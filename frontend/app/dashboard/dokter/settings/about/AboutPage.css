@@ -1,0 +1,130 @@
+/* Latar & Font */
+.about-page {
+  background: #fff5f8;
+  min-height: 100vh;
+  font-family: 'Poppins', sans-serif;
+  color: #343a40;
+}
+
+/* Header */
+.header-box {
+  background: linear-gradient(90deg, #ec4899, #f43f5e);
+  color: #fff;
+  padding: 2rem 2rem 1.5rem 2rem;
+  margin-bottom: 2rem;
+  border-radius: 1.5rem;
+  box-shadow: 0 8px 25px rgba(236,72,153,0.3);
+}
+
+.header-box h1 {
+  font-size: 2.2rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.header-box p {
+  font-size: 1rem;
+  opacity: 0.85;
+}
+
+/* Info Cards */
+.info-card {
+  background: #fff0f6;
+  padding: 2rem 1.5rem;
+  border-radius: 1.5rem;
+  text-align: center;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.info-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 30px rgba(0,0,0,0.12);
+}
+
+.info-card i {
+  font-size: 2.2rem;
+  color: #d63384;
+  margin-bottom: 0.5rem;
+}
+
+.info-card h5 {
+  font-weight: 600;
+  color: #d63384;
+  margin-bottom: 0.3rem;
+}
+
+.info-card p {
+  font-size: 0.9rem;
+  color: #495057;
+}
+
+/* List Cards (Support & Legal) */
+.list-card {
+  background: #fff;
+  border-radius: 1.5rem;
+  padding: 1.8rem 2rem;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+  margin-bottom: 1.5rem;
+  transition: transform 0.2s;
+}
+
+.list-card:hover {
+  transform: translateY(-3px);
+}
+
+.list-card h5 {
+  font-weight: 600;
+  color: #d63384;
+  margin-bottom: 1rem;
+}
+
+.list-card ul {
+  padding-left: 1.2rem;
+}
+
+.list-card ul li {
+  margin-bottom: 0.5rem;
+  font-size: 0.925rem;
+  color: #495057;
+}
+
+/* Thank You Card */
+.thankyou-card {
+  background: #ffe0eb;
+  padding: 2rem;
+  border-radius: 1.5rem;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+  margin-bottom: 2rem;
+  text-align: center;
+  transition: transform 0.2s;
+}
+
+.thankyou-card:hover {
+  transform: translateY(-3px);
+}
+
+.thankyou-card h5 {
+  font-weight: 600;
+  color: #d63384;
+  margin-bottom: 0.5rem;
+}
+
+.thankyou-card p {
+  font-size: 0.95rem;
+  color: #495057;
+}
+
+/* Footer */
+footer {
+  text-align: center;
+  color: #6c757d;
+  font-size: 0.85rem;
+  margin-top: 2rem;
+}
+
+/* Responsif */
+@media (max-width: 768px) {
+  .header-box h1 { font-size: 1.8rem; }
+  .info-card, .list-card, .thankyou-card { padding: 1.5rem 1rem; }
+}

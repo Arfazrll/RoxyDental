@@ -1,0 +1,101 @@
+/* SettingsSidebar.css */
+
+/* Kontainer utama sidebar */
+.sidebar-full {
+  background-color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+  padding: 1.25rem;          /* sedikit lebih kecil */
+  margin: 1rem 0;            /* margin atas-bawah */
+  width: 250px;              /* lebar sidebar disesuaikan */
+  flex-shrink: 0;            /* agar tidak mengecil */
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  font-size: 0.9rem;         /* ukuran teks lebih proporsional */
+}
+
+/* Header sidebar */
+.sidebar-header h5 {
+  font-size: 1.15rem;
+  font-weight: 600;
+  margin-bottom: 0.2rem;
+}
+
+.sidebar-header p {
+  font-size: 0.8rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+/* Menu item */
+.sidebar-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;              /* jarak antar menu lebih rapat */
+}
+
+.sidebar-item {
+  padding: 0.6rem 1rem;     /* padding lebih proporsional */
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  background-color: #f9fafb;
+}
+
+.sidebar-item:hover {
+  background-color: #f3e8ff;
+  transform: translateX(2px);
+}
+
+.sidebar-item.active {
+  background: linear-gradient(135deg, #ec4899 0%, #f43f5e 100%);
+  color: #fff;
+  font-weight: 600;
+  box-shadow: 0 2px 6px rgba(236, 72, 153, 0.3);
+}
+
+.sidebar-item-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.item-title {
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.item-subtitle {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+/* Tips section */
+.sidebar-tips {
+  background-color: #fef3c7;
+  border-radius: 8px;
+  padding: 0.6rem 0.8rem;   /* padding lebih kecil */
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+}
+
+.tips-icon {
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.tips-text h6 {
+  margin: 0 0 0.2rem 0;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.tips-text p {
+  margin: 0;
+  font-size: 0.7rem;
+  color: #6b7280;
+}

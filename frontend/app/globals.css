@@ -1,0 +1,111 @@
+/* Dashboard Global Styles */
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  font-family: 'Poppins', sans-serif;
+  background: #fdf2f8;
+  color: #4b4b4b;
+  min-height: 100vh;
+}
+
+/* Content Area */
+.content-area {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  padding: 2rem 2.5rem;
+}
+
+/* Profile Card */
+.profile-card {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2rem;
+  background: #fff;
+  border-radius: 20px;
+  padding: 2rem;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  align-items: center;
+}
+
+.doctor-image { 
+  width: 140px; height: 140px; border-radius: 15px; border: 4px solid #fbbf24; object-fit: cover; 
+}
+
+.profile-info { flex:1; display:flex; flex-direction:column; gap:0.6rem; }
+
+.doctor-name { font-size: 1.5rem; font-weight:700; color:#831843; }
+.doctor-title { font-size:1rem; color:#666; }
+.doctor-rating { display:flex; align-items:center; gap:0.5rem; font-size:1rem; }
+
+.badge-group { display:flex; flex-wrap:wrap; gap:0.5rem; }
+.badge-custom { background: linear-gradient(135deg,#fce7f3,#fbcfe8); color:#be185d; padding:0.45rem 1rem; border-radius:25px; font-weight:500; font-size:0.9rem; border:1px solid #f9a8d4; }
+
+.button-group { display:flex; gap:0.8rem; flex-wrap:wrap; }
+.btn-primary-custom { background: linear-gradient(135deg,#ec4899,#f43f5e); color:white; border:none; padding:0.7rem 1.8rem; border-radius:25px; font-weight:600; cursor:pointer; transition:.3s; }
+.btn-primary-custom:hover { transform:translateY(-2px); box-shadow:0 6px 16px rgba(236,72,153,.4); }
+.btn-outline-custom { border:2px solid #ec4899; color:#ec4899; background:#fff; padding:0.7rem 1.8rem; border-radius:25px; font-weight:600; transition:.3s; }
+.btn-outline-custom:hover { background:#ec4899; color:white; }
+
+/* Stats */
+.stats-grid { display:flex; flex-wrap:wrap; gap:1rem; }
+.stat-card {
+  flex:1 1 32%;
+  background:#fff; border-radius:15px; padding:1.5rem 1.8rem; 
+  box-shadow:0 4px 12px rgba(0,0,0,0.06); display:flex; justify-content:space-between; align-items:center; border-left:6px solid; transition:.3s;
+}
+.stat-card:hover { transform:translateY(-4px); box-shadow:0 6px 20px rgba(0,0,0,0.12); }
+.stat-label { font-size:0.9rem; color:#666; }
+.stat-value { font-size:1.2rem; font-weight:700; }
+.stat-icon { width:50px; height:50px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:1.4rem; }
+
+/* Side-by-Side Layout Jadwal & Kualifikasi */
+.side-by-side-row {
+  display:flex;
+  gap:1.5rem;
+  flex-wrap:wrap;
+}
+
+.schedule-card, .qualification-card {
+  border-radius:15px; padding:1.5rem 1.8rem; box-shadow:0 4px 12px rgba(0,0,0,0.06); background:#fcd5e1;
+}
+
+/* Desktop proportion */
+.schedule-card { flex:2 1 65%; }
+.qualification-card { flex:1 1 35%; }
+
+/* Section Titles */
+.section-title { font-size:1.15rem; font-weight:700; color:#831843; margin-bottom:1rem; display:flex; align-items:center; gap:0.5rem; }
+
+/* Table */
+.table-custom { width:100%; border-collapse:collapse; font-size:0.9rem; }
+.table-custom thead { background: linear-gradient(135deg,#fce7f3,#fbcfe8); }
+.table-custom thead th { border:none; color:#be185d; font-weight:600; padding:0.7rem; }
+.table-custom tbody td { padding:0.7rem; border-bottom:1px solid #fce7f3; }
+.table-custom tbody tr:hover { background:#fef7fb; }
+
+/* Qualification */
+.qualification-item { margin-bottom:1rem; }
+.qualification-title { color:#ec4899; font-weight:600; font-size:0.9rem; margin-bottom:0.4rem; display:flex; align-items:center; gap:0.5rem; }
+.specialization-badge { background: linear-gradient(135deg,#fbbf24,#f59e0b); color:white; padding:0.5rem 1rem; border-radius:20px; font-weight:500; font-size:0.9rem; display:inline-block; margin:0.2rem 0.2rem 0 0; }
+
+/* Rating Stars */
+.rating-stars { color:#fbbf24; font-size:1rem; }
+
+/* Footer */
+.footer-text { color:#9ca3af; font-size:0.9rem; margin-top:3rem; text-align:center; }
+
+/* Responsive */
+@media (max-width:1200px) {
+  .stat-card { flex:1 1 48%; }
+  .schedule-card, .qualification-card { flex:1 1 100%; }
+  .qualification-card { margin-top:1rem; }
+}
+
+@media (max-width:768px) {
+  .profile-card { flex-direction:column; align-items:flex-start; gap:1rem; }
+  .doctor-image { width:120px; height:120px; }
+  .btn-primary-custom, .btn-outline-custom { font-size:0.9rem; padding:0.5rem 1.5rem; }
+  .stat-card { flex:1 1 100%; }
+  .section-title { font-size:1rem; }
+}

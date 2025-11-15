@@ -1,0 +1,139 @@
+/* 🌸 LATAR UTAMA */
+.keuangan-container {
+  background-color: #ffe6ef; /* pink lembut */
+  min-height: 100vh;
+  font-family: 'Poppins', sans-serif;
+  color: #333;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 🌺 HEADER TITLE */
+.keuangan-container h5 {
+  font-size: 2rem; /* Lebih besar & elegan */
+  font-weight: 700;
+  color: #c2185b;
+  text-align: center;
+  letter-spacing: 0.5px;
+  margin-bottom: 2rem;
+  text-shadow: 1px 1px 3px rgba(255, 182, 193, 0.6);
+}
+
+/* 🌼 BAGIAN FILTER */
+.filter-section {
+  background-color: #ffc9db;
+  border-radius: 14px;
+  padding: 1.2rem;
+  border: 1px solid #f5b0c3;
+  box-shadow: 0 4px 12px rgba(255, 150, 170, 0.3);
+  margin-bottom: 2rem;
+}
+
+.filter-section input,
+.filter-section select {
+  border-radius: 8px;
+  border: 1px solid #f3a6bc;
+}
+
+.filter-section button {
+  border-radius: 10px;
+  font-weight: 600;
+  transition: all 0.2s ease-in-out;
+  background-color: white;
+  border: 2px solid #ff7096;
+  color: #ff7096;
+}
+
+.filter-section button:hover {
+  transform: translateY(-2px);
+  background-color: #ff7096;
+  color: white;
+  box-shadow: 0 4px 8px rgba(255, 112, 150, 0.4);
+}
+
+/* 🌷 CARD SECTION */
+.section-box {
+  background-color: #ffffff;
+  border-radius: 14px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 10px rgba(255, 140, 160, 0.2);
+  transition: all 0.2s ease-in-out;
+}
+
+.section-box:hover {
+  transform: translateY(-3px);
+}
+
+.section-title {
+  color: #c2185b;
+  font-weight: 600;
+  font-size: 1.1rem;
+  margin-bottom: 1rem;
+  border-left: 5px solid #ff8fb1;
+  padding-left: 10px;
+}
+
+/* 💰 TABEL */
+.table {
+  background-color: #ffffff;
+  border: 1px solid #f1c2ce;
+  font-size: 0.9rem;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.table th {
+  background-color: #ffd9e2;
+  color: #444;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.table td {
+  color: #333;
+  text-align: center;
+}
+
+.table-striped tbody tr:nth-of-type(odd) {
+  background-color: #fff7fa;
+}
+
+/* 💖 FOOTER */
+.footer {
+  color: #fff;
+  font-size: 0.95rem;
+  background: linear-gradient(90deg, #ff8fb1, #f48fb1);
+  border-top: 1px solid #f3a6bc;
+  text-align: center;
+  padding: 1rem 0;
+  border-radius: 14px 14px 0 0;
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.08);
+  margin-top: auto;
+}
+
+/* 📱 RESPONSIF */
+@media (max-width: 768px) {
+  .keuangan-container h5 {
+    font-size: 1.6rem;
+  }
+
+  .section-box {
+    padding: 1rem;
+  }
+
+  .table th,
+  .table td {
+    font-size: 0.8rem;
+  }
+
+  .filter-section .row {
+    flex-direction: column;
+  }
+
+  .filter-section input,
+  .filter-section select,
+  .filter-section button {
+    width: 100%;
+  }
+}

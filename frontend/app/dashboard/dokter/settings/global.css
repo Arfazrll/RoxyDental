@@ -1,0 +1,79 @@
+:root{
+  --pink-500: #ff2d6f;
+  --pink-300: #ffd7e6;
+  --soft-pink: #fde6ee;
+  --card-bg: #fff7fb;
+  --muted: #8b8b8b;
+}
+
+html,body,#root {
+  height: 100%;
+}
+
+body {
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  background: linear-gradient(180deg, var(--soft-pink) 0%, #fff 100%);
+  margin: 0;
+  padding: 0;
+  color: #333;
+}
+
+/* Layout */
+.settings-container {
+  display: flex;
+  gap: 24px;
+  padding: 28px;
+  max-width: 1200px;
+  margin: 20px auto;
+}
+
+/* Sidebar */
+.settings-sidebar {
+  width: 260px;
+}
+.settings-sidebar .menu-card {
+  background: white;
+  border-radius: 10px;
+  padding: 16px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.06);
+}
+.settings-sidebar .menu-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-bottom: 8px;
+  color: #333;
+  text-decoration: none;
+}
+.settings-sidebar .menu-item.active {
+  background: linear-gradient(90deg, #ffeff7, #ffe1ef);
+  border-left:4px solid var(--pink-500);
+}
+
+/* Content Card */
+.settings-main {
+  flex: 1;
+}
+.settings-card {
+  background: white;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.06);
+}
+
+/* Small utilities */
+.header-title {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+.small-muted { color: var(--muted); font-size: 13px; }
+
+/* Buttons */
+.btn-primary-custom {
+  background: var(--pink-500);
+  border-color: var(--pink-500);
+}

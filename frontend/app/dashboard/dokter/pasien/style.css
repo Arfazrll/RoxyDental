@@ -1,0 +1,173 @@
+/* ===== Header Section ===== */
+.header-section {
+  background: rgba(255, 255, 255, 0.85);
+  border-radius: 18px;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 14px rgba(255, 182, 193, 0.25);
+  padding: 14px 20px;
+  margin-top: 20px;
+  margin-bottom: 25px;
+}
+
+/* ===== Tabs ===== */
+.tab-link {
+  padding: 8px 18px;
+  border-radius: 10px;
+  border: 1px solid #ffb6c1;
+  background: linear-gradient(145deg, #fff, #ffe6ef);
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #555;
+  box-shadow: 0 2px 5px rgba(255, 192, 203, 0.25);
+  transition: all 0.25s ease;
+}
+
+.tab-link:hover {
+  background: linear-gradient(145deg, #ffeaf1, #fff0f6);
+  transform: translateY(-2px);
+  color: #d63384;
+}
+
+.tab-link.active {
+  background: linear-gradient(145deg, #ff69b4, #ff85c1);
+  color: white;
+  border: none;
+  box-shadow: 0 3px 10px rgba(255, 105, 180, 0.4);
+  transform: translateY(-2px);
+}
+
+/* ===== Refresh Button ===== */
+.refresh-btn {
+  background: linear-gradient(135deg, #ff69b4, #ff85c1);
+  color: white;
+  border: none;
+  padding: 8px 20px;
+  border-radius: 12px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  box-shadow: 0 4px 10px rgba(255, 105, 180, 0.4);
+  transition: all 0.25s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.refresh-btn:hover {
+  background: linear-gradient(135deg, #ff4da6, #ff79bc);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgba(255, 105, 180, 0.45);
+}
+
+.refresh-btn:hover .rotate-icon {
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* ===== Stats Cards ===== */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 16px;
+}
+
+.stat-card {
+  padding: 16px;
+  border-radius: 14px;
+  text-align: center;
+  transition: transform 0.2s;
+}
+
+.stat-card:hover {
+  transform: translateY(-3px);
+}
+
+.stat-card p {
+  margin-bottom: 4px;
+  font-weight: 500;
+  color: #666;
+}
+
+.stat-card h5 {
+  font-weight: 700;
+}
+
+.bg-waiting {
+  background: #fff3cd;
+}
+
+.bg-serving {
+  background: #cff4fc;
+}
+
+.bg-finished {
+  background: #d1e7dd;
+}
+
+/* ===== Table ===== */
+.table-header {
+  background: linear-gradient(135deg, #ffeef5, #fff9fc);
+}
+
+.number-circle {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #ffb6c1;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+}
+
+.status-badge {
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.status-menunggu {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.status-dilayani {
+  background: #cce5ff;
+  color: #004085;
+}
+
+.status-selesai {
+  background: #d4edda;
+  color: #155724;
+}
+
+/* ===== Search & Filter ===== */
+.search-input,
+.filter-select {
+  border: 1px solid #ffb6c1;
+  border-radius: 20px;
+  padding: 8px 14px;
+  font-size: 0.9rem;
+}
+
+.search-input:focus,
+.filter-select:focus {
+  outline: none;
+  border-color: #ff69b4;
+  box-shadow: 0 0 6px rgba(255, 105, 180, 0.3);
+}
+
+/* ===== Footer ===== */
+.footer-pink {
+  background: #fff0f6;
+  color: #555;
+  font-size: 0.9rem;
+  font-weight: 500;
+  padding: 12px 0;
+  border-top: 2px solid #ffd6e1;
+}

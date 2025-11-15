@@ -1,0 +1,58 @@
+.privacy-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #ffe6f0 0%, #ffcce0 100%);
+  font-family: 'Poppins', sans-serif;
+  color: #333;
+}
+
+.header-section .info-title {
+  font-size: 1.8rem;
+  font-weight: 600;
+  color: #d63384;
+}
+
+.header-section .info-subtitle {
+  font-size: 1rem;
+  color: #6c757d;
+  margin-top: 0.25rem;
+}
+
+.settings-card {
+  background: #fff0f6;
+  border: 1px solid #ffcce0;
+  border-radius: 1rem;
+  padding: 2rem;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+}
+
+.section-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.switch-input {
+  width: 50px;
+  height: 28px;
+  cursor: pointer;
+}
+
+.switch-label {
+  margin-left: 0.75rem;
+  font-size: 0.9rem;
+  color: #555;
+}
+
+.btn-save {
+  background: linear-gradient(90deg, #ec4899 0%, #f43f5e 100%);
+  color: white;
+  border-radius: 12px;
+  padding: 0.5rem 1.5rem;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.btn-save:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+}

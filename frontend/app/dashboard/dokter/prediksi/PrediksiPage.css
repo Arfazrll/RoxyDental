@@ -1,0 +1,79 @@
+/* Layout Utama */
+.dashboard-layout {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+/* Body berisi sidebar + konten */
+.dashboard-body {
+  display: flex;
+  flex: 1;
+  margin-top: 70px; /* tinggi Navbar */
+  background-color: #fff5f8; /* warna soft pink */
+}
+
+/* Sidebar */
+.dashboard-body > :first-child {
+  width: 250px;
+  min-width: 250px;
+}
+
+/* Konten utama */
+.dashboard-content {
+  flex: 1;
+  padding: 30px;
+  background-color: #fff;
+  overflow-y: auto;
+  border-top-left-radius: 20px;
+  margin-left: 250px; /* posisi mengikuti sidebar */
+}
+
+/* Judul halaman */
+.page-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #ec4899;
+  margin-bottom: 20px;
+}
+
+/* Statistik (3 kotak kecil) */
+.stats-container {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.stat-card {
+  background-color: #fce7f3;
+  border-radius: 15px;
+  padding: 20px;
+  flex: 1;
+  min-width: 250px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  transition: 0.3s;
+}
+
+.stat-card:hover {
+  background-color: #ec4899;
+  color: white;
+}
+
+.icon {
+  font-size: 2rem;
+  color: #ec4899;
+}
+
+/* Responsif untuk HP */
+@media (max-width: 991px) {
+  .dashboard-body > :first-child {
+    display: none; /* sembunyikan sidebar di HP */
+  }
+  .dashboard-content {
+    margin-left: 0;
+    padding: 20px;
+  }
+}

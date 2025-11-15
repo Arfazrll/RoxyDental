@@ -1,0 +1,119 @@
+/* Background gradasi lembut */
+.dashboard-page {
+  background: linear-gradient(to bottom, #ffe8f1 0%, #ffffff 100%);
+  color: #333;
+  font-family: "Poppins", sans-serif;
+}
+
+/* === Profile Card === */
+.profile-card {
+  background: linear-gradient(90deg, #ffffff 0%, #ffe8f1 100%);
+  border: 1px solid #ffb6c8;
+}
+
+.doctor-image {
+  width: 130px;
+  height: 130px;
+  object-fit: cover;
+  border: 4px solid white;
+  box-shadow: 0 4px 10px rgba(255, 170, 190, 0.3);
+}
+
+.doctor-name {
+  color: #b91c5f;
+  font-weight: 600;
+}
+
+.doctor-title {
+  color: #b84d6f;
+}
+
+.badge-location {
+  background: #ffffff;
+  border: 1px solid #ffc2d0;
+  color: #b91c5f;
+  font-size: 13px;
+  border-radius: 12px;
+  padding: 4px 10px;
+}
+
+.btn-pink {
+  background-color: #ec4899;
+  color: white;
+  font-weight: 500;
+  border: none;
+  border-radius: 8px;
+  padding: 6px 14px;
+  transition: all 0.3s ease;
+}
+.btn-pink:hover {
+  background-color: #db2777;
+}
+
+.btn-outline-pink {
+  border: 1.5px solid #ec4899;
+  color: #ec4899;
+  border-radius: 8px;
+  padding: 6px 14px;
+  transition: all 0.3s ease;
+}
+.btn-outline-pink:hover {
+  background-color: #ec4899;
+  color: white;
+}
+
+/* === Statistik === */
+.stat-card {
+  background: white;
+  border-left: 5px solid #ec4899;
+  border-radius: 12px;
+}
+
+/* === Jadwal & Kualifikasi === */
+.pink-card {
+  background-color: #ffffff;
+  border: 1px solid #ffc6d7;
+}
+
+.section-title {
+  color: #b91c5f;
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.table-custom thead {
+  background-color: #ffffff;
+  color: #b91c5f;
+  font-size: 14px;
+}
+.table-custom td,
+.table-custom th {
+  border-color: #ffe0eb !important;
+  font-size: 13px;
+}
+
+.specBadge{
+  display:inline-block;
+  background: linear-gradient(180deg,#ffd7e3,#ffd0dd);
+  color: var(--accent);
+  padding: 6px 10px;
+  border-radius: 12px;
+  font-size: 0.82rem;
+}
+
+/* === Footer === */
+.footer-text {
+  color: #9a9a9a;
+  font-size: 13px;
+}
+
+/* Responsif */
+@media (max-width: 768px) {
+  .profile-card {
+    flex-direction: column;
+    text-align: center;
+  }
+  .doctor-image {
+    margin-bottom: 12px;
+  }
+}

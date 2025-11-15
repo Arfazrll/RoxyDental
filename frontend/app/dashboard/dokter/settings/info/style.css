@@ -1,0 +1,73 @@
+.info-page {
+  background-color: #fff0f6;
+  font-family: 'Poppins', sans-serif;
+  min-height: 100vh;
+}
+
+.header-section .hello-title {
+  font-size: 1.8rem;
+  font-weight: 600;
+  color: #d63384;
+}
+
+.header-section .hello-subtitle {
+  font-size: 0.95rem;
+  color: #555;
+}
+
+.info-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #d63384;
+}
+
+.info-subtitle {
+  font-size: 0.9rem;
+  color: #777;
+}
+
+.settings-wrapper .top-tab {
+  font-weight: 600;
+  font-size: 1rem;
+  color: #fff;
+  background-color: #d63384;
+  padding: 0.5rem 1rem;
+  border-radius: 8px 8px 0 0;
+  margin-bottom: 0;
+}
+
+.settings-card {
+  background-color: #fff;
+  border-radius: 12px;
+}
+
+.photo-wrapper {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2px solid #d63384;
+  margin: 0 auto;
+}
+
+.photo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.btn-primary-custom {
+  background-color: #d63384;
+  color: #fff;
+  border: none;
+}
+
+.btn-primary-custom:hover {
+  background-color: #c12f74;
+}
+
+.format-text {
+  font-size: 0.8rem;
+  color: #888;
+}
+
