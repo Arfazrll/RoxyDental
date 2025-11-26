@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { AuthProvider } from "@/contexts/AuthContext";
 
 export const metadata: Metadata = {
   title: "POLADC - Dental Clinic | Klinik Gigi Profesional",
@@ -14,7 +15,9 @@ export default function RootLayout({
   return (
     <html lang="id">
       <body className="antialiased">
-        {children}
+        <AuthProvider>
+          {children}
+        </AuthProvider>
       </body>
     </html>
   );
