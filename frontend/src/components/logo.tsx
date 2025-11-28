@@ -2,12 +2,12 @@
 import React from "react";
 import Image from "next/image";
 
-export default function Logo() {
+export default function logo() {
   return (
     <div className="flex items-center gap-3">
       <div className="relative w-12 h-12 md:w-14 md:h-14">
         <Image
-          src="/images/logo.png"
+          src="/images/pink.png"
           alt="POLADC Logo"
           width={56}
           height={56}
