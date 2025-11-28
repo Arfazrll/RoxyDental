@@ -1,18 +1,21 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { HiEye, HiEyeOff } from "react-icons/hi";
 
 export default function LoginPage() {
   const router = useRouter();
+  const { login, isAuthenticated, loading: authLoading } = useAuth();
 
-  const [role, setRole] = useState<"dokter" | "perawat">();
+  const [role, setRole] = useState<"DOKTER" | "PERAWAT">();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
+<<<<<<< HEAD
   const [errors, setErrors] = useState({
     role: "",
     username: "",
@@ -22,6 +25,23 @@ export default function LoginPage() {
   const [errorMessage, setErrorMessage] = useState("");
 
   const slides = ["/images/logo1.jpg", "/images/logo2.jpg", "/images/logo3.jpg"];
+=======
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const slides = [
+    "/images/logo1.jpg",
+    "/images/logo2.jpg",
+    "/images/logo3.jpg",
+  ];
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (!authLoading && isAuthenticated) {
+      router.push('/dashboard/dokter/utama');
+    }
+  }, [isAuthenticated, authLoading, router]);
+>>>>>>> d62cde122874babc89d9f76e3c686a9cb702af4a
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -30,6 +50,7 @@ export default function LoginPage() {
     return () => clearInterval(timer);
   }, []);
 
+<<<<<<< HEAD
   const dummyUser = {
     role: "dokter",
     username: "yusria",
@@ -94,8 +115,40 @@ export default function LoginPage() {
       router.push(role === "dokter" ? "/dashboard/dokter/main" : "/dashboard/perawat/main");
     } else {
       showNotification("Username atau password salah! Silakan coba lagi.");
+=======
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+
+    // Validation
+    if (!role) {
+      setError("Pilih role terlebih dahulu");
+      return;
+    }
+    if (!username || !password) {
+      setError("Username & password wajib diisi");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      await login(username, password, role);
+    } catch (err: any) {
+      setError(err.message || "Login gagal. Periksa kredensial Anda.");
+    } finally {
+      setLoading(false);
+>>>>>>> d62cde122874babc89d9f76e3c686a9cb702af4a
     }
   };
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-pink-500"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen w-full flex flex-col lg:flex-row">
@@ -150,7 +203,12 @@ export default function LoginPage() {
                   }`}
                 />
               ))}
+<<<<<<< HEAD
               <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
+=======
+              
+              <div className="absolute inset-0 bg-linear-to-t from-black/20 to-transparent"></div>
+>>>>>>> d62cde122874babc89d9f76e3c686a9cb702af4a
             </div>
 
             <div className="flex justify-center mt-5 gap-3">
@@ -186,6 +244,7 @@ export default function LoginPage() {
               <p className="text-gray-500 font-medium text-sm sm:text-base text-center">Login ke Akun Kamu</p>
             </div>
 
+<<<<<<< HEAD
             {/* Role Selection */}
             <div className="mb-6">
               <label className="block text-sm font-semibold text-gray-700 mb-3">Pilih Role</label>
@@ -257,19 +316,103 @@ export default function LoginPage() {
                   >
                     {showPassword ? <HiEyeOff size={22} /> : <HiEye size={22} />}
                   </button>
+=======
+            {/* Error Message */}
+            {error && (
+              <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl text-sm">
+                {error}
+              </div>
+            )}
+
+            <form onSubmit={handleLogin}>
+              {/* Role Selection */}
+              <div className="mb-6">
+                <label className="block text-sm font-semibold text-gray-700 mb-3">
+                  Pilih Role
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  {[
+                    { value: "DOKTER", label: "Dokter" },
+                    { value: "PERAWAT", label: "Perawat" }
+                  ].map((r) => (
+                    <button
+                      key={r.value}
+                      type="button"
+                      className={`px-4 py-3 rounded-xl font-semibold transition-all border-2 text-sm sm:text-base ${
+                        role === r.value
+                          ? "text-white bg-pink-500 border-pink-500 shadow-lg scale-105"
+                          : "text-gray-700 bg-white border-gray-300 hover:border-pink-300 hover:bg-pink-50"
+                      }`}
+                      onClick={() => setRole(r.value as any)}
+                    >
+                      {r.label}
+                    </button>
+                  ))}
+>>>>>>> d62cde122874babc89d9f76e3c686a9cb702af4a
                 </div>
                 {errors.password && (
                   <p className="text-red-500 text-xs mt-2 font-medium">{errors.password}</p>
                 )}
               </div>
 
-              <button
-                onClick={handleLogin}
-                className="w-full bg-gradient-to-r from-pink-500 to-pink-600 text-white py-3.5 rounded-xl font-bold text-base sm:text-lg shadow-lg hover:shadow-xl hover:from-pink-600 hover:to-pink-700 transform hover:scale-[1.02] transition-all active:scale-[0.98] mt-2"
-              >
-                Sign In
-              </button>
-            </div>
+              {/* Form Inputs */}
+              <div className="space-y-4">
+                <div>
+                  <label className="block font-semibold text-sm text-gray-900 mb-2">
+                    Username
+                  </label>
+                  <input
+                    type="text"
+                    className="w-full border-2 rounded-xl px-4 py-3 text-sm sm:text-base text-gray-900 placeholder:text-gray-400 focus:border-pink-500 focus:ring-4 focus:ring-pink-100 outline-none transition-all"
+                    placeholder="Masukkan username"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    disabled={loading}
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-semibold text-sm text-gray-900 mb-2">
+                    Password
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      className="w-full border-2 rounded-xl px-4 py-3 pr-20 text-sm sm:text-base text-gray-900 placeholder:text-gray-400 focus:border-pink-500 focus:ring-4 focus:ring-pink-100 outline-none transition-all"
+                      placeholder="Masukkan password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      disabled={loading}
+                    />
+                    <button
+                      type="button"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1.5 rounded-lg bg-pink-50 text-pink-600 font-semibold text-xs sm:text-sm hover:bg-pink-100 transition-colors"
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      {showPassword ? "Hide" : "Show"}
+                    </button>
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full bg-linear-to-r from-pink-500 to-pink-600 text-white py-3.5 rounded-xl font-bold text-base sm:text-lg shadow-lg hover:shadow-xl hover:from-pink-600 hover:to-pink-700 transform hover:scale-[1.02] transition-all active:scale-[0.98] mt-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                >
+                  {loading ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+                      </svg>
+                      Memproses...
+                    </span>
+                  ) : (
+                    "Sign In"
+                  )}
+                </button>
+              </div>
+            </form>
 
             {/* Footer */}
             <div className="mt-6 space-y-3 text-center">
@@ -280,6 +423,7 @@ export default function LoginPage() {
                 Lupa Password?
               </p>
 
+<<<<<<< HEAD
               {role === "perawat" && (
                 <p className="text-gray-600 text-sm sm:text-base">
                   Belum punya akun?{" "}
@@ -291,6 +435,21 @@ export default function LoginPage() {
                   </span>
                 </p>
               )}
+=======
+              <div className="h-6">
+                {role === "PERAWAT" && (
+                  <p className="text-gray-600 text-sm sm:text-base">
+                    Belum punya akun?{" "}
+                    <span
+                      className="text-pink-600 font-bold underline cursor-pointer hover:text-pink-700"
+                      onClick={() => router.push("/register")}
+                    >
+                      Daftar Sekarang
+                    </span>
+                  </p>
+                )}
+              </div>
+>>>>>>> d62cde122874babc89d9f76e3c686a9cb702af4a
 
               <button
                 onClick={() => router.push("/")}
