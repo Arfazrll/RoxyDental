@@ -19,11 +19,11 @@ export class AuthService {
     }
 
     if (user.role !== role) {
-      throw new AppError('Role tidak sesuai', 403);
+      throw new AppError('Role tidak sesuai dengan akun yang terdaftar', 403);
     }
 
     if (!user.isActive) {
-      throw new AppError('Akun tidak aktif', 403);
+      throw new AppError('Akun tidak aktif. Hubungi administrator', 403);
     }
 
     const isPasswordValid = await comparePassword(password, user.passwordHash);
@@ -44,7 +44,10 @@ export class AuthService {
         username: user.username,
         email: user.email,
         fullName: user.fullName,
-        role: user.role
+        role: user.role,
+        phone: user.phone,
+        specialization: user.specialization || undefined,
+        isActive: user.isActive
       },
       token
     };
@@ -55,12 +58,18 @@ export class AuthService {
 
     const existingUser = await prisma.user.findFirst({
       where: {
-        OR: [{ username }, { email }]
+        OR: [
+          { username },
+          { email }
+        ]
       }
     });
 
     if (existingUser) {
-      throw new AppError('Username atau email sudah terdaftar', 400);
+      if (existingUser.username === username) {
+        throw new AppError('Username sudah digunakan', 400);
+      }
+      throw new AppError('Email sudah terdaftar', 400);
     }
 
     const hashedPassword = await hashPassword(password);
@@ -71,6 +80,66 @@ export class AuthService {
         email,
         passwordHash: hashedPassword,
         role: UserRole.PERAWAT,
+        fullName,
+        phone,
+        specialization: specialization || null,
+        isActive: true
+      }
+    });
+
+    const token = generateToken({
+      id: user.id,
+      username: user.username,
+      email: user.email,
+      role: user.role
+    });
+
+    return {
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        fullName: user.fullName,
+        role: user.role,
+        phone: user.phone,
+        specialization: user.specialization || undefined,
+        isActive: user.isActive
+      },
+      token
+    };
+  }
+
+  async registerDoctor(data: RegisterDto): Promise<AuthResponse> {
+    const { username, email, password, fullName, phone, specialization } = data;
+
+    const existingUser = await prisma.user.findFirst({
+      where: {
+        OR: [
+          { username },
+          { email }
+        ]
+      }
+    });
+
+    if (existingUser) {
+      if (existingUser.username === username) {
+        throw new AppError('Username sudah digunakan', 400);
+      }
+      throw new AppError('Email sudah terdaftar', 400);
+    }
+
+    if (!specialization) {
+      throw new AppError('Spesialisasi wajib diisi untuk dokter', 400);
+    }
+
+    const hashedPassword = await hashPassword(password);
+
+    const user = await prisma.user.create({
+      data: {
+        username,
+        email,
+        passwordHash: hashedPassword,
+        role: UserRole.DOKTER,
         fullName,
         phone,
         specialization,
@@ -91,7 +160,10 @@ export class AuthService {
         username: user.username,
         email: user.email,
         fullName: user.fullName,
-        role: user.role
+        role: user.role,
+        phone: user.phone,
+        specialization: user.specialization || undefined,
+        isActive: user.isActive
       },
       token
     };
@@ -178,52 +250,5 @@ export class AuthService {
     }
 
     return user;
-  }
-
-  async registerDoctor(data: RegisterDto): Promise<AuthResponse> {
-    const { username, email, password, fullName, phone, specialization } = data;
-
-    const existingUser = await prisma.user.findFirst({
-      where: {
-        OR: [{ username }, { email }]
-      }
-    });
-
-    if (existingUser) {
-      throw new AppError('Username atau email sudah terdaftar', 400);
-    }
-
-    const hashedPassword = await hashPassword(password);
-
-    const user = await prisma.user.create({
-      data: {
-        username,
-        email,
-        passwordHash: hashedPassword,
-        role: UserRole.DOKTER,
-        fullName,
-        phone,
-        specialization,
-        isActive: true
-      }
-    });
-
-    const token = generateToken({
-      id: user.id,
-      username: user.username,
-      email: user.email,
-      role: user.role
-    });
-
-    return {
-      user: {
-        id: user.id,
-        username: user.username,
-        email: user.email,
-        fullName: user.fullName,
-        role: user.role
-      },
-      token
-    };
   }
 }

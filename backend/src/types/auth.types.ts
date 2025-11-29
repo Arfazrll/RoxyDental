@@ -13,27 +13,23 @@ export interface RegisterDto {
   specialization?: string;
 }
 
+export interface UserResponse {
+  id: string;
+  username: string;
+  email: string;
+  fullName: string;
+  role: string;
+  phone: string;
+  specialization?: string;
+  isActive: boolean;
+}
+
 export interface AuthResponse {
-  user: {
-    id: string;
-    username: string;
-    email: string;
-    fullName: string;
-    role: string;
-  };
+  user: UserResponse;
   token: string;
 }
 
 export interface ChangePasswordDto {
   currentPassword: string;
-  newPassword: string;
-}
-
-export interface ForgotPasswordDto {
-  email: string;
-}
-
-export interface ResetPasswordDto {
-  token: string;
   newPassword: string;
 }

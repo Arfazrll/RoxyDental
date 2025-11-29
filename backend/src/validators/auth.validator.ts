@@ -30,6 +30,12 @@ export const forgotPasswordSchema = z.object({
   email: z.string().email('Format email tidak valid')
 });
 
+export const resetPasswordSchema = z.object({
+  email: z.string().email('Format email tidak valid'),
+  token: z.string().min(1, 'Token harus diisi'),
+  newPassword: z.string().min(6, 'Password baru minimal 6 karakter')
+});
+
 export const changePasswordSchema = z.object({
   currentPassword: z.string().min(6, 'Password minimal 6 karakter'),
   newPassword: z.string().min(6, 'Password baru minimal 6 karakter')

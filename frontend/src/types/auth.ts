@@ -6,9 +6,9 @@ export interface User {
   email: string;
   fullName: string;
   role: UserRole;
-  phone?: string;
+  phone: string;
   specialization?: string;
-  isActive?: boolean;
+  isActive: boolean;
 }
 
 export interface LoginRequest {

@@ -6,9 +6,9 @@ import {
   loginSchema,
   registerSchema,
   forgotPasswordSchema,
-  changePasswordSchema
+  changePasswordSchema,
+  resetPasswordSchema
 } from '../validators/auth.validator';
-import { resetPasswordSchema } from '../validators/reset-password.validator';
 
 const router = Router();
 const authController = new AuthController();

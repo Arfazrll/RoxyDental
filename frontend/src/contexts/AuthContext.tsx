@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { User } from '@/types/auth';
+import { User, RegisterRequest } from '@/types/auth';
 import { authService } from '@/services/auth.service';
 import { useRouter } from 'next/navigation';
 
@@ -9,7 +9,7 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   login: (username: string, password: string, role: 'DOKTER' | 'PERAWAT') => Promise<void>;
-  register: (data: any) => Promise<void>;
+  register: (data: RegisterRequest) => Promise<void>;
   logout: () => void;
   isAuthenticated: boolean;
 }
@@ -21,7 +21,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  // Initialize auth state
   useEffect(() => {
     const initAuth = async () => {
       try {
@@ -29,12 +28,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const token = authService.getToken();
 
         if (storedUser && token) {
-          // Verify token by fetching current user
           const currentUser = await authService.getCurrentUser();
           setUser(currentUser);
         }
       } catch (error) {
-        // Token invalid or expired
         authService.logout();
       } finally {
         setLoading(false);
@@ -49,9 +46,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const response = await authService.login({ username, password, role });
       setUser(response.data.user);
       
-      // Redirect based on role
       if (role === 'DOKTER') {
-        router.push('/dashboard/dokter/utama');
+        router.push('/dashboard/dokter/main');
       } else {
         router.push('/dashboard/perawat/main');
       }
@@ -60,7 +56,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const register = async (data: any) => {
+  const register = async (data: RegisterRequest) => {
     try {
       const response = await authService.register(data);
       setUser(response.data.user);

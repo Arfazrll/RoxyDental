@@ -22,7 +22,6 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // Redirect if already authenticated
   useEffect(() => {
     if (!authLoading && isAuthenticated) {
       router.push('/dashboard/perawat/main');
@@ -98,7 +97,6 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-screen w-full flex flex-col lg:flex-row">
-      {/* LEFT SIDE - Hero Section */}
       <div
         className="hidden lg:flex relative flex-col justify-center items-center lg:w-2/5 overflow-hidden"
         style={{
@@ -129,11 +127,9 @@ export default function RegisterPage() {
         </div>
       </div>
 
-      {/* RIGHT SIDE - Register Form */}
       <div className="flex flex-col w-full lg:w-3/5 bg-white min-h-screen overflow-y-auto">
         <div className="flex flex-col justify-center items-center flex-1 px-6 sm:px-8 md:px-12 py-8 sm:py-10">
           <div className="w-full max-w-2xl">
-            {/* Mobile Header */}
             <div className="lg:hidden mb-8 -mx-6 sm:-mx-8 md:-mx-12 -mt-8 sm:-mt-10 px-6 sm:px-8 md:px-12 py-8 rounded-b-3xl"
               style={{
                 background: "linear-gradient(135deg, #FFDDE6 0%, #FFB4C8 100%)",
@@ -147,7 +143,6 @@ export default function RegisterPage() {
               </h2>
             </div>
 
-            {/* Logo */}
             <div className="flex flex-col items-center mb-8">
               <div
                 className="rounded-full flex items-center justify-center shadow-lg mb-4"
@@ -170,7 +165,6 @@ export default function RegisterPage() {
               </p>
             </div>
 
-            {/* Error Message */}
             {error && (
               <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl text-sm">
                 {error}
@@ -179,7 +173,6 @@ export default function RegisterPage() {
 
             <form onSubmit={handleSubmit}>
               <div className="grid md:grid-cols-2 gap-4">
-                {/* Username */}
                 <div>
                   <label className="block font-semibold text-sm text-gray-900 mb-2">
                     Username <span className="text-red-500">*</span>
@@ -195,7 +188,6 @@ export default function RegisterPage() {
                   />
                 </div>
 
-                {/* Email */}
                 <div>
                   <label className="block font-semibold text-sm text-gray-900 mb-2">
                     Email <span className="text-red-500">*</span>
@@ -211,7 +203,6 @@ export default function RegisterPage() {
                   />
                 </div>
 
-                {/* Full Name */}
                 <div className="md:col-span-2">
                   <label className="block font-semibold text-sm text-gray-900 mb-2">
                     Nama Lengkap <span className="text-red-500">*</span>
@@ -227,7 +218,6 @@ export default function RegisterPage() {
                   />
                 </div>
 
-                {/* Phone */}
                 <div>
                   <label className="block font-semibold text-sm text-gray-900 mb-2">
                     No. Telepon <span className="text-red-500">*</span>
@@ -243,7 +233,6 @@ export default function RegisterPage() {
                   />
                 </div>
 
-                {/* Specialization (Optional) */}
                 <div>
                   <label className="block font-semibold text-sm text-gray-900 mb-2">
                     Spesialisasi (Opsional)
@@ -259,7 +248,6 @@ export default function RegisterPage() {
                   />
                 </div>
 
-                {/* Password */}
                 <div>
                   <label className="block font-semibold text-sm text-gray-900 mb-2">
                     Password <span className="text-red-500">*</span>
@@ -284,7 +272,6 @@ export default function RegisterPage() {
                   </div>
                 </div>
 
-                {/* Confirm Password */}
                 <div>
                   <label className="block font-semibold text-sm text-gray-900 mb-2">
                     Konfirmasi Password <span className="text-red-500">*</span>
@@ -329,7 +316,6 @@ export default function RegisterPage() {
               </button>
             </form>
 
-            {/* Links */}
             <div className="mt-6 space-y-3 text-center">
               <p className="text-gray-600 text-sm">
                 Sudah punya akun?{" "}
@@ -352,7 +338,6 @@ export default function RegisterPage() {
               </button>
             </div>
 
-            {/* Footer */}
             <p className="text-gray-400 text-xs text-center mt-8">
               © 2025 POLADC — All rights reserved
             </p>
