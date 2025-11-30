@@ -1,57 +1,65 @@
-import api from '@/lib/api';
-import { LoginRequest, RegisterRequest, AuthResponse, User } from '@/types/auth';
+import apiClient from './api.client';
+
+export interface LoginData {
+  username: string;
+  password: string;
+  role: 'DOKTER' | 'PERAWAT';
+}
+
+export interface RegisterData {
+  username: string;
+  email: string;
+  password: string;
+  fullName: string;
+  phone: string;
+  specialization?: string;
+}
+
+export interface AuthResponse {
+  success: boolean;
+  message: string;
+  data: {
+    user: {
+      id: string;
+      username: string;
+      email: string;
+      fullName: string;
+      role: string;
+      phone: string;
+      specialization?: string;
+      isActive: boolean;
+    };
+    token: string;
+  };
+}
 
 export const authService = {
-  async login(credentials: LoginRequest): Promise<AuthResponse> {
-    const response = await api.post<AuthResponse>('/auth/login', credentials);
-    
-    if (response.data.success) {
+  async login(data: LoginData): Promise<AuthResponse> {
+    const response = await apiClient.post('/auth/login', data);
+    if (response.data.success && response.data.data.token) {
       localStorage.setItem('token', response.data.data.token);
       localStorage.setItem('user', JSON.stringify(response.data.data.user));
     }
-    
     return response.data;
   },
 
-  async register(data: RegisterRequest): Promise<AuthResponse> {
-    const response = await api.post<AuthResponse>('/auth/register', data);
-    
-    if (response.data.success) {
+  async register(data: RegisterData): Promise<AuthResponse> {
+    const response = await apiClient.post('/auth/register', data);
+    if (response.data.success && response.data.data.token) {
       localStorage.setItem('token', response.data.data.token);
       localStorage.setItem('user', JSON.stringify(response.data.data.user));
     }
-    
     return response.data;
   },
 
-  async forgotPassword(email: string): Promise<void> {
-    await api.post('/auth/forgot-password', { email });
-  },
-
-  async resetPassword(email: string, token: string, newPassword: string): Promise<void> {
-    await api.post('/auth/reset-password', { email, token, newPassword });
-  },
-
-  async getCurrentUser(): Promise<User> {
-    const response = await api.get<AuthResponse>('/auth/me');
-    return response.data.data.user;
-  },
-
-  logout(): void {
+  async logout(): Promise<void> {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    window.location.href = '/login';
   },
 
-  getStoredUser(): User | null {
+  getCurrentUser() {
     const userStr = localStorage.getItem('user');
-    if (!userStr) return null;
-    
-    try {
-      return JSON.parse(userStr);
-    } catch {
-      return null;
-    }
+    return userStr ? JSON.parse(userStr) : null;
   },
 
   getToken(): string | null {

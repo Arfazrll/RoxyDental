@@ -1,10 +1,10 @@
 export interface UserProfile {
   id: string;
   username: string;
-  email: string;
   fullName: string;
-  role: string;
+  email: string;
   phone: string;
+  role: string;
   specialization?: string;
   education?: string;
   experience?: string;
@@ -16,6 +16,13 @@ export interface UserProfile {
   createdAt: string;
 }
 
+export interface ScheduleItem {
+  day: string;
+  start: string;
+  end: string;
+  location: string;
+}
+
 export interface DashboardData {
   totalVisits: number;
   todayVisits: number;
@@ -23,17 +30,16 @@ export interface DashboardData {
   profile: UserProfile;
   schedules: ScheduleItem[];
   practiceStatus: 'ACTIVE' | 'INACTIVE' | 'EXPIRED';
-  sipRemaining?: {
+  sipRemaining: {
     percentage: number;
     years: number;
     months: number;
     days: number;
-  };
+  } | null;
 }
 
-export interface ScheduleItem {
-  day: string;
-  start: string;
-  end: string;
-  location: string;
+export interface ApiResponse<T> {
+  success: boolean;
+  message: string;
+  data: T;
 }

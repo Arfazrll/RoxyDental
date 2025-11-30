@@ -1,20 +1,20 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { dashboardService } from "@/services/dashboard.service";
-import { DashboardData } from "@/types/user";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { GraduationCap, Briefcase, Award, MapPin, FileText, BarChart3, TrendingUp } from "lucide-react";
-import DoctorNavbar from "@/components/ui/navbardr";
+import { useState, useEffect } from 'react';
+import { dashboardService } from '@/services/dashboard.service';
+import { DashboardData } from '@/types/user';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { GraduationCap, Briefcase, Award, MapPin, FileText, BarChart3, TrendingUp } from 'lucide-react';
+import DoctorNavbar from '@/components/ui/navbardr';
 import {
   User,
   Calendar,
   Users,
   Activity,
   Clock,
-} from "lucide-react";
+} from 'lucide-react';
 
 export default function DoctorDashboard() {
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
@@ -30,7 +30,7 @@ export default function DoctorDashboard() {
     try {
       setLoading(true);
       const response = await dashboardService.getDoctorSummary();
-      if (response.success) {
+      if (response.success && response.data) {
         setDashboardData(response.data);
       }
     } catch (error) {

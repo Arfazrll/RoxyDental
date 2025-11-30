@@ -1,20 +1,14 @@
-import api from '@/lib/api';
-import { UserProfile } from '@/types/user';
-
-interface ApiResponse<T> {
-  success: boolean;
-  message: string;
-  data: T;
-}
+import apiClient from './api.client';
+import { UserProfile, ApiResponse } from '@/types/user';
 
 export const userService = {
   async getProfile(): Promise<ApiResponse<UserProfile>> {
-    const response = await api.get<ApiResponse<UserProfile>>('/users/profile');
+    const response = await apiClient.get('/users/profile');
     return response.data;
   },
 
   async updateProfile(data: Partial<UserProfile>): Promise<ApiResponse<UserProfile>> {
-    const response = await api.put<ApiResponse<UserProfile>>('/users/profile', data);
+    const response = await apiClient.put('/users/profile', data);
     return response.data;
   }
 };
