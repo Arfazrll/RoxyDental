@@ -41,7 +41,7 @@ export default function TambahAntrianPage() {
     showToast("Berhasil ditambahkan!");
 
     setTimeout(() => {
-      router.push("/dashboard/perawat/pasien/antrian");
+      router.push("/dashboard/perawat/pasienpr/antrian");
     }, 1500);
   };
 
