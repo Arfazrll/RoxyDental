@@ -2,7 +2,7 @@
   "name": "roxydental-be",
   "version": "1.0.0",
   "scripts": {
-    "dev": "nodemon src/index.ts",
+    "dev": "nodemon",
     "build": "tsc",
     "start": "node dist/index.js",
     "prisma:generate": "prisma generate",

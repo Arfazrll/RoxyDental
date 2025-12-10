@@ -264,9 +264,9 @@ enum ScheduleType {
 }
 
 enum LeaveType {
-  SICK
   ANNUAL
-  EMERGENCY
+  SICK
+  SPECIAL
   UNPAID
 }
 

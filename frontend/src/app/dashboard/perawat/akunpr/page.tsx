@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import DoctorNavbar from "@/components/ui/navbarpr";
+import AuthGuard from "@/components/AuthGuard";
 import {
   User, CreditCard, Phone, Mail, MapPin, Calendar, FileText, ArrowRight, BadgeCheck, Loader2
 } from "lucide-react";
@@ -34,18 +35,7 @@ function InfoItem({ label, value, icon }: { label: string; value: string; icon: 
   );
 }
 
-function ScheduleItem({ day, time }: { day: string; time: string }) {
-  return (
-    <div className="flex items-center justify-between py-2 border-b border-yellow-100 last:border-0">
-      <div className="flex items-center gap-3">
-        <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-        <span className="text-yellow-900 font-medium">{day}: {time}</span>
-      </div>
-    </div>
-  );
-}
-
-export default function MedicalStaffDashboard() {
+function MedicalStaffDashboardContent() {
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<NurseProfile | null>(null);
   const [completion, setCompletion] = useState<ProfileCompletion | null>(null);
@@ -286,5 +276,13 @@ export default function MedicalStaffDashboard() {
         </footer>
       </main>
     </div>
+  );
+}
+
+export default function MedicalStaffDashboard() {
+  return (
+    <AuthGuard requiredRole="PERAWAT">
+      <MedicalStaffDashboardContent />
+    </AuthGuard>
   );
 }

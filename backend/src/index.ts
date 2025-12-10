@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import routes from './routes';
 import { errorHandler } from './middlewares/error.middleware';
 import { emailService } from './utils/email.util';
+import calendarRoutes from './routes/calendar.routes';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -19,6 +20,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use('/api', routes);
+app.use('/api/calendar', calendarRoutes);
 
 app.get('/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });

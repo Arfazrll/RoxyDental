@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import DoctorNavbar from "@/components/ui/navbarpr";
+import AuthGuard from "@/components/AuthGuard";
 import { 
   User, MapPin, Calendar, Users, Clock, FileText, GraduationCap, 
   Briefcase, Award, Loader2 
@@ -11,7 +12,7 @@ import {
 import { dashboardNurseService, NurseDashboardData } from '@/services/dashboard-nurse.service';
 import { nurseProfileService, ProfileCompletion, ShiftStatus } from '@/services/nurse-profile.service';
 
-export default function DoctorDashboard() {
+function DashboardContent() {
   const [dashboardData, setDashboardData] = useState<NurseDashboardData | null>(null);
   const [completion, setCompletion] = useState<ProfileCompletion | null>(null);
   const [shiftStatus, setShiftStatus] = useState<ShiftStatus | null>(null);
@@ -114,18 +115,7 @@ export default function DoctorDashboard() {
 
             <div className="flex flex-col items-end gap-2">
               {completion && (
-                <div className="bg-white px-4 py-2 rounded-lg shadow-sm">
-                  <p className="text-xs text-gray-500">Kelengkapan Profil</p>
-                  <div className="flex items-center gap-2 mt-1">
-                    <div className="w-24 h-2 bg-gray-200 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-pink-500 transition-all"
-                        style={{ width: `${completion.percentage}%` }}
-                      />
-                    </div>
-                    <span className="text-sm font-bold text-pink-700">{completion.percentage}%</span>
-                  </div>
-                </div>
+                <div className="flex items-center gap-2 mt-1"></div>
               )}
 
               {shiftStatus && shiftStatus.status === 'On Duty' && (
@@ -232,42 +222,38 @@ export default function DoctorDashboard() {
 
             <Card className="shadow-md border-none bg-white h-full flex-1">
               <CardContent className="px-6 py-6 h-full flex flex-col space-y-8">
+                {/* Pendidikan - Data dari Database */}
                 <div>
                   <h4 className="font-semibold text-gray-900 mb-2 flex items-center gap-2 mt-4">
                     <GraduationCap className="w-5 h-5 text-pink-600" />
                     Pendidikan
                   </h4>
-                  <p className="text-sm text-gray-800">{profile.education || 'D3 Keperawatan'}</p>
-                  <p className="text-xs text-gray-500">{profile.specialization || 'Perawat Klinik'}</p>
+                  <p className="text-sm text-gray-800">{profile.education || '-'}</p>
                 </div>
 
+                {/* Pengalaman - Data dari Database */}
                 <div>
                   <h4 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
                     <Briefcase className="w-5 h-5 text-pink-600" />
                     Pengalaman
                   </h4>
-                  <p className="text-sm text-gray-800">{profile.experience || '5+ tahun praktik'}</p>
-                  <p className="text-xs text-gray-500">Spesialis Perawatan Gigi</p>
+                  <p className="text-sm text-gray-800">{profile.experience || '-'}</p>
                 </div>
 
+                {/* Spesialisasi - Data dari Database (1 badge saja) */}
                 <div>
                   <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
                     <Award className="w-5 h-5 text-pink-600" />
                     Spesialisasi
                   </h4>
                   <div className="flex flex-wrap gap-3">
-                    <Badge className="bg-yellow-50 text-yellow-700 border border-yellow-200 rounded-full px-4 py-1 shadow-sm font-medium">
-                      Kedokteran Gigi Umum
-                    </Badge>
-                    <Badge className="bg-green-50 text-green-700 border border-green-200 rounded-full px-4 py-1 shadow-sm font-medium">
-                      Perawatan Preventif
-                    </Badge>
-                    <Badge className="bg-blue-50 text-blue-700 border border-blue-200 rounded-full px-4 py-1 shadow-sm font-medium">
-                      Asisten Tindakan
-                    </Badge>
-                    <Badge className="bg-purple-50 text-purple-700 border border-purple-200 rounded-full px-4 py-1 shadow-sm font-medium">
-                      Edukasi Kesehatan
-                    </Badge>
+                    {profile.specialization ? (
+                      <Badge className="bg-yellow-50 text-yellow-700 border border-yellow-200 rounded-full px-4 py-1 shadow-sm font-medium">
+                        {profile.specialization}
+                      </Badge>
+                    ) : (
+                      <p className="text-xs text-gray-500">Belum ada spesialisasi</p>
+                    )}
                   </div>
                 </div>
               </CardContent>
@@ -276,5 +262,13 @@ export default function DoctorDashboard() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function DoctorDashboard() {
+  return (
+    <AuthGuard requiredRole="PERAWAT">
+      <DashboardContent />
+    </AuthGuard>
   );
 }

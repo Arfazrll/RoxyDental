@@ -14,10 +14,10 @@ import {
 } from "@/components/ui/dialog";
 import DoctorNavbar from "@/components/ui/navbarpr";
 import SettingsSidebar from "@/components/ui/SettingsSidebarpr";
+import AuthGuard from "@/components/AuthGuard";
 import { nurseProfileService, NurseProfile, UpdateProfileData } from "@/services/nurse-profile.service";
 
-
-export default function SettingsAccountPage() {
+function SettingsAccountPageContent() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [profile, setProfile] = useState<NurseProfile | null>(null);
@@ -413,5 +413,13 @@ export default function SettingsAccountPage() {
         </DialogContent>
       </Dialog>
     </div>
+  );
+}
+
+export default function SettingsAccountPage() {
+  return (
+    <AuthGuard requiredRole="PERAWAT">
+      <SettingsAccountPageContent />
+    </AuthGuard>
   );
 }
