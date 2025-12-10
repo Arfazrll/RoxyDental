@@ -6,10 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ChevronLeft, ChevronRight, Calendar, Loader2, AlertCircle } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { ChevronLeft, ChevronRight, Calendar, Loader2, AlertCircle, CheckCircle, XCircle } from "lucide-react";
 import DoctorNavbar from "@/components/ui/navbardr";
 import AuthGuard from "@/components/AuthGuard";
-import { calendarService, LeaveRequest, CalendarEvent } from "@/services/calendar.service";
+import { calendarService, LeaveRequest, LeaveResponse, CalendarEvent } from "@/services/calendar.service";
 
 interface DisplayEvent {
   id: string;
@@ -25,8 +26,13 @@ function CalendarContent() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedMonth, setSelectedMonth] = useState(new Date());
   const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [approveDialogOpen, setApproveDialogOpen] = useState(false);
+  const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
+  const [selectedLeave, setSelectedLeave] = useState<LeaveResponse | null>(null);
+  const [rejectionReason, setRejectionReason] = useState("");
   const [formData, setFormData] = useState({ reason: "", startDate: "", endDate: "" });
   const [events, setEvents] = useState<DisplayEvent[]>([]);
+  const [pendingLeaves, setPendingLeaves] = useState<LeaveResponse[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -64,6 +70,7 @@ function CalendarContent() {
 
   useEffect(() => {
     fetchEvents();
+    fetchPendingLeaves();
   }, [weekDays]);
 
   const fetchEvents = async () => {
@@ -74,9 +81,9 @@ function CalendarContent() {
       const startDate = formatDate(weekDays[0]);
       const endDate = formatDate(weekDays[6]);
 
-      const myEventsRes = await calendarService.getMyEvents(startDate, endDate);
+      const eventsRes = await calendarService.getEvents(startDate, endDate);
 
-      const mappedEvents: DisplayEvent[] = myEventsRes.data.map((event: CalendarEvent) => ({
+      const mappedEvents: DisplayEvent[] = eventsRes.data.map((event: CalendarEvent) => ({
         id: event.id,
         doctor: event.patientName || event.userName || event.title,
         reason: event.description,
@@ -92,6 +99,15 @@ function CalendarContent() {
       console.error('Error fetching events:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchPendingLeaves = async () => {
+    try {
+      const response = await calendarService.getPendingLeaves();
+      setPendingLeaves(response.data);
+    } catch (err: any) {
+      console.error('Error fetching pending leaves:', err);
     }
   };
 
@@ -143,6 +159,54 @@ function CalendarContent() {
     } catch (err: any) {
       setError(err.response?.data?.message || 'Gagal menyimpan pengajuan cuti');
       console.error('Error submitting leave:', err);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleApproveLeave = async () => {
+    if (!selectedLeave) return;
+
+    try {
+      setSubmitting(true);
+      setError(null);
+
+      await calendarService.approveLeave(selectedLeave.id);
+      
+      setApproveDialogOpen(false);
+      setSelectedLeave(null);
+      
+      await fetchEvents();
+      await fetchPendingLeaves();
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Gagal menyetujui pengajuan cuti');
+      console.error('Error approving leave:', err);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleRejectLeave = async () => {
+    if (!selectedLeave || !rejectionReason) {
+      setError('Alasan penolakan harus diisi');
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      setError(null);
+
+      await calendarService.rejectLeave(selectedLeave.id, rejectionReason);
+      
+      setRejectDialogOpen(false);
+      setSelectedLeave(null);
+      setRejectionReason("");
+      
+      await fetchEvents();
+      await fetchPendingLeaves();
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Gagal menolak pengajuan cuti');
+      console.error('Error rejecting leave:', err);
     } finally {
       setSubmitting(false);
     }
@@ -272,6 +336,46 @@ function CalendarContent() {
             </CardContent>
           </Card>
 
+          {pendingLeaves.length > 0 && (
+            <Card className="shadow-md rounded-lg border-2 border-yellow-300">
+              <CardContent className="p-4 max-h-[200px] overflow-auto space-y-2">
+                <h2 className="font-semibold text-pink-900 mt-6 flex items-center gap-2 text-lg">
+                  <span className="w-1.5 h-6 bg-yellow-500 rounded"></span> Pengajuan Cuti Menunggu
+                </h2>
+
+                {pendingLeaves.map(leave => (
+                  <div key={leave.id} className="bg-yellow-50 border border-yellow-300 text-pink-900 p-3 rounded-lg shadow">
+                    <div className="font-semibold text-sm">{leave.requester.fullName}</div>
+                    <div className="text-[10px] mt-1">{leave.reason}</div>
+                    <div className="text-[10px]">{leave.startDate} - {leave.endDate}</div>
+                    <div className="flex gap-2 mt-2">
+                      <Button 
+                        size="sm" 
+                        className="bg-green-600 hover:bg-green-700 text-white h-7 text-xs flex-1" 
+                        onClick={() => {
+                          setSelectedLeave(leave);
+                          setApproveDialogOpen(true);
+                        }}
+                      >
+                        <CheckCircle className="w-3 h-3 mr-1" /> Setuju
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        className="bg-red-600 hover:bg-red-700 text-white h-7 text-xs flex-1" 
+                        onClick={() => {
+                          setSelectedLeave(leave);
+                          setRejectDialogOpen(true);
+                        }}
+                      >
+                        <XCircle className="w-3 h-3 mr-1" /> Tolak
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          )}
+
           <Card className="shadow-md rounded-lg">
             <CardContent className="p-4 max-h-[300px] overflow-auto space-y-2">
               <h2 className="font-semibold text-pink-900 mt-6 flex items-center gap-2 text-lg">
@@ -337,6 +441,94 @@ function CalendarContent() {
             </div>
           </div>
 
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={approveDialogOpen} onOpenChange={setApproveDialogOpen}>
+        <DialogContent className="max-w-md bg-green-50 rounded-lg shadow-lg p-6 space-y-4">
+          <DialogHeader>
+            <DialogTitle className="text-green-900 font-bold text-lg flex items-center gap-2">
+              <CheckCircle className="w-5 h-5 text-green-600" /> Setujui Pengajuan Cuti
+            </DialogTitle>
+          </DialogHeader>
+
+          {selectedLeave && (
+            <div className="space-y-3">
+              <div className="bg-white p-3 rounded-lg border border-green-200">
+                <div className="text-sm"><strong>Perawat:</strong> {selectedLeave.requester.fullName}</div>
+                <div className="text-sm mt-1"><strong>Alasan:</strong> {selectedLeave.reason}</div>
+                <div className="text-sm mt-1"><strong>Periode:</strong> {selectedLeave.startDate} - {selectedLeave.endDate}</div>
+              </div>
+
+              <div className="text-sm text-green-900">
+                Apakah Anda yakin ingin menyetujui pengajuan cuti ini?
+              </div>
+
+              {error && (
+                <div className="text-red-600 text-sm flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4" />
+                  {error}
+                </div>
+              )}
+
+              <div className="flex justify-end gap-3 pt-4">
+                <Button variant="outline" className="border-green-300 text-green-700 hover:bg-green-50" onClick={() => setApproveDialogOpen(false)} disabled={submitting}>
+                  Batal
+                </Button>
+
+                <Button className="bg-green-600 text-white hover:bg-green-700 shadow" onClick={handleApproveLeave} disabled={submitting}>
+                  {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Setujui'}
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
+        <DialogContent className="max-w-md bg-red-50 rounded-lg shadow-lg p-6 space-y-4">
+          <DialogHeader>
+            <DialogTitle className="text-red-900 font-bold text-lg flex items-center gap-2">
+              <XCircle className="w-5 h-5 text-red-600" /> Tolak Pengajuan Cuti
+            </DialogTitle>
+          </DialogHeader>
+
+          {selectedLeave && (
+            <div className="space-y-3">
+              <div className="bg-white p-3 rounded-lg border border-red-200">
+                <div className="text-sm"><strong>Perawat:</strong> {selectedLeave.requester.fullName}</div>
+                <div className="text-sm mt-1"><strong>Alasan:</strong> {selectedLeave.reason}</div>
+                <div className="text-sm mt-1"><strong>Periode:</strong> {selectedLeave.startDate} - {selectedLeave.endDate}</div>
+              </div>
+
+              <div>
+                <Label className="text-red-900">Alasan Penolakan</Label>
+                <Textarea 
+                  placeholder="Masukkan alasan penolakan..." 
+                  value={rejectionReason} 
+                  onChange={e => setRejectionReason(e.target.value)} 
+                  className="border-red-300 focus:border-red-500 min-h-[100px]"
+                />
+              </div>
+
+              {error && (
+                <div className="text-red-600 text-sm flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4" />
+                  {error}
+                </div>
+              )}
+
+              <div className="flex justify-end gap-3 pt-4">
+                <Button variant="outline" className="border-red-300 text-red-700 hover:bg-red-50" onClick={() => setRejectDialogOpen(false)} disabled={submitting}>
+                  Batal
+                </Button>
+
+                <Button className="bg-red-600 text-white hover:bg-red-700 shadow" onClick={handleRejectLeave} disabled={submitting}>
+                  {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Tolak'}
+                </Button>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
 

@@ -16,11 +16,17 @@ export interface LeaveResponse {
   leaveType: string;
   status: string;
   createdAt: string;
+  rejectionReason?: string;
   requester: {
     id: string;
     fullName: string;
     email: string;
     role: string;
+  };
+  approver?: {
+    id: string;
+    fullName: string;
+    email: string;
   };
 }
 
@@ -50,6 +56,11 @@ class CalendarService {
     return response.data;
   }
 
+  async getPendingLeaves(): Promise<{ data: LeaveResponse[] }> {
+    const response = await apiClient.get('/calendar/pending-leaves');
+    return response.data;
+  }
+
   async submitLeaveRequest(data: LeaveRequest): Promise<{ data: LeaveResponse }> {
     const response = await apiClient.post('/calendar/leave', data);
     return response.data;
@@ -62,6 +73,16 @@ class CalendarService {
 
   async deleteLeave(id: string): Promise<void> {
     await apiClient.delete(`/calendar/leave/${id}`);
+  }
+
+  async approveLeave(id: string): Promise<{ data: LeaveResponse }> {
+    const response = await apiClient.post(`/calendar/leave/${id}/approve`);
+    return response.data;
+  }
+
+  async rejectLeave(id: string, rejectionReason: string): Promise<{ data: LeaveResponse }> {
+    const response = await apiClient.post(`/calendar/leave/${id}/reject`, { rejectionReason });
+    return response.data;
   }
 
   async getEvents(startDate: string, endDate: string): Promise<{ data: CalendarEvent[] }> {

@@ -1,5 +1,5 @@
 import { Response } from 'express';
-import { PrismaClient, Prisma } from '../../generated/prisma';
+import { PrismaClient, Prisma, UserRole } from '../../generated/prisma';
 
 const prisma = new PrismaClient();
 
@@ -120,12 +120,48 @@ export const getAllLeaveRequests = async (req: any, res: Response): Promise<void
   }
 };
 
+export const getPendingLeaveRequests = async (req: any, res: Response): Promise<void> => {
+  try {
+    const leaves = await prisma.leaveRequest.findMany({
+      where: { 
+        status: 'PENDING',
+        requester: {
+          role: 'PERAWAT'
+        }
+      },
+      include: {
+        requester: {
+          select: {
+            id: true,
+            fullName: true,
+            email: true,
+            role: true
+          }
+        }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    res.status(200).json({
+      success: true,
+      data: leaves
+    });
+  } catch (error: any) {
+    console.error('Error fetching pending leave requests:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Gagal mengambil data pengajuan cuti'
+    });
+  }
+};
+
 export const createLeaveRequest = async (req: any, res: Response): Promise<void> => {
   try {
     console.log('Create leave request - User:', req.user);
     console.log('Create leave request - Body:', req.body);
 
     const userId = req.user.id;
+    const userRole = req.user.role;
     const { startDate, endDate, reason, leaveType } = req.body;
 
     if (!startDate || !endDate || !reason) {
@@ -155,12 +191,19 @@ export const createLeaveRequest = async (req: any, res: Response): Promise<void>
       return;
     }
 
+    const validLeaveType = leaveType && ['SICK', 'ANNUAL', 'EMERGENCY', 'UNPAID'].includes(leaveType) 
+      ? leaveType 
+      : 'ANNUAL';
+
+    const status = userRole === 'DOKTER' ? 'APPROVED' : 'PENDING';
+
     console.log('Creating leave with data:', {
       userId,
       startDate: start,
       endDate: end,
       reason,
-      leaveType: leaveType || 'ANNUAL'
+      leaveType: validLeaveType,
+      status
     });
 
     const leave = await prisma.leaveRequest.create({
@@ -169,8 +212,10 @@ export const createLeaveRequest = async (req: any, res: Response): Promise<void>
         startDate: start,
         endDate: end,
         reason,
-        leaveType: leaveType || 'ANNUAL',
-        status: 'PENDING'
+        leaveType: validLeaveType,
+        status,
+        approvedBy: userRole === 'DOKTER' ? userId : null,
+        approvedAt: userRole === 'DOKTER' ? new Date() : null
       },
       include: {
         requester: {
@@ -179,6 +224,13 @@ export const createLeaveRequest = async (req: any, res: Response): Promise<void>
             fullName: true,
             email: true,
             role: true
+          }
+        },
+        approver: {
+          select: {
+            id: true,
+            fullName: true,
+            email: true
           }
         }
       }
@@ -189,7 +241,9 @@ export const createLeaveRequest = async (req: any, res: Response): Promise<void>
     res.status(201).json({
       success: true,
       data: leave,
-      message: 'Pengajuan cuti berhasil dibuat'
+      message: userRole === 'DOKTER' 
+        ? 'Pengajuan cuti berhasil dibuat' 
+        : 'Pengajuan cuti berhasil dibuat dan menunggu persetujuan dokter'
     });
   } catch (error: any) {
     console.error('Error creating leave request:', error);
@@ -197,6 +251,178 @@ export const createLeaveRequest = async (req: any, res: Response): Promise<void>
     res.status(500).json({
       success: false,
       message: error.message || 'Gagal membuat pengajuan cuti'
+    });
+  }
+};
+
+export const approveLeaveRequest = async (req: any, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const doctorId = req.user.id;
+
+    if (req.user.role !== 'DOKTER') {
+      res.status(403).json({
+        success: false,
+        message: 'Hanya dokter yang dapat menyetujui pengajuan cuti'
+      });
+      return;
+    }
+
+    const existingLeave = await prisma.leaveRequest.findUnique({
+      where: { id },
+      include: {
+        requester: {
+          select: {
+            fullName: true,
+            role: true
+          }
+        }
+      }
+    });
+
+    if (!existingLeave) {
+      res.status(404).json({
+        success: false,
+        message: 'Pengajuan cuti tidak ditemukan'
+      });
+      return;
+    }
+
+    if (existingLeave.status !== 'PENDING') {
+      res.status(400).json({
+        success: false,
+        message: 'Pengajuan cuti sudah diproses sebelumnya'
+      });
+      return;
+    }
+
+    const leave = await prisma.leaveRequest.update({
+      where: { id },
+      data: {
+        status: 'APPROVED',
+        approvedBy: doctorId,
+        approvedAt: new Date()
+      },
+      include: {
+        requester: {
+          select: {
+            id: true,
+            fullName: true,
+            email: true,
+            role: true
+          }
+        },
+        approver: {
+          select: {
+            id: true,
+            fullName: true,
+            email: true
+          }
+        }
+      }
+    });
+
+    res.status(200).json({
+      success: true,
+      data: leave,
+      message: `Pengajuan cuti ${existingLeave.requester.fullName} berhasil disetujui`
+    });
+  } catch (error: any) {
+    console.error('Error approving leave request:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Gagal menyetujui pengajuan cuti'
+    });
+  }
+};
+
+export const rejectLeaveRequest = async (req: any, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const doctorId = req.user.id;
+    const { rejectionReason } = req.body;
+
+    if (req.user.role !== 'DOKTER') {
+      res.status(403).json({
+        success: false,
+        message: 'Hanya dokter yang dapat menolak pengajuan cuti'
+      });
+      return;
+    }
+
+    if (!rejectionReason) {
+      res.status(400).json({
+        success: false,
+        message: 'Alasan penolakan harus diisi'
+      });
+      return;
+    }
+
+    const existingLeave = await prisma.leaveRequest.findUnique({
+      where: { id },
+      include: {
+        requester: {
+          select: {
+            fullName: true,
+            role: true
+          }
+        }
+      }
+    });
+
+    if (!existingLeave) {
+      res.status(404).json({
+        success: false,
+        message: 'Pengajuan cuti tidak ditemukan'
+      });
+      return;
+    }
+
+    if (existingLeave.status !== 'PENDING') {
+      res.status(400).json({
+        success: false,
+        message: 'Pengajuan cuti sudah diproses sebelumnya'
+      });
+      return;
+    }
+
+    const leave = await prisma.leaveRequest.update({
+      where: { id },
+      data: {
+        status: 'REJECTED',
+        approvedBy: doctorId,
+        approvedAt: new Date(),
+        rejectionReason
+      },
+      include: {
+        requester: {
+          select: {
+            id: true,
+            fullName: true,
+            email: true,
+            role: true
+          }
+        },
+        approver: {
+          select: {
+            id: true,
+            fullName: true,
+            email: true
+          }
+        }
+      }
+    });
+
+    res.status(200).json({
+      success: true,
+      data: leave,
+      message: `Pengajuan cuti ${existingLeave.requester.fullName} berhasil ditolak`
+    });
+  } catch (error: any) {
+    console.error('Error rejecting leave request:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Gagal menolak pengajuan cuti'
     });
   }
 };
@@ -240,7 +466,9 @@ export const updateLeaveRequest = async (req: any, res: Response): Promise<void>
     if (startDate) updateData.startDate = new Date(startDate);
     if (endDate) updateData.endDate = new Date(endDate);
     if (reason) updateData.reason = reason;
-    if (leaveType) updateData.leaveType = leaveType;
+    if (leaveType && ['SICK', 'ANNUAL', 'EMERGENCY', 'UNPAID'].includes(leaveType)) {
+      updateData.leaveType = leaveType;
+    }
 
     const leave = await prisma.leaveRequest.update({
       where: { id },
@@ -436,7 +664,8 @@ export const getMyCalendarEvents = async (req: any, res: Response): Promise<void
         userId,
         AND: [
           { startDate: { lte: new Date(endDate as string) } },
-          { endDate: { gte: new Date(startDate as string) } }
+          { endDate: { gte: new Date(startDate as string) } },
+          { status: 'APPROVED' }
         ]
       },
       include: {

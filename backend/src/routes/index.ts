@@ -11,6 +11,7 @@ import paymentRoutes from './payment.routes';
 import userRoutes from './user.routes';
 import treatmentRoutes from './treatment.routes';
 import nurseProfileRoutes from './nurse-profile.routes';
+import financeRoutes from './finance.routes';
 
 const router = Router();
 
@@ -26,5 +27,6 @@ router.use('/doctor/leaves', leaveRoutes);
 router.use('/doctor/finance/commissions', commissionRoutes);
 router.use('/payments', paymentRoutes);
 router.use('/users', userRoutes);
+router.use('/doctor/finance', financeRoutes);
 
 export default router;

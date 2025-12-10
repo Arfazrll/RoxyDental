@@ -7,10 +7,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
-import { ChevronLeft, ChevronRight, Calendar, Loader2, AlertCircle } from "lucide-react";
+import { ChevronLeft, ChevronRight, Calendar, Loader2, AlertCircle, Clock } from "lucide-react";
 import DoctorNavbar from "@/components/ui/navbarpr";
 import AuthGuard from "@/components/AuthGuard";
-import { calendarService, LeaveRequest, CalendarEvent } from "@/services/calendar.service";
+import { calendarService, LeaveRequest, LeaveResponse, CalendarEvent } from "@/services/calendar.service";
 
 interface DisplayEvent {
   id: string;
@@ -20,15 +20,17 @@ interface DisplayEvent {
   endDate: string;
   color: string;
   type: "Cuti" | "Jadwal" | "Appointment";
+  status?: string;
 }
 
 function CalendarContent() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedMonth, setSelectedMonth] = useState(new Date());
   const [addDialogOpen, setAddDialogOpen] = useState(false);
-  const [formType, setFormType] = useState<"Cuti" | "Jadwal">("Cuti");
+  const [leaveType, setLeaveType] = useState<string>("ANNUAL");
   const [formData, setFormData] = useState({ reason: "", startDate: "", endDate: "" });
   const [events, setEvents] = useState<DisplayEvent[]>([]);
+  const [myLeaves, setMyLeaves] = useState<LeaveResponse[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -66,6 +68,7 @@ function CalendarContent() {
 
   useEffect(() => {
     fetchEvents();
+    fetchMyLeaves();
   }, [weekDays]);
 
   const fetchEvents = async () => {
@@ -85,7 +88,8 @@ function CalendarContent() {
         startDate: event.startDate,
         endDate: event.endDate,
         color: event.color,
-        type: event.type === 'LEAVE' ? 'Cuti' : event.type === 'APPOINTMENT' ? 'Appointment' : 'Jadwal'
+        type: event.type === 'LEAVE' ? 'Cuti' : event.type === 'APPOINTMENT' ? 'Appointment' : 'Jadwal',
+        status: event.status
       }));
 
       setEvents(mappedEvents);
@@ -94,6 +98,15 @@ function CalendarContent() {
       console.error('Error fetching events:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchMyLeaves = async () => {
+    try {
+      const response = await calendarService.getMyLeaves();
+      setMyLeaves(response.data);
+    } catch (err: any) {
+      console.error('Error fetching my leaves:', err);
     }
   };
 
@@ -115,8 +128,8 @@ function CalendarContent() {
     return events.filter(l => dateStr >= l.startDate && dateStr <= l.endDate);
   };
 
-  const hasLeaveOnDate = (dateStr: string, type: "Cuti"|"Jadwal") => {
-    return events.some(l => dateStr >= l.startDate && dateStr <= l.endDate && l.type === type);
+  const hasLeaveOnDate = (dateStr: string) => {
+    return events.some(l => dateStr >= l.startDate && dateStr <= l.endDate);
   };
 
   const handleSaveLeave = async () => {
@@ -133,16 +146,16 @@ function CalendarContent() {
         reason: formData.reason,
         startDate: formData.startDate,
         endDate: formData.endDate,
-        leaveType: formType === 'Cuti' ? 'ANNUAL' : 'SPECIAL'
+        leaveType: leaveType
       };
 
       await calendarService.submitLeaveRequest(leaveData);
       
       setAddDialogOpen(false);
       setFormData({ reason: "", startDate: "", endDate: "" });
-      setFormType("Cuti");
+      setLeaveType("ANNUAL");
       
-      await fetchEvents();
+      await fetchMyLeaves();
     } catch (err: any) {
       setError(err.response?.data?.message || 'Gagal menyimpan pengajuan');
       console.error('Error submitting leave:', err);
@@ -161,6 +174,17 @@ function CalendarContent() {
   useEffect(() => { 
     setWeekDays(getWeekDays(currentDate)); 
   }, [currentDate]);
+
+  const getStatusBadge = (status: string) => {
+    if (status === 'PENDING') {
+      return <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">Menunggu Persetujuan</span>;
+    } else if (status === 'APPROVED') {
+      return <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">Disetujui</span>;
+    } else if (status === 'REJECTED') {
+      return <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded">Ditolak</span>;
+    }
+    return null;
+  };
 
   return (
     <div className="min-h-screen bg-[#FFF5F7] text-pink-900">
@@ -183,7 +207,7 @@ function CalendarContent() {
                   </Button>
                 </div>
                 <Button size="sm" variant="outline" className="gap-2 border-pink-300 text-pink-700 hover:bg-pink-50" onClick={() => setAddDialogOpen(true)}>
-                  <Calendar className="w-4 h-4" /> Pengajuan
+                  <Calendar className="w-4 h-4" /> Ajukan Cuti
                 </Button>
               </div>
 
@@ -257,8 +281,7 @@ function CalendarContent() {
                       onClick={() => { if(date) handleMiniCalendarClick(new Date(dateStr)); }}
                     >
                       {date || ""}
-                      {date && hasLeaveOnDate(dateStr, "Cuti") && <div className="w-2 h-2 bg-pink-500 rounded-full absolute top-1 right-1"></div>}
-                      {date && hasLeaveOnDate(dateStr, "Jadwal") && <div className="w-2 h-2 bg-green-500 rounded-full absolute top-1 left-1"></div>}
+                      {date && hasLeaveOnDate(dateStr) && <div className="w-2 h-2 bg-pink-500 rounded-full absolute top-1 right-1"></div>}
                     </div>
                   );
                 })}
@@ -267,9 +290,34 @@ function CalendarContent() {
           </Card>
 
           <Card className="shadow-md rounded-lg">
-            <CardContent className="p-4 max-h-[300px] overflow-auto scrollbar-thin scrollbar-thumb-pink-400 scrollbar-track-pink-100 space-y-2">
+            <CardContent className="p-4 max-h-[200px] overflow-auto space-y-2">
               <h2 className="font-semibold text-pink-900 mt-6 flex items-center gap-2 text-lg">
-                <span className="w-1.5 h-6 bg-pink-500 rounded"></span> Jadwal
+                <span className="w-1.5 h-6 bg-pink-500 rounded"></span> Pengajuan Cuti Saya
+              </h2>
+              {myLeaves.length === 0 && <div className="text-xs text-pink-700">Belum ada pengajuan cuti</div>}
+              {myLeaves.map(leave => (
+                <div key={leave.id} className={`${leave.status === 'PENDING' ? 'bg-yellow-50 border-yellow-300' : leave.status === 'APPROVED' ? 'bg-green-50 border-green-300' : 'bg-red-50 border-red-300'} border text-pink-900 p-2 rounded-lg shadow`}>
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1">
+                      <div className="font-semibold text-sm">{leave.reason}</div>
+                      <div className="text-[10px] mt-0.5">Dari: {leave.startDate} Sampai: {leave.endDate}</div>
+                    </div>
+                    {getStatusBadge(leave.status)}
+                  </div>
+                  {leave.status === 'REJECTED' && leave.rejectionReason && (
+                    <div className="text-[10px] mt-2 text-red-700 bg-red-100 p-2 rounded">
+                      <strong>Alasan Penolakan:</strong> {leave.rejectionReason}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+
+          <Card className="shadow-md rounded-lg">
+            <CardContent className="p-4 max-h-[300px] overflow-auto space-y-2">
+              <h2 className="font-semibold text-pink-900 mt-6 flex items-center gap-2 text-lg">
+                <span className="w-1.5 h-6 bg-blue-500 rounded"></span> Jadwal Klinik
               </h2>
               {events.length === 0 && <div className="text-xs text-pink-700">Belum ada jadwal</div>}
               {events.map(l => (
@@ -288,25 +336,27 @@ function CalendarContent() {
         <DialogContent className="max-w-md bg-pink-50 rounded-lg shadow-lg p-6 space-y-4">
           <DialogHeader>
             <DialogTitle className="text-pink-900 font-bold text-lg flex items-center gap-2">
-              <Calendar className="w-5 h-5 text-pink-500" /> Ajukan {formType === "Cuti" ? "Cuti" : "Jadwal"}
+              <Calendar className="w-5 h-5 text-pink-500" /> Ajukan Cuti
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label className="text-pink-900">Jenis Pengajuan</Label>
-              <Select value={formType} onValueChange={(v: "Cuti"|"Jadwal") => setFormType(v)}>
+              <Label className="text-pink-900">Jenis Cuti</Label>
+              <Select value={leaveType} onValueChange={setLeaveType}>
                 <SelectTrigger className="border-pink-300 focus:border-pink-500">
                   <SelectValue/>
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Cuti">Cuti</SelectItem>
-                  <SelectItem value="Jadwal">Jadwal Khusus</SelectItem>
+                  <SelectItem value="ANNUAL">Cuti Tahunan</SelectItem>
+                  <SelectItem value="SICK">Cuti Sakit</SelectItem>
+                  <SelectItem value="EMERGENCY">Cuti Darurat</SelectItem>
+                  <SelectItem value="UNPAID">Cuti Tanpa Gaji</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div>
-              <Label className="text-pink-900">{formType === "Cuti" ? "Alasan Cuti" : "Keterangan Jadwal"}</Label>
-              <Input placeholder={formType === "Cuti" ? "Masukkan alasan cuti" : "Masukkan keterangan jadwal"} value={formData.reason} onChange={e=>setFormData({...formData, reason:e.target.value})} className="border-pink-300 focus:border-pink-500"/>
+              <Label className="text-pink-900">Alasan Cuti</Label>
+              <Input placeholder="Masukkan alasan cuti" value={formData.reason} onChange={e=>setFormData({...formData, reason:e.target.value})} className="border-pink-300 focus:border-pink-500"/>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -316,6 +366,12 @@ function CalendarContent() {
               <div>
                 <Label className="text-pink-900">Tanggal Selesai</Label>
                 <Input type="date" value={formData.endDate} onChange={e=>setFormData({...formData,endDate:e.target.value})}/>
+              </div>
+            </div>
+            <div className="bg-yellow-50 border border-yellow-300 p-3 rounded-lg flex items-start gap-2">
+              <Clock className="w-4 h-4 text-yellow-600 mt-0.5 shrink-0" />
+              <div className="text-xs text-yellow-800">
+                Pengajuan cuti Anda akan menunggu persetujuan dari dokter sebelum ditampilkan di kalender.
               </div>
             </div>
             {error && (
@@ -329,7 +385,7 @@ function CalendarContent() {
                 Batal
               </Button>
               <Button className="bg-pink-600 hover:bg-pink-700 text-white shadow" onClick={handleSaveLeave} disabled={submitting}>
-                {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Simpan'}
+                {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Ajukan'}
               </Button>
             </div>
           </div>
