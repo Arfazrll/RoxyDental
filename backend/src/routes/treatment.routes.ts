@@ -2,9 +2,9 @@ import { Router } from 'express';
 import { TreatmentController } from '../controllers/treatment.controller';
 import { authMiddleware } from '../middlewares/auth.middleware';
 import { roleMiddleware } from '../middlewares/role.middleware';
-import { uploadMiddleware } from '../middlewares/upload.middleware';
+import { uploadMiddleware } from '../middlewares/Upload.middleware';
 import { validate } from '../middlewares/validation.middleware';
-import { updateTreatmentSchema } from '../validators/treatment.validator';
+import { updateTreatmentSchema } from '../validators/Treatment.validator';
 import { UserRole } from '../../generated/prisma';
 
 const router = Router();
