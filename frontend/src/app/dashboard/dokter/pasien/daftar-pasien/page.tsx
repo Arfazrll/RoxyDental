@@ -36,14 +36,32 @@ export default function PatientPage() {
     setLoading(true);
     try {
       const response = await visitService.getCompletedVisits(currentPage, 10, searchQuery);
-      setVisits(response.data.visits);
-      setPagination(response.data.pagination);
+      
+      if (response.success && response.data) {
+        setVisits(response.data.visits || []);
+        setPagination(response.data.pagination || {
+          total: 0,
+          page: 1,
+          limit: 10,
+          totalPages: 0
+        });
+      } else {
+        setVisits([]);
+        setPagination({
+          total: 0,
+          page: 1,
+          limit: 10,
+          totalPages: 0
+        });
+      }
     } catch (error: any) {
+      console.error('Error fetching completed visits:', error);
       toast({
         title: "Error",
         description: error.response?.data?.message || "Gagal mengambil data pasien",
         variant: "destructive"
       });
+      setVisits([]);
     } finally {
       setLoading(false);
     }
@@ -66,10 +84,9 @@ export default function PatientPage() {
 
   const formatDate = (date: string) => {
     return new Date(date).toLocaleDateString('id-ID', {
-      weekday: 'long',
-      year: 'numeric',
+      day: '2-digit',
       month: 'long',
-      day: 'numeric'
+      year: 'numeric'
     });
   };
 
@@ -149,11 +166,14 @@ export default function PatientPage() {
                   ) : (
                     visits.map((visit, i) => (
                       <tr key={i} className="border-t border-pink-100 hover:bg-pink-50 transition">
-                        <td className="px-3 py-3 whitespace-nowrap">{visit.patient.patientNumber}</td>
-                        <td className="px-3 py-3">{visit.patient.fullName}</td>
-                        <td className="px-3 py-3">{visit.patient.gender === 'L' ? 'Pria' : 'Wanita'}</td>
+                        <td className="px-3 py-3 whitespace-nowrap">{visit.patient?.patientNumber || '-'}</td>
+                        <td className="px-3 py-3">{visit.patient?.fullName || '-'}</td>
+                        <td className="px-3 py-3">{visit.patient?.gender === 'L' ? 'Pria' : 'Wanita'}</td>
                         <td className="px-3 py-3">
-                          {new Date(visit.patient.dateOfBirth).toLocaleDateString('id-ID')} ({calculateAge(visit.patient.dateOfBirth)} thn)
+                          {visit.patient?.dateOfBirth ? 
+                            `${new Date(visit.patient.dateOfBirth).toLocaleDateString('id-ID')} (${calculateAge(visit.patient.dateOfBirth)} thn)` 
+                            : '-'
+                          }
                         </td>
                         <td className="px-3 py-3">{formatDate(visit.visitDate)}</td>
                         <td className="px-3 py-3">

@@ -36,7 +36,7 @@ export default function TambahAntrianPage() {
     if (!formData.fullName || !formData.dateOfBirth || !formData.phone) {
       toast({
         title: "Error",
-        description: "Mohon isi semua field yang wajib",
+        description: "Mohon isi semua field yang wajib (Nama, Tanggal Lahir, No. Telepon)",
         variant: "destructive"
       });
       return;
@@ -44,21 +44,21 @@ export default function TambahAntrianPage() {
 
     setLoading(true);
     try {
-      await visitService.createVisit({
+      const response = await visitService.createVisit({
         patient: {
           fullName: formData.fullName,
           dateOfBirth: formData.dateOfBirth,
           gender: formData.gender,
           phone: formData.phone,
-          email: formData.email,
-          address: formData.address,
-          bloodType: formData.bloodType,
-          allergies: formData.allergies
+          email: formData.email || undefined,
+          address: formData.address || undefined,
+          bloodType: formData.bloodType || undefined,
+          allergies: formData.allergies || undefined
         },
         visit: {
           visitDate: formData.visitDate,
-          chiefComplaint: formData.chiefComplaint,
-          bloodPressure: formData.bloodPressure
+          chiefComplaint: formData.chiefComplaint || undefined,
+          bloodPressure: formData.bloodPressure || undefined
         }
       });
 
@@ -69,6 +69,7 @@ export default function TambahAntrianPage() {
 
       router.push("/dashboard/perawat/pasienpr/antrian");
     } catch (error: any) {
+      console.error('Error creating visit:', error);
       toast({
         title: "Error",
         description: error.response?.data?.message || "Gagal menambahkan antrian",
@@ -230,6 +231,7 @@ export default function TambahAntrianPage() {
                 variant="outline"
                 className="px-8 border-pink-300 text-pink-700"
                 onClick={() => router.push("/dashboard/perawat/pasienpr/antrian")}
+                disabled={loading}
               >
                 Kembali
               </Button>
