@@ -1,7 +1,7 @@
 import express, { Application } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
-import morgan from 'morgan';
+
 import path from 'path';
 import routes from './routes';
 import { errorHandler } from './middlewares/error.middleware';
@@ -20,10 +20,7 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Logger
-if (process.env.NODE_ENV === 'development') {
-  app.use(morgan('dev'));
-}
+
 
 // Static files
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));

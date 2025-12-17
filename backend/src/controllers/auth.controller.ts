@@ -61,6 +61,40 @@ export class AuthController {
     }
   }
 
+  async seedDoctor(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      try {
+        const result = await authService.registerDoctor({
+          username: 'dokter1',
+          email: 'dokter1@roxydental.com',
+          password: 'password123',
+          fullName: 'Dr. Roxy',
+          phone: '08123456789',
+          specialization: 'Gigi Umum',
+        });
+        res.json(successResponse('SEED SUCCESS: Akun dokter berhasil dibuat. Login: dokter1 / password123', result));
+      } catch (err: any) {
+        if (err.message && (err.message.includes('already exists') || err.message.includes('sudah digunakan'))) {
+          res.json(successResponse('INFO: Akun dokter sudah ada. Login: dokter1 / password123'));
+          return;
+        }
+        res.status(500).json({
+          success: false,
+          message: err.message || 'Unknown Error',
+          stack: err.stack,
+          context: 'Inside seedDoctor inner catch'
+        });
+      }
+    } catch (error: any) {
+      res.status(500).json({
+        success: false,
+        message: error.message || 'Unknown Global Error',
+        stack: error.stack,
+        context: 'Inside seedDoctor outer catch'
+      });
+    }
+  }
+
   async getCurrentUser(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const user = await authService.getCurrentUser(req.user!.id);

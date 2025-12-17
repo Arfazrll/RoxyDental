@@ -36,25 +36,25 @@ export interface AuthResponse {
 export const authService = {
   async login(data: LoginData): Promise<AuthResponse> {
     const response = await apiClient.post('/auth/login', data);
-    
+
     if (response.data.success && response.data.data.token) {
       localStorage.setItem('token', response.data.data.token);
       localStorage.setItem('user', JSON.stringify(response.data.data.user));
       document.cookie = `token=${response.data.data.token}; path=/; max-age=604800`;
     }
-    
+
     return response.data;
   },
 
   async register(data: RegisterData): Promise<AuthResponse> {
     const response = await apiClient.post('/auth/register', data);
-    
+
     if (response.data.success && response.data.data.token) {
       localStorage.setItem('token', response.data.data.token);
       localStorage.setItem('user', JSON.stringify(response.data.data.user));
       document.cookie = `token=${response.data.data.token}; path=/; max-age=604800`;
     }
-    
+
     return response.data;
   },
 

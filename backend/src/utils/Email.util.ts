@@ -17,7 +17,7 @@ export class EmailService {
       },
     });
 
-    this.verifyConnection();
+    // this.verifyConnection();
   }
 
   private async verifyConnection() {
@@ -96,7 +96,7 @@ export class EmailService {
 
   async sendResetEmail(email: string, token: string, fullName: string): Promise<void> {
     const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${token}&email=${encodeURIComponent(email)}`;
-    
+
     const mailOptions = {
       from: process.env.EMAIL_FROM || `POLADC <${process.env.EMAIL_USER}>`,
       to: email,

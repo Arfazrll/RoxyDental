@@ -22,15 +22,15 @@ export class ServiceService {
   private async generateServiceCode(): Promise<string> {
     const count = await prisma.service.count();
     const code = `SRV-${String(count + 1).padStart(4, '0')}`;
-    
+
     const existing = await prisma.service.findFirst({
-      where: { service_code: code } // snake_case
+      where: { serviceCode: code } // snake_case
     });
-    
+
     if (existing) {
       return `SRV-${String(count + 2).padStart(4, '0')}`;
     }
-    
+
     return code;
   }
 
@@ -50,7 +50,7 @@ export class ServiceService {
     if (search) {
       where.OR = [
         { serviceName: { contains: search, mode: 'insensitive' } }, // camelCase
-        { service_code: { contains: search, mode: 'insensitive' } } // snake_case
+        { serviceCode: { contains: search, mode: 'insensitive' } } // snake_case
       ];
     }
 
@@ -92,7 +92,7 @@ export class ServiceService {
 
     const service = await prisma.service.create({
       data: {
-        service_code: serviceCode,      // snake_case
+        serviceCode: serviceCode,      // snake_case
         serviceName: data.serviceName,   // camelCase
         category: data.category,
         basePrice: data.basePrice,       // camelCase
@@ -114,7 +114,7 @@ export class ServiceService {
     }
 
     const updateData: any = {};
-    
+
     if (data.serviceName !== undefined) updateData.serviceName = data.serviceName;       // camelCase
     if (data.category !== undefined) updateData.category = data.category;
     if (data.basePrice !== undefined) updateData.basePrice = data.basePrice;            // camelCase

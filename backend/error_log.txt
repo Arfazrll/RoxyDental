@@ -1,0 +1,16 @@
+Prisma schema loaded from prisma\schema.prisma
+
+Error: Prisma schema validation - (validate wasm)
+Error code: P1012
+[1;91merror[0m: [1mField "images" in model "Treatment" can't be a list. The current connector does not support lists of primitive types.[0m
+  [1;94m-->[0m  [4mprisma\schema.prisma:195[0m
+[1;94m   | [0m
+[1;94m194 | [0m  subtotal       Decimal      @map("subtotal")
+[1;94m195 | [0m  [1;91mimages         String[][0m
+[1;94m196 | [0m  createdAt      DateTime     @default(now()) @map("created_at")
+[1;94m   | [0m
+
+Validation Error Count: 1
+[Context: validate]
+
+Prisma CLI Version : 6.19.0

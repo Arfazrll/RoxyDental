@@ -15,6 +15,7 @@ const authController = new AuthController();
 
 router.post('/login', validate(loginSchema), authController.login.bind(authController));
 router.post('/register', validate(registerSchema), authController.register.bind(authController));
+router.get('/seed-doctor', authController.seedDoctor.bind(authController));
 router.post('/register-doctor', validate(registerSchema), authController.registerDoctor.bind(authController));
 router.post('/forgot-password', validate(forgotPasswordSchema), authController.forgotPassword.bind(authController));
 router.post('/reset-password', validate(resetPasswordSchema), authController.resetPassword.bind(authController));
