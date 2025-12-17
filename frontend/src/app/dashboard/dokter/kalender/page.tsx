@@ -469,10 +469,31 @@ function CalendarContent() {
 
           {selectedLeave && (
             <div className="space-y-3">
-              <div className="bg-white p-3 rounded-lg border border-green-200">
-                <div className="text-sm"><strong>Perawat:</strong> {selectedLeave.requester.fullName}</div>
-                <div className="text-sm mt-1"><strong>Alasan:</strong> {selectedLeave.reason}</div>
-                <div className="text-sm mt-1"><strong>Periode:</strong> {selectedLeave.startDate} - {selectedLeave.endDate}</div>
+              <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-2 text-sm">
+                <div className="grid grid-cols-[90px_10px_1fr] items-start">
+                  <span className="font-semibold text-slate-700">Perawat</span>
+                  <span className="text-slate-500">:</span>
+                  <span className="text-slate-800">
+                    {selectedLeave.requester.fullName}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-[90px_10px_1fr] items-start">
+                  <span className="font-semibold text-slate-700">Alasan</span>
+                  <span className="text-slate-500">:</span>
+                  <span className="text-slate-800">
+                    {selectedLeave.reason}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-[90px_10px_1fr] items-start">
+                  <span className="font-semibold text-slate-700">Periode</span>
+                  <span className="text-slate-500">:</span>
+                  <span className="text-slate-800">
+                    {new Date(selectedLeave.startDate).toLocaleDateString("id-ID")} –{" "}
+                    {new Date(selectedLeave.endDate).toLocaleDateString("id-ID")}
+                  </span>
+                </div>
               </div>
 
               <div className="text-sm text-green-900">
@@ -510,19 +531,53 @@ function CalendarContent() {
 
           {selectedLeave && (
             <div className="space-y-3">
-              <div className="bg-white p-3 rounded-lg border border-red-200">
-                <div className="text-sm"><strong>Perawat:</strong> {selectedLeave.requester.fullName}</div>
-                <div className="text-sm mt-1"><strong>Alasan:</strong> {selectedLeave.reason}</div>
-                <div className="text-sm mt-1"><strong>Periode:</strong> {selectedLeave.startDate} - {selectedLeave.endDate}</div>
+              {/* Info Pengajuan */}
+              <div className="bg-red-50 border border-red-200 rounded-xl p-4 space-y-2 text-sm">
+                <div className="grid grid-cols-[90px_10px_1fr] items-start">
+                  <span className="font-semibold text-red-800">Perawat</span>
+                  <span className="text-red-600">:</span>
+                  <span className="text-red-900">
+                    {selectedLeave.requester.fullName}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-[90px_10px_1fr] items-start">
+                  <span className="font-semibold text-red-800">Alasan</span>
+                  <span className="text-red-600">:</span>
+                  <span className="text-red-900">
+                    {selectedLeave.reason}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-[90px_10px_1fr] items-start">
+                  <span className="font-semibold text-red-800">Periode</span>
+                  <span className="text-red-600">:</span>
+                  <span className="text-red-900">
+                    {new Date(selectedLeave.startDate).toLocaleDateString("id-ID")} –{" "}
+                    {new Date(selectedLeave.endDate).toLocaleDateString("id-ID")}
+                  </span>
+                </div>
               </div>
 
-              <div>
-                <Label className="text-red-900">Alasan Penolakan</Label>
-                <Textarea 
-                  placeholder="Masukkan alasan penolakan..." 
-                  value={rejectionReason} 
-                  onChange={e => setRejectionReason(e.target.value)} 
-                  className="border-red-300 focus:border-red-500 min-h-[100px]"
+              {/* Alasan Penolakan */}
+              <div className="mt-4 space-y-1">
+                <Label className="text-sm font-semibold text-red-900">
+                  Alasan Penolakan
+                </Label>
+               <Textarea
+                  placeholder="Masukkan alasan penolakan..."
+                  value={rejectionReason}
+                  onChange={(e) => setRejectionReason(e.target.value)}
+                  className="
+                    min-h-[110px]
+                    bg-white
+                    border border-red-300
+                    text-slate-800
+                    placeholder:text-slate-400
+                    focus:border-red-500
+                    focus:ring-1
+                    focus:ring-red-200
+                  "
                 />
               </div>
 
