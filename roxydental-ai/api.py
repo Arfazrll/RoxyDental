@@ -98,8 +98,43 @@ def chat_with_tika(item: ChatInput):
         {context}
         """
         
-        model = genai.GenerativeModel('gemini-2.5-flash')
-        response = model.generate_content(f"{system_prompt}\nUser: {item.message}")
-        return {"status": "success", "reply": response.text}
+        # GANTI MODEL: Pakai model yang TERSEDIA di list (gemini-2.5-flash)
+        GEMINI_URL = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GEMINI_KEY}"
+        
+        headers = {"Content-Type": "application/json"}
+        payload = {
+            "contents": [{
+                "parts": [{"text": f"{system_prompt}\nUser: {item.message}"}]
+            }]
+        }
+
+        import requests
+        import time
+        
+        # Retry mechanism for 503 (Server Overloaded)
+        for attempt in range(3):
+            response = requests.post(GEMINI_URL, headers=headers, json=payload)
+            
+            if response.status_code == 200:
+                result = response.json()
+                reply_text = result['candidates'][0]['content']['parts'][0]['text']
+                return {"status": "success", "reply": reply_text}
+            elif response.status_code == 503:
+                # Server busy, wait and retry
+                print(f"⚠️ Model Overloaded (Attempt {attempt+1}/3). Retrying in 2s...")
+                time.sleep(2)
+            elif response.status_code == 429:
+                # Rate limit, wait longer
+                print(f"⚠️ Rate Limit Hit (Attempt {attempt+1}/3). Retrying in 4s...")
+                time.sleep(4)
+            else:
+                # Other errors (400, 401, etc), fail immediately
+                break
+        
+        # If we get here, all retries failed
+        error_msg = response.text if response else "Unknown Error"
+        return {"status": "error", "reply": f"Maaf, server otak Tika sedang penuh (Error {response.status_code}). Mohon tanya lagi dalam beberapa detik. 🙏"}
+            
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        print(f"Error Chat: {e}")
+        return {"status": "error", "reply": "Maaf, sistem sedang sibuk."}
