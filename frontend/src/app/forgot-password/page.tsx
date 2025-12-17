@@ -73,14 +73,19 @@ export default function ForgotPasswordPage() {
             <label className="text-pink-500 text-sm font-medium">Email</label>
             <div className="flex items-center bg-white/70 rounded-xl mt-1 mb-5 px-3 py-2 shadow-inner focus-within:ring-2 focus-within:ring-pink-400 transition-all">
               <FaEnvelope className="text-pink-400 mr-2" />
-              <input
-                type="email"
-                className="w-full py-2 px-1 outline-none bg-transparent placeholder-pink-300"
-                placeholder="Masukkan email kamu"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                disabled={loading}
-              />
+             <input
+              type="email"
+              className="
+                w-full py-2 px-1
+                outline-none bg-transparent
+                text-gray-800
+                placeholder-pink-300
+              "
+              placeholder="Masukkan email kamu"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              disabled={loading}
+            />
             </div>
 
             <button

@@ -35,9 +35,10 @@ export default function LoginPage() {
     setError("");
 
     if (!role) {
-      setError("Pilih role terlebih dahulu");
-      return;
+    setError("Pilih role terlebih dahulu");
+    return;
     }
+
     if (!username || !password) {
       setError("Username dan password wajib diisi");
       return;
@@ -46,7 +47,7 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const response = await authService.login({ username, password, role });
+     const response = await authService.login({ username, password, role });
       
       if (response.success) {
         if (role === 'DOKTER') {
@@ -55,8 +56,17 @@ export default function LoginPage() {
           router.push('/dashboard/perawat/mainpr');
         }
       }
+
     } catch (err: any) {
-      setError(err.response?.data?.message || "Login gagal. Periksa kredensial Anda.");
+      if (err.response) {
+        if (err.response.status === 401 || err.response.status === 400) {
+          setError("Username atau password salah");
+        } else {
+          setError(err.response.data?.message || "Terjadi kesalahan pada server");
+        }
+      } else {
+        setError("Server tidak dapat dihubungi");
+      }
     } finally {
       setLoading(false);
     }
