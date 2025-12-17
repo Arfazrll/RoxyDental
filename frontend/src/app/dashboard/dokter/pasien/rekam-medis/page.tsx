@@ -106,7 +106,7 @@ export default function MedicalRecordsPage() {
     const raw = row.lastVisit;
     return raw ? formatDate(raw) : "-";
   };
-  const getDiagnosis = (row: PatientWithVisit) => row.lastDiagnosis || "-";
+  const getDiagnosis = (row: PatientWithVisit) => row.medicalHistory || "-";
   const getTindakan = (row: PatientWithVisit) => row.chiefComplaint || row.lastServiceName || "-";
 
   const openDetail = (row: PatientWithVisit) => {

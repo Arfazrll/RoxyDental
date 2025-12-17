@@ -53,18 +53,18 @@ export class PatientService {
   }
 
   async updateMedicalHistory(patientId: string, medicalHistory: string) {
-  const patient = await prisma.patient.findUnique({
-    where: { id: patientId }
-  });
+    const patient = await prisma.patient.findUnique({
+      where: { id: patientId }
+    });
 
-  if (!patient) {
-    throw new AppError("Pasien tidak ditemukan", 404);
-  }
+    if (!patient) {
+      throw new AppError("Pasien tidak ditemukan", 404);
+    }
 
-  const updated = await prisma.patient.update({
-    where: { id: patientId },
-    data: { medicalHistory }
-  });
+    const updated = await prisma.patient.update({
+      where: { id: patientId },
+      data: { medicalHistory }
+    });
 
     return updated;
   }
@@ -95,6 +95,10 @@ export class PatientService {
           gender: true,
           phone: true,
           email: true,
+          address: true,
+          bloodType: true,
+          allergies: true,
+          medicalHistory: true,
           createdAt: true,
           visits: {
             where: {
@@ -141,7 +145,7 @@ export class PatientService {
       lastVisitId: p.visits[0]?.id,
       lastVisitNumber: p.visits[0]?.visitNumber,
       chiefComplaint: p.visits[0]?.chiefComplaint,
-      lastDiagnosis: p.visits[0]?.treatments?.[0]?.diagnosis,
+      lastDiagnosis: p.medicalHistory || p.visits[0]?.treatments?.[0]?.diagnosis,
       lastServiceName: p.visits[0]?.treatments?.[0]?.service?.serviceName,
       visits: undefined
     }));

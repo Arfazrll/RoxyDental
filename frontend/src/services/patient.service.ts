@@ -12,6 +12,7 @@ export interface PatientWithVisit {
   address?: string;
   bloodType?: string;
   allergies?: string;
+  medicalHistory?: string;
   lastVisit?: string;
   lastVisitId?: string;
   lastVisitNumber?: string;
@@ -35,10 +36,10 @@ export const patientService = {
   },
 
   async updateMedicalHistory(patientId: string, medicalHistory: string) {
-  const response = await apiClient.put(`/doctor/patients/${patientId}/medical-history`, {
-    medicalHistory
-  });
-  return response.data;
+    const response = await apiClient.put(`/doctor/patients/${patientId}/medical-history`, {
+      medicalHistory
+    });
+    return response.data;
   },
 
   async getPatientById(id: string) {
