@@ -18,8 +18,10 @@ interface DisplayEvent {
   reason: string;
   startDate: string;
   endDate: string;
+  startTime: string;
+  endTime: string;
   color: string;
-  type: "Cuti" | "Appointment";
+  type: "Cuti" | "Kunjungan";
 }
 
 function CalendarContent() {
@@ -89,8 +91,10 @@ function CalendarContent() {
         reason: event.description,
         startDate: event.startDate,
         endDate: event.endDate,
+        startTime: event.startTime || '00:00',
+        endTime: event.endTime || '23:59',
         color: event.color,
-        type: event.type === 'LEAVE' ? 'Cuti' : 'Appointment'
+        type: event.type === 'LEAVE' ? 'Cuti' : 'Kunjungan'
       }));
 
       setEvents(mappedEvents);
@@ -124,12 +128,23 @@ function CalendarContent() {
     setAddDialogOpen(true);
   };
 
-  const getLeavesForDay = (date: Date) => {
-    const dateStr = formatDate(date);
-    return events.filter(l => dateStr >= l.startDate && dateStr <= l.endDate);
+  const getEventsForTimeSlot = (day: Date, timeSlot: string) => {
+    const dateStr = formatDate(day);
+    const [slotHour] = timeSlot.split(':').map(Number);
+    
+    return events.filter(event => {
+      if (event.startDate !== dateStr) return false;
+      
+      if (event.type === 'Cuti') {
+        return true;
+      }
+      
+      const [startHour] = event.startTime.split(':').map(Number);
+      return startHour === slotHour;
+    });
   };
 
-  const hasLeaveOnDate = (dateStr: string) => {
+  const hasEventOnDate = (dateStr: string) => {
     return events.some(l => dateStr >= l.startDate && dateStr <= l.endDate);
   };
 
@@ -283,14 +298,14 @@ function CalendarContent() {
                         </div>
 
                         {weekDays.map((day, dIdx) => {
-                          const dayLeaves = getLeavesForDay(day);
+                          const dayEvents = getEventsForTimeSlot(day, time);
                           return (
                             <div key={`${tIdx}-${dIdx}`} className="border-r border-b border-pink-200 p-1.5 min-h-16 relative hover:bg-pink-50 cursor-pointer" onClick={() => handleMainCalendarClick(day)}>
-                              {dayLeaves.map(l => (
+                              {dayEvents.map(l => (
                                 <div key={l.id} className={`${l.color} text-pink-900 text-xs p-1.5 rounded-lg shadow-md mb-1.5`}>
                                   <div className="font-semibold text-[11px]">{l.doctor}</div>
                                   <div className="text-[10px]">{l.reason}</div>
-                                  <div className="text-[10px]">{l.startDate} - {l.endDate}</div>
+                                  <div className="text-[10px]">{l.startTime} - {l.endTime}</div>
                                 </div>
                               ))}
                             </div>
@@ -328,7 +343,7 @@ function CalendarContent() {
                   return (
                     <div key={idx} className={`py-2 cursor-pointer rounded relative transition ${isSelected ? "bg-pink-600 text-white font-bold" : date ? "text-pink-900 hover:bg-pink-200" : "text-pink-300"}`} onClick={() => date && handleMiniCalendarClick(new Date(dateStr))}>
                       {date || ""}
-                      {date && hasLeaveOnDate(dateStr) && (<div className="w-2 h-2 bg-pink-500 rounded-full absolute top-1 right-1"></div>)}
+                      {date && hasEventOnDate(dateStr) && (<div className="w-2 h-2 bg-pink-500 rounded-full absolute top-1 right-1"></div>)}
                     </div>
                   );
                 })}
@@ -388,7 +403,7 @@ function CalendarContent() {
                 <div key={l.id} className={`${l.color} text-pink-900 p-2 rounded-lg shadow`}>
                   <div className="font-semibold text-sm">{l.doctor}</div>
                   <div className="text-[10px]">{l.reason}</div>
-                  <div className="text-[10px]">{l.startDate} - {l.endDate}</div>
+                  <div className="text-[10px]">{l.type === 'Cuti' ? `${l.startDate} - ${l.endDate}` : `${l.startDate} ${l.startTime}`}</div>
                 </div>
               ))}
             </CardContent>

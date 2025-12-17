@@ -36,6 +36,8 @@ export interface CalendarEvent {
   description: string;
   startDate: string;
   endDate: string;
+  startTime?: string;
+  endTime?: string;
   type: string;
   status: string;
   userName?: string;

@@ -134,7 +134,7 @@ export class DashboardService {
           day: daysOfWeek[dayIndex],
           start: startTime,
           end: endTime,
-          location: 'RoxyDental Clinic'
+          location: 'POLADC'
         };
       }
     });

@@ -610,24 +610,42 @@ export const getCalendarEvents = async (req: any, res: Response): Promise<void> 
         description: leave.reason,
         startDate: leave.startDate.toISOString().split('T')[0],
         endDate: leave.endDate.toISOString().split('T')[0],
+        startTime: '00:00',
+        endTime: '23:59',
         type: 'LEAVE',
         status: leave.status,
         userId: leave.userId,
         userName: leave.requester.fullName,
-        color: 'bg-pink-200'
+        patientName: null,
+        color: 'bg-yellow-100'
       })),
-      ...visits.map((visit: any) => ({
-        id: visit.id,
-        title: `Kunjungan - ${visit.patient.fullName}`,
-        description: visit.chiefComplaint || 'Kunjungan Pasien',
-        startDate: visit.visitDate.toISOString().split('T')[0],
-        endDate: visit.visitDate.toISOString().split('T')[0],
-        type: 'VISIT',
-        status: visit.status,
-        patientName: visit.patient.fullName,
-        nurseName: visit.nurse.fullName,
-        color: 'bg-blue-200'
-      }))
+      ...visits.map((visit: any) => {
+        const visitDate = new Date(visit.visitDate);
+        const dateStr = visitDate.toISOString().split('T')[0];
+        const hours = visitDate.getHours();
+        const minutes = visitDate.getMinutes();
+        const timeStr = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+        
+        const endMinutes = minutes + 30;
+        const endHours = hours + Math.floor(endMinutes / 60);
+        const finalEndMinutes = endMinutes % 60;
+        const endTimeStr = `${endHours.toString().padStart(2, '0')}:${finalEndMinutes.toString().padStart(2, '0')}`;
+
+        return {
+          id: visit.id,
+          title: `Kunjungan - ${visit.patient.fullName}`,
+          description: visit.chiefComplaint || 'Kunjungan Pasien',
+          startDate: dateStr,
+          endDate: dateStr,
+          startTime: timeStr,
+          endTime: endTimeStr,
+          type: 'VISIT',
+          status: visit.status,
+          patientName: visit.patient.fullName,
+          userName: visit.nurse?.fullName || null,
+          color: 'bg-blue-100'
+        };
+      })
     ];
 
     res.status(200).json({
@@ -714,24 +732,42 @@ export const getMyCalendarEvents = async (req: any, res: Response): Promise<void
         description: leave.reason,
         startDate: leave.startDate.toISOString().split('T')[0],
         endDate: leave.endDate.toISOString().split('T')[0],
+        startTime: '00:00',
+        endTime: '23:59',
         type: 'LEAVE',
         status: leave.status,
         userId: leave.userId,
         userName: leave.requester.fullName,
-        color: 'bg-pink-200'
+        patientName: null,
+        color: 'bg-yellow-100'
       })),
-      ...visits.map((visit: any) => ({
-        id: visit.id,
-        title: `Kunjungan - ${visit.patient.fullName}`,
-        description: visit.chiefComplaint || 'Kunjungan Pasien',
-        startDate: visit.visitDate.toISOString().split('T')[0],
-        endDate: visit.visitDate.toISOString().split('T')[0],
-        type: 'VISIT',
-        status: visit.status,
-        patientName: visit.patient.fullName,
-        nurseName: visit.nurse.fullName,
-        color: 'bg-blue-200'
-      }))
+      ...visits.map((visit: any) => {
+        const visitDate = new Date(visit.visitDate);
+        const dateStr = visitDate.toISOString().split('T')[0];
+        const hours = visitDate.getHours();
+        const minutes = visitDate.getMinutes();
+        const timeStr = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+        
+        const endMinutes = minutes + 30;
+        const endHours = hours + Math.floor(endMinutes / 60);
+        const finalEndMinutes = endMinutes % 60;
+        const endTimeStr = `${endHours.toString().padStart(2, '0')}:${finalEndMinutes.toString().padStart(2, '0')}`;
+
+        return {
+          id: visit.id,
+          title: `Kunjungan - ${visit.patient.fullName}`,
+          description: visit.chiefComplaint || 'Kunjungan Pasien',
+          startDate: dateStr,
+          endDate: dateStr,
+          startTime: timeStr,
+          endTime: endTimeStr,
+          type: 'VISIT',
+          status: visit.status,
+          patientName: visit.patient.fullName,
+          userName: visit.nurse?.fullName || null,
+          color: 'bg-blue-100'
+        };
+      })
     ];
 
     console.log('Total events:', events.length);

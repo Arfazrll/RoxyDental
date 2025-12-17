@@ -104,7 +104,7 @@ function DashboardContent() {
 
                 <div className="flex items-center gap-1 text-sm text-gray-500 mt-1">
                   <MapPin className="w-4 h-4" />
-                  <span>RoxyDental Clinic</span>
+                  <span>POLADC</span>
                 </div>
 
                 <Badge className="mt-2 bg-pink-100 text-pink-700 border-none w-fit">

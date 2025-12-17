@@ -18,8 +18,10 @@ interface DisplayEvent {
   reason: string;
   startDate: string;
   endDate: string;
+  startTime: string;
+  endTime: string;
   color: string;
-  type: "Cuti" | "Jadwal" | "Appointment";
+  type: "Cuti" | "Kunjungan";
   status?: string;
 }
 
@@ -79,16 +81,18 @@ function CalendarContent() {
       const startDate = formatDate(weekDays[0]);
       const endDate = formatDate(weekDays[6]);
 
-      const eventsRes = await calendarService.getEvents(startDate, endDate);
+      const eventsRes = await calendarService.getMyEvents(startDate, endDate);
 
       const mappedEvents: DisplayEvent[] = eventsRes.data.map((event: CalendarEvent) => ({
         id: event.id,
-        doctor: event.userName || event.patientName || event.title,
+        doctor: event.patientName || event.userName || event.title,
         reason: event.description,
         startDate: event.startDate,
         endDate: event.endDate,
+        startTime: event.startTime || '00:00',
+        endTime: event.endTime || '23:59',
         color: event.color,
-        type: event.type === 'LEAVE' ? 'Cuti' : event.type === 'APPOINTMENT' ? 'Appointment' : 'Jadwal',
+        type: event.type === 'LEAVE' ? 'Cuti' : 'Kunjungan',
         status: event.status
       }));
 
@@ -123,12 +127,23 @@ function CalendarContent() {
     setAddDialogOpen(true);
   };
 
-  const getLeavesForDay = (date: Date) => {
-    const dateStr = formatDate(date);
-    return events.filter(l => dateStr >= l.startDate && dateStr <= l.endDate);
+  const getEventsForTimeSlot = (day: Date, timeSlot: string) => {
+    const dateStr = formatDate(day);
+    const [slotHour] = timeSlot.split(':').map(Number);
+    
+    return events.filter(event => {
+      if (event.startDate !== dateStr) return false;
+      
+      if (event.type === 'Cuti') {
+        return true;
+      }
+      
+      const [startHour] = event.startTime.split(':').map(Number);
+      return startHour === slotHour;
+    });
   };
 
-  const hasLeaveOnDate = (dateStr: string) => {
+  const hasEventOnDate = (dateStr: string) => {
     return events.some(l => dateStr >= l.startDate && dateStr <= l.endDate);
   };
 
@@ -236,14 +251,14 @@ function CalendarContent() {
                       <React.Fragment key={tIdx}>
                         <div className="sticky left-0 z-20 border-r border-b border-pink-200 bg-pink-50 p-2 text-xs text-right font-medium min-h-16">{time}</div>
                         {weekDays.map((day, dIdx) => {
-                          const dayLeaves = getLeavesForDay(day);
+                          const dayEvents = getEventsForTimeSlot(day, time);
                           return (
                             <div key={`${tIdx}-${dIdx}`} className="border-r border-b border-pink-200 p-1.5 min-h-16 relative hover:bg-pink-50 transition cursor-pointer" onClick={() => handleMainCalendarClick(day)}>
-                              {dayLeaves.map(l => (
-                                <div key={l.id} className={`${l.color} text-pink-900 text-xs p-1.5 rounded-lg shadow-md w-full max-w-[200px] mb-1.5`}>
+                              {dayEvents.map(l => (
+                                <div key={l.id} className={`${l.color} text-pink-900 text-xs p-1.5 rounded-lg shadow-md mb-1.5`}>
                                   <div className="font-semibold text-[11px]">{l.doctor}</div>
-                                  <div className="text-[10px] mt-0.5">{l.reason}</div>
-                                  <div className="text-[10px] mt-0.5">Dari: {l.startDate} Sampai: {l.endDate}</div>
+                                  <div className="text-[10px]">{l.reason}</div>
+                                  <div className="text-[10px]">{l.startTime} - {l.endTime}</div>
                                 </div>
                               ))}
                             </div>
@@ -281,7 +296,7 @@ function CalendarContent() {
                       onClick={() => { if(date) handleMiniCalendarClick(new Date(dateStr)); }}
                     >
                       {date || ""}
-                      {date && hasLeaveOnDate(dateStr) && <div className="w-2 h-2 bg-pink-500 rounded-full absolute top-1 right-1"></div>}
+                      {date && hasEventOnDate(dateStr) && <div className="w-2 h-2 bg-pink-500 rounded-full absolute top-1 right-1"></div>}
                     </div>
                   );
                 })}
@@ -317,14 +332,14 @@ function CalendarContent() {
           <Card className="shadow-md rounded-lg">
             <CardContent className="p-4 max-h-[300px] overflow-auto space-y-2">
               <h2 className="font-semibold text-pink-900 mt-6 flex items-center gap-2 text-lg">
-                <span className="w-1.5 h-6 bg-blue-500 rounded"></span> Jadwal Klinik
+                <span className="w-1.5 h-6 bg-blue-500 rounded"></span> Jadwal Saya
               </h2>
               {events.length === 0 && <div className="text-xs text-pink-700">Belum ada jadwal</div>}
               {events.map(l => (
                 <div key={l.id} className={`${l.color} text-pink-900 p-2 rounded-lg shadow mb-2`}>
                   <div className="font-semibold text-sm">{l.doctor}</div>
                   <div className="text-[10px] mt-0.5">{l.reason}</div>
-                  <div className="text-[10px] mt-0.5">Dari: {l.startDate} Sampai: {l.endDate}</div>
+                  <div className="text-[10px] mt-0.5">{l.type === 'Cuti' ? `${l.startDate} - ${l.endDate}` : `${l.startDate} ${l.startTime}`}</div>
                 </div>
               ))}
             </CardContent>
