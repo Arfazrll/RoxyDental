@@ -15,7 +15,6 @@ import financeRoutes from './finance.routes';
 import medicationRoutes from './medication.routes';
 import nurseVisitRoutes from './nurse-visit.routes';
 
-
 const router = Router();
 
 router.use('/auth', authRoutes);
