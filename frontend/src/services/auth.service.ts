@@ -15,6 +15,11 @@ export interface RegisterData {
   specialization?: string;
 }
 
+export interface ChangePasswordData {
+  currentPassword: string;
+  newPassword: string;
+}
+
 export interface AuthResponse {
   success: boolean;
   message: string;
@@ -31,6 +36,12 @@ export interface AuthResponse {
     };
     token: string;
   };
+}
+
+export interface ApiResponse {
+  success: boolean;
+  message: string;
+  data?: any;
 }
 
 export const authService = {
@@ -56,6 +67,21 @@ export const authService = {
     }
     
     return response.data;
+  },
+
+  async changePassword(data: ChangePasswordData): Promise<ApiResponse> {
+    try {
+      const response = await apiClient.put('/auth/change-password', data);
+      return response.data;
+    } catch (error: any) {
+      if (error.response?.data) {
+        throw error.response.data;
+      }
+      throw {
+        success: false,
+        message: 'Terjadi kesalahan pada server'
+      };
+    }
   },
 
   logout(): void {
