@@ -15,14 +15,9 @@ export class DashboardNurseService {
       monthlyVisits,
       nurseProfile
     ] = await Promise.all([
+      prisma.visit.count(),
       prisma.visit.count({
         where: {
-          nurseId: userId
-        }
-      }),
-      prisma.visit.count({
-        where: {
-          nurseId: userId,
           visitDate: {
             gte: startOfDay,
             lte: endOfDay
@@ -31,7 +26,6 @@ export class DashboardNurseService {
       }),
       prisma.visit.count({
         where: {
-          nurseId: userId,
           visitDate: {
             gte: startOfMonth,
             lte: endOfMonth
@@ -56,7 +50,7 @@ export class DashboardNurseService {
       })
     ]);
 
-    const schedules = await this.generateScheduleFromVisits(userId);
+    const schedules = await this.generateScheduleFromVisits();
 
     return {
       totalVisits,
@@ -67,7 +61,7 @@ export class DashboardNurseService {
     };
   }
 
-  private async generateScheduleFromVisits(userId: string) {
+  private async generateScheduleFromVisits() {
     const today = new Date();
     const startOfWeek = new Date(today);
     startOfWeek.setDate(today.getDate() - today.getDay());
@@ -78,7 +72,6 @@ export class DashboardNurseService {
 
     const visits = await prisma.visit.findMany({
       where: {
-        nurseId: userId,
         visitDate: {
           gte: startOfWeek,
           lt: endOfWeek

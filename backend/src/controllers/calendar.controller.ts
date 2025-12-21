@@ -701,7 +701,6 @@ export const getMyCalendarEvents = async (req: any, res: Response): Promise<void
 
     const visits = await prisma.visit.findMany({
       where: {
-        nurseId: userId,
         visitDate: {
           gte: new Date(startDate as string),
           lte: new Date(endDate as string)
