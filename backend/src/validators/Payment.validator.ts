@@ -6,12 +6,19 @@ export const createPaymentSchema = z.object({
     errorMap: () => ({ message: 'Metode pembayaran tidak valid' })
   }),
   amount: z.number().positive('Jumlah pembayaran harus lebih dari 0'),
-  paidAmount: z.number().positive('Jumlah yang dibayar harus lebih dari 0'),
+  paidAmount: z.number().min(0, 'Jumlah yang dibayar tidak boleh negatif'),
   referenceNumber: z.string().optional(),
   notes: z.string().optional()
-}).refine((data) => data.paidAmount >= data.amount, {
-  message: 'Jumlah yang dibayar tidak boleh kurang dari total tagihan',
-  path: ['paidAmount']
+});
+
+export const updatePaymentSchema = z.object({
+  paymentMethod: z.enum(['CASH', 'TRANSFER', 'CARD', 'QRIS'], {
+    errorMap: () => ({ message: 'Metode pembayaran tidak valid' })
+  }).optional(),
+  amount: z.number().positive('Jumlah pembayaran harus lebih dari 0').optional(),
+  paidAmount: z.number().min(0, 'Jumlah yang dibayar tidak boleh negatif').optional(),
+  referenceNumber: z.string().optional(),
+  notes: z.string().optional()
 });
 
 export const updatePaymentStatusSchema = z.object({

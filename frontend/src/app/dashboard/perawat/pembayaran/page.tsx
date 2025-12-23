@@ -1,19 +1,19 @@
-// path: frontend/src/app/dashboard/perawat/pembayaran/page.tsx         
-
 "use client";
 
 import React, { useMemo, useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Plus, ReceiptText, CreditCard, Wallet, ArrowLeft, ArrowRight } from "lucide-react";
+import { Search, Plus, ReceiptText, CreditCard, Wallet, ArrowLeft, ArrowRight, Edit } from "lucide-react";
 import InputPembayaran from "@/components/ui/addpembayaran";
+import EditPembayaran from "@/components/ui/editpembayaran";
 import DoctorNavbar from "@/components/ui/navbarpr";
 import { useToast } from "@/hooks/use-toast";
 import { 
   paymentService, 
   Payment, 
   CreatePaymentData,
+  UpdatePaymentData,
   PaymentMethodType 
 } from "@/services/payment.service";
 
@@ -52,6 +52,8 @@ export default function PaymentPage() {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [showModal, setShowModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
 
   useEffect(() => {
     fetchPayments();
@@ -143,6 +145,43 @@ export default function PaymentPage() {
     }
   };
 
+  const handleEditPayment = (payment: Payment) => {
+    setSelectedPayment(payment);
+    setShowEditModal(true);
+  };
+
+  const handleUpdatePayment = async (formData: any) => {
+    if (!selectedPayment) return;
+
+    try {
+      const updateData: UpdatePaymentData = {
+        paymentMethod: formData.paymentMethod,
+        amount: formData.amount,
+        paidAmount: formData.paidAmount,
+        referenceNumber: formData.referenceNumber || undefined,
+        notes: formData.notes || undefined
+      };
+
+      await paymentService.updatePayment(selectedPayment.id, updateData);
+
+      toast({
+        title: "Berhasil",
+        description: "Pembayaran berhasil diupdate",
+      });
+
+      setShowEditModal(false);
+      setSelectedPayment(null);
+      fetchPayments();
+    } catch (error: any) {
+      console.error("Error updating payment:", error);
+      toast({
+        title: "Error",
+        description: error?.response?.data?.message || "Gagal mengupdate pembayaran",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-linear-to-b from-[#FFF5F7] via-white to-white">
       <DoctorNavbar />
@@ -208,6 +247,7 @@ export default function PaymentPage() {
                     "JUMLAH BAYAR",
                     "KEMBALIAN",
                     "STATUS",
+                    "AKSI",
                   ].map((h) => (
                     <th
                       key={h}
@@ -222,7 +262,7 @@ export default function PaymentPage() {
               <tbody className="bg-white divide-y divide-pink-100">
                 {loading ? (
                   <tr>
-                    <td colSpan={9} className="px-4 py-10 text-center">
+                    <td colSpan={10} className="px-4 py-10 text-center">
                       <div className="flex justify-center">
                         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pink-600" />
                       </div>
@@ -230,7 +270,7 @@ export default function PaymentPage() {
                   </tr>
                 ) : displayedPayments.length === 0 ? (
                   <tr>
-                    <td colSpan={9} className="px-4 py-10 text-center text-sm text-gray-500">
+                    <td colSpan={10} className="px-4 py-10 text-center text-sm text-gray-500">
                       Tidak ada data pembayaran untuk filter saat ini.
                     </td>
                   </tr>
@@ -284,6 +324,17 @@ export default function PaymentPage() {
                             : p.status}
                         </span>
                       </td>
+
+                      <td className="px-4 py-3">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleEditPayment(p)}
+                          className="text-pink-600 hover:text-pink-700 hover:bg-pink-50 rounded-lg"
+                        >
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                      </td>
                     </tr>
                   ))
                 )}
@@ -304,7 +355,7 @@ export default function PaymentPage() {
                   <td className="px-4 py-3 text-right text-gray-900">
                     {formatCurrency(total.change)}
                   </td>
-                  <td />
+                  <td colSpan={2} />
                 </tr>
               </tfoot>
             </table>
@@ -353,6 +404,28 @@ export default function PaymentPage() {
             <InputPembayaran
               onSave={handleSavePayment}
               onClose={() => setShowModal(false)}
+            />
+          </div>
+        </div>
+      )}
+
+      {showEditModal && selectedPayment && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+          <div
+            className="absolute inset-0 bg-black/40"
+            onClick={() => {
+              setShowEditModal(false);
+              setSelectedPayment(null);
+            }}
+          />
+          <div className="relative z-10 w-full max-w-3xl">
+            <EditPembayaran
+              payment={selectedPayment}
+              onSave={handleUpdatePayment}
+              onClose={() => {
+                setShowEditModal(false);
+                setSelectedPayment(null);
+              }}
             />
           </div>
         </div>

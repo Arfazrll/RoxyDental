@@ -12,6 +12,14 @@ export interface CreatePaymentData {
   notes?: string;
 }
 
+export interface UpdatePaymentData {
+  paymentMethod?: PaymentMethodType;
+  amount?: number;
+  paidAmount?: number;
+  referenceNumber?: string;
+  notes?: string;
+}
+
 export interface Payment {
   id: string;
   visitId: string;
@@ -41,6 +49,11 @@ export interface Payment {
 export const paymentService = {
   async createPayment(data: CreatePaymentData): Promise<Payment> {
     const response = await apiClient.post('/payments', data);
+    return response.data.data;
+  },
+
+  async updatePayment(id: string, data: UpdatePaymentData): Promise<Payment> {
+    const response = await apiClient.put(`/payments/${id}`, data);
     return response.data.data;
   },
 

@@ -15,6 +15,15 @@ export class PaymentController {
     }
   }
 
+  async updatePayment(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const payment = await paymentService.updatePayment(req.params.id, req.body);
+      res.json(successResponse('Pembayaran berhasil diupdate', payment));
+    } catch (error) {
+      next(error);
+    }
+  }
+
   async getPaymentsByVisit(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const payments = await paymentService.getPaymentsByVisit(req.params.visitId);
