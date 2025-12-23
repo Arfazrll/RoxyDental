@@ -83,26 +83,48 @@ export default function DoctorDashboard() {
               <span className="text-sm">{profile?.specialization || 'Dokter Gigi'}</span>
             </p>
 
-            <div className="flex items-center gap-2 text-sm text-gray-500 mt-2">
-              <MapPin className="w-4 h-4" />
-              <span>Tempat Praktik</span>
-            </div>
+            <div className="flex items-center gap-2 mt-3 text-pink-500">
+          <MapPin className="w-4 h-4" />
+          <span className="text-sm font-medium">
+            Tempat Praktek
+          </span>
+        </div>
 
-            <Badge className="mt-3 bg-pink-100 text-pink-700 border-none w-fit">
-              {practiceStatus === 'ACTIVE' ? 'Aktif' : 'Tidak Aktif'}
-            </Badge>
+    {/* Badge Lokasi */}
+    <Badge
+      className="
+        mt-2
+        inline-flex items-center
+        max-w-fit
+        px-3 py-1
+        rounded-full
+        text-xs font-medium
+        bg-pink-100 text-pink-600
+        whitespace-nowrap
+      "
+    >
+      POLABDC
+    </Badge>
 
-            {/* Tombol Prediksi */}
-            <div className="mt-4">
-              <Button
-                onClick={() => setShowPredictionModal(true)}
-                className="flex items-center bg-pink-600 hover:bg-pink-700 text-white shadow-md px-4 py-2 rounded-md transition-colors"
-              >
-                <Activity className="w-4 h-4 mr-2" />
-                Prediksi
-              </Button>
-            </div>
-          </div>
+    {/* Tombol Prediksi */}
+    <div className="mt-3">
+      <Button
+        onClick={() => setShowPredictionModal(true)}
+        className="
+          inline-flex items-center
+          h-8 px-4
+          rounded-full
+          bg-pink-600 hover:bg-pink-700
+          text-sm font-semibold text-white
+          shadow-md
+          transition-colors
+        "
+      >
+        <Activity className="w-4 h-4 mr-2" />
+        Prediksi
+      </Button>
+    </div>
+    </div>
 
         </div>
       </CardContent>
