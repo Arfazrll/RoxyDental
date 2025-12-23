@@ -18,27 +18,13 @@ import {
   Package,
 } from "@/services/finance.service";
 
+import { 
+  paymentService, 
+  Payment
+} from "@/services/payment.service";
+
 const PAGE_SIZE = 20;
 
-/* =======================
-   (FE ONLY) PAYMENT TYPES
-   - tidak mengubah BE
-======================= */
-interface Payment {
-  id: string;
-  patientName: string;
-  visitNumber: string;
-  totalBill: number;
-  paymentMethod: string;
-  amountPaid: number;
-  change: number;
-  note?: string;
-  createdAt: string;
-}
-
-/* =======================
-   Table border styles
-======================= */
 const tableClass =
   "min-w-full text-xs border border-pink-200 border-separate border-spacing-0";
 const thClass =
@@ -58,54 +44,15 @@ export default function CommissionReportPage() {
   const [pagePayment, setPagePayment] = useState(1);
 
   const [showModal, setShowModal] = useState(false);
-  const [modalMode, setModalMode] = useState<
-    "medical" | "procedure" | "packet"
-  >("medical");
+  const [modalMode, setModalMode] = useState<"medical" | "procedure" | "packet">("medical");
 
-  // PDF picker modal
   const [showPdfModal, setShowPdfModal] = useState(false);
   const [pdfScope, setPdfScope] = useState<PdfScope>("all");
 
   const [medicalStaff, setMedicalStaff] = useState<FinanceReport[]>([]);
   const [procedures, setProcedures] = useState<Procedure[]>([]);
   const [packages, setPackages] = useState<Package[]>([]);
-
-  // ✅ Dummy pembayaran (FE-only)
-  const [payments] = useState<Payment[]>([
-    {
-      id: "1",
-      patientName: "Intan Nuraeini",
-      visitNumber: "KJ-2025-001",
-      totalBill: 250000,
-      paymentMethod: "Cash",
-      amountPaid: 300000,
-      change: 50000,
-      note: "Lunas",
-      createdAt: "2025-12-01T10:20:00",
-    },
-    {
-      id: "2",
-      patientName: "Rafi Pratama",
-      visitNumber: "KJ-2025-002",
-      totalBill: 150000,
-      paymentMethod: "QRIS",
-      amountPaid: 150000,
-      change: 0,
-      note: "-",
-      createdAt: "2025-12-03T09:10:00",
-    },
-    {
-      id: "3",
-      patientName: "Salsa Aulia",
-      visitNumber: "KJ-2025-003",
-      totalBill: 500000,
-      paymentMethod: "Debit",
-      amountPaid: 500000,
-      change: 0,
-      note: "Lunas",
-      createdAt: "2025-12-05T14:40:00",
-    },
-  ]);
+  const [payments, setPayments] = useState<Payment[]>([]);
 
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState<{
@@ -116,13 +63,17 @@ export default function CommissionReportPage() {
 
   useEffect(() => {
     loadAllData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadAllData = async () => {
     try {
       setLoading(true);
-      await Promise.all([loadFinanceReports(), loadProcedures(), loadPackages()]);
+      await Promise.all([
+        loadFinanceReports(), 
+        loadProcedures(), 
+        loadPackages(), 
+        loadPayments()
+      ]);
     } finally {
       setLoading(false);
     }
@@ -158,6 +109,16 @@ export default function CommissionReportPage() {
     }
   };
 
+  const loadPayments = async () => {
+    try {
+      const data = await paymentService.getAllPayments("");
+      setPayments(data);
+    } catch (e) {
+      console.error(e);
+      showToast("Gagal memuat data pembayaran", "error");
+    }
+  };
+
   const showToast = (msg: string, type: "success" | "error" = "success") => {
     setToast({ show: true, msg, type });
     setTimeout(() => setToast({ show: false, msg: "" }), 3000);
@@ -165,10 +126,18 @@ export default function CommissionReportPage() {
 
   const toNumber = (v: any) => Number(v) || 0;
   const formatCurrency = (v: number) => `Rp. ${v.toLocaleString("id-ID")}`;
+  const formatDate = (iso: string) =>
+    new Date(iso).toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" });
 
-  /* =======================
-     FILTERS
-  ======================= */
+  function methodLabel(m: string) {
+    const x = (m || "").toLowerCase();
+    if (x === "cash") return "Cash";
+    if (x === "card") return "Debit/Credit";
+    if (x === "qris") return "QRIS";
+    if (x === "transfer") return "Transfer";
+    return m || "-";
+  }
+
   const filteredMedical = useMemo(() => {
     const q = searchQuery.toLowerCase();
     return medicalStaff.filter((s) => s.nama.toLowerCase().includes(q));
@@ -185,17 +154,16 @@ export default function CommissionReportPage() {
   }, [searchQuery, packages]);
 
   const filteredPayment = useMemo(() => {
-    const q = searchQuery.toLowerCase();
+    const q = searchQuery.toLowerCase().trim();
+    if (!q) return payments;
     return payments.filter(
       (p) =>
-        p.patientName.toLowerCase().includes(q) ||
-        p.visitNumber.toLowerCase().includes(q)
+        p.visit.patient.fullName.toLowerCase().includes(q) ||
+        p.visit.visitNumber.toLowerCase().includes(q) ||
+        p.paymentNumber.toLowerCase().includes(q)
     );
   }, [searchQuery, payments]);
 
-  /* =======================
-     PAGINATION
-  ======================= */
   const totalPagesMedical = Math.max(1, Math.ceil(filteredMedical.length / PAGE_SIZE));
   const totalPagesProcedure = Math.max(1, Math.ceil(filteredProcedure.length / PAGE_SIZE));
   const totalPagesPacket = Math.max(1, Math.ceil(filteredPacket.length / PAGE_SIZE));
@@ -236,9 +204,6 @@ export default function CommissionReportPage() {
     </div>
   );
 
-  /* =======================
-     TOTALS
-  ======================= */
   const totalMedical = filteredMedical.reduce(
     (acc, s) => {
       acc.potongan += toNumber(s.potongan);
@@ -271,17 +236,14 @@ export default function CommissionReportPage() {
 
   const totalPayment = filteredPayment.reduce(
     (acc, p) => {
-      acc.totalBill += toNumber(p.totalBill);
-      acc.amountPaid += toNumber(p.amountPaid);
-      acc.change += toNumber(p.change);
+      acc.totalBill += toNumber(p.amount);
+      acc.amountPaid += toNumber(p.paidAmount);
+      acc.change += toNumber(p.changeAmount);
       return acc;
     },
     { totalBill: 0, amountPaid: 0, change: 0 }
   );
 
-  /* =======================
-     SAVE HANDLERS (BE existing)
-  ======================= */
   const handleSaveFinance = async (data: any) => {
     try {
       const res = await financeService.createFinanceReport(data);
@@ -321,9 +283,6 @@ export default function CommissionReportPage() {
     }
   };
 
-  /* =======================
-     EXPORT PDF: pilih tabel / semua
-  ======================= */
   const exportPDF = async (scope: PdfScope) => {
     try {
       const jsPDF = (await import("jspdf")).default;
@@ -470,26 +429,29 @@ export default function CommissionReportPage() {
           startY: 28,
           head: [[
             "TANGGAL",
+            "NO. PEMBAYARAN",
             "PASIEN",
-            "NO KUNJUNGAN",
+            "NO. KUNJUNGAN",
             "TOTAL TAGIHAN",
             "METODE",
             "JUMLAH BAYAR",
             "KEMBALIAN",
-            "CATATAN",
+            "STATUS",
           ]],
           body: filteredPayment.map((p) => ([
-            new Date(p.createdAt).toLocaleDateString("id-ID"),
-            p.patientName,
-            p.visitNumber,
-            `Rp ${toNumber(p.totalBill).toLocaleString("id-ID")}`,
-            p.paymentMethod,
-            `Rp ${toNumber(p.amountPaid).toLocaleString("id-ID")}`,
-            `Rp ${toNumber(p.change).toLocaleString("id-ID")}`,
-            p.note || "-",
+            formatDate(p.createdAt),
+            p.paymentNumber,
+            p.visit.patient.fullName,
+            p.visit.visitNumber,
+            `Rp ${toNumber(p.amount).toLocaleString("id-ID")}`,
+            methodLabel(p.paymentMethod),
+            `Rp ${toNumber(p.paidAmount).toLocaleString("id-ID")}`,
+            `Rp ${toNumber(p.changeAmount).toLocaleString("id-ID")}`,
+            p.status === "PAID" ? "Lunas" : p.status === "PARTIAL" ? "Sebagian" : p.status,
           ])),
           foot: [[
             "TOTAL",
+            "",
             "",
             "",
             `Rp ${totalPayment.totalBill.toLocaleString("id-ID")}`,
@@ -539,129 +501,110 @@ export default function CommissionReportPage() {
     }
   };
 
-  /* XLSX tetap (opsional) */
   const exportXLSX = async () => {
-  try {
-    const XLSX = await import("xlsx");
-    const wb = XLSX.utils.book_new();
+    try {
+      const XLSX = await import("xlsx");
+      const wb = XLSX.utils.book_new();
 
-    const now = new Date();
-    const stamp = now
-      .toLocaleDateString("id-ID")
-      .replaceAll("/", "-"); // aman untuk nama file
+      const now = new Date();
+      const stamp = now.toLocaleDateString("id-ID").replaceAll("/", "-");
 
-    // Helper: tambah sheet dari array of object
-    const appendSheet = (name: string, rows: Record<string, any>[]) => {
-      const ws = XLSX.utils.json_to_sheet(rows);
-      XLSX.utils.book_append_sheet(wb, ws, name);
-    };
+      const appendSheet = (name: string, rows: Record<string, any>[]) => {
+        const ws = XLSX.utils.json_to_sheet(rows);
+        XLSX.utils.book_append_sheet(wb, ws, name);
+      };
 
-    // =========================
-    // SHEET: TENAGA MEDIS
-    // =========================
-    appendSheet(
-      "Tenaga Medis",
-      filteredMedical.map((s) => ({
-        "Tenaga Medis": s.nama,
-        "Potongan Awal": toNumber(s.potongan),
-        "Harga Modal (BHP)": toNumber(s.bhpHarga),
-        "Komisi BHP (%)": toNumber(s.bhpKomisi),
-        "Farmasi": toNumber(s.farmasiHarga),
-        "Harga Modal (Farmasi)": toNumber(s.bhpHarga),
-        "Komisi Farmasi (%)": toNumber(s.farmasiKomisi),
-        "Paket": toNumber(s.paketHarga),
-        "Komisi Paket (%)": toNumber(s.paketKomisi),
-        "Lab": toNumber(s.labHarga),
-      }))
-    );
+      appendSheet(
+        "Tenaga Medis",
+        filteredMedical.map((s) => ({
+          "Tenaga Medis": s.nama,
+          "Potongan Awal": toNumber(s.potongan),
+          "Harga Modal (BHP)": toNumber(s.bhpHarga),
+          "Komisi BHP (%)": toNumber(s.bhpKomisi),
+          "Farmasi": toNumber(s.farmasiHarga),
+          "Harga Modal (Farmasi)": toNumber(s.bhpHarga),
+          "Komisi Farmasi (%)": toNumber(s.farmasiKomisi),
+          "Paket": toNumber(s.paketHarga),
+          "Komisi Paket (%)": toNumber(s.paketKomisi),
+          "Lab": toNumber(s.labHarga),
+        }))
+      );
 
-    // =========================
-    // SHEET: PROSEDUR
-    // =========================
-    appendSheet(
-      "Prosedur",
-      filteredProcedure.map((p) => ({
-        Prosedur: p.name,
-        Kode: p.code,
-        Qty: toNumber(p.quantity),
-        "Harga Jual": toNumber(p.salePrice),
-        "Total Penjualan": toNumber(p.totalSale),
-        "Komisi (%)": toNumber(p.avgComm),
-        "Total Komisi": toNumber(p.totalComm),
-      }))
-    );
+      appendSheet(
+        "Prosedur",
+        filteredProcedure.map((p) => ({
+          Prosedur: p.name,
+          Kode: p.code,
+          Qty: toNumber(p.quantity),
+          "Harga Jual": toNumber(p.salePrice),
+          "Total Penjualan": toNumber(p.totalSale),
+          "Komisi (%)": toNumber(p.avgComm),
+          "Total Komisi": toNumber(p.totalComm),
+        }))
+      );
 
-    // =========================
-    // SHEET: PAKET
-    // =========================
-    appendSheet(
-      "Paket",
-      filteredPacket.map((p) => ({
-        Paket: p.name,
-        SKU: p.sku,
-        Qty: toNumber(p.quantity),
-        "Harga Jual": toNumber(p.salePrice),
-        "Total Penjualan": toNumber(p.totalSale),
-        "Komisi (%)": toNumber(p.avgComm),
-        "Total Komisi": toNumber(p.totalComm),
-      }))
-    );
+      appendSheet(
+        "Paket",
+        filteredPacket.map((p) => ({
+          Paket: p.name,
+          SKU: p.sku,
+          Qty: toNumber(p.quantity),
+          "Harga Jual": toNumber(p.salePrice),
+          "Total Penjualan": toNumber(p.totalSale),
+          "Komisi (%)": toNumber(p.avgComm),
+          "Total Komisi": toNumber(p.totalComm),
+        }))
+      );
 
-    // =========================
-    // SHEET: PEMBAYARAN (dummy FE)
-    // =========================
-    appendSheet(
-      "Pembayaran",
-      filteredPayment.map((p) => ({
-        Tanggal: new Date(p.createdAt).toLocaleDateString("id-ID"),
-        Pasien: p.patientName,
-        "No Kunjungan": p.visitNumber,
-        "Total Tagihan": toNumber(p.totalBill),
-        Metode: p.paymentMethod,
-        "Jumlah Bayar": toNumber(p.amountPaid),
-        Kembalian: toNumber(p.change),
-        Catatan: p.note || "-",
-      }))
-    );
+      appendSheet(
+        "Pembayaran",
+        filteredPayment.map((p) => ({
+          Tanggal: formatDate(p.createdAt),
+          "No. Pembayaran": p.paymentNumber,
+          Pasien: p.visit.patient.fullName,
+          "No Kunjungan": p.visit.visitNumber,
+          "Total Tagihan": toNumber(p.amount),
+          Metode: methodLabel(p.paymentMethod),
+          "Jumlah Bayar": toNumber(p.paidAmount),
+          Kembalian: toNumber(p.changeAmount),
+          Status: p.status === "PAID" ? "Lunas" : p.status === "PARTIAL" ? "Sebagian" : p.status,
+        }))
+      );
 
-    // =========================
-    // (Opsional) SHEET: RINGKASAN
-    // =========================
-    appendSheet("Ringkasan", [
-      {
-        Kategori: "Tenaga Medis",
-        "Total Potongan": totalMedical.potongan,
-        "Total BHP": totalMedical.bhpHarga,
-        "Total Farmasi": totalMedical.farmasiHarga,
-        "Total Paket": totalMedical.paketHarga,
-        "Total Lab": totalMedical.labHarga,
-      },
-      {
-        Kategori: "Prosedur",
-        "Total Penjualan": totalProcedure.totalSale,
-        "Total Komisi": totalProcedure.totalComm,
-      },
-      {
-        Kategori: "Paket",
-        "Total Penjualan": totalPacket.totalSale,
-        "Total Komisi": totalPacket.totalComm,
-      },
-      {
-        Kategori: "Pembayaran",
-        "Total Tagihan": totalPayment.totalBill,
-        "Total Bayar": totalPayment.amountPaid,
-        "Total Kembalian": totalPayment.change,
-      },
-    ]);
+      appendSheet("Ringkasan", [
+        {
+          Kategori: "Tenaga Medis",
+          "Total Potongan": totalMedical.potongan,
+          "Total BHP": totalMedical.bhpHarga,
+          "Total Farmasi": totalMedical.farmasiHarga,
+          "Total Paket": totalMedical.paketHarga,
+          "Total Lab": totalMedical.labHarga,
+        },
+        {
+          Kategori: "Prosedur",
+          "Total Penjualan": totalProcedure.totalSale,
+          "Total Komisi": totalProcedure.totalComm,
+        },
+        {
+          Kategori: "Paket",
+          "Total Penjualan": totalPacket.totalSale,
+          "Total Komisi": totalPacket.totalComm,
+        },
+        {
+          Kategori: "Pembayaran",
+          "Total Tagihan": totalPayment.totalBill,
+          "Total Bayar": totalPayment.amountPaid,
+          "Total Kembalian": totalPayment.change,
+        },
+      ]);
 
-    XLSX.writeFile(wb, `Laporan_${stamp}.xlsx`);
-    showToast("Excel berhasil diunduh!", "success");
-  } catch (e) {
-    console.error(e);
-    showToast("Gagal mengunduh Excel", "error");
-  }
-};
-
+      XLSX.writeFile(wb, `Laporan_${stamp}.xlsx`);
+      showToast("Excel berhasil diunduh!", "success");
+    } catch (e) {
+      console.error(e);
+      showToast("Gagal mengunduh Excel", "error");
+    }
+  };
 
   if (loading) {
     return (
@@ -680,7 +623,6 @@ export default function CommissionReportPage() {
 
       <div className="min-h-screen bg-[#FFF5F7]">
         <div className="p-6 max-w-7xl mx-auto">
-          {/* SEARCH + EXPORT */}
           <Card className="shadow-md mb-6 border border-pink-200">
             <CardContent className="p-4 flex flex-wrap gap-4 items-center">
               <div className="relative flex-1 min-w-[250px] mt-6">
@@ -721,9 +663,6 @@ export default function CommissionReportPage() {
             </CardContent>
           </Card>
 
-          {/* =======================
-              TABLE: MEDICAL
-          ======================= */}
           <div className="flex justify-between items-center mt-4 mb-2">
             <h2 className="text-xl font-bold text-pink-600">KOMISI TENAGA MEDIS</h2>
             <button
@@ -799,9 +738,6 @@ export default function CommissionReportPage() {
             </div>
           </Card>
 
-          {/* =======================
-              TABLE: PROCEDURE
-          ======================= */}
           <div className="flex justify-between items-center mt-4 mb-2">
             <h2 className="text-xl font-bold text-pink-600">KOMISI PROSEDUR / LAYANAN</h2>
             <button
@@ -869,9 +805,6 @@ export default function CommissionReportPage() {
             </div>
           </Card>
 
-          {/* =======================
-              TABLE: PACKET
-          ======================= */}
           <div className="flex justify-between items-center mt-4 mb-2">
             <h2 className="text-xl font-bold text-pink-600">KOMISI PAKET</h2>
             <button
@@ -939,9 +872,6 @@ export default function CommissionReportPage() {
             </div>
           </Card>
 
-          {/* =======================
-              TABLE: PEMBAYARAN (no button)
-          ======================= */}
           <div className="flex justify-between items-center mt-4 mb-2">
             <h2 className="text-xl font-bold text-pink-600">PEMBAYARAN</h2>
           </div>
@@ -953,13 +883,14 @@ export default function CommissionReportPage() {
                   <tr>
                     {[
                       "TANGGAL",
+                      "NO. PEMBAYARAN",
                       "PASIEN",
-                      "NO KUNJUNGAN",
+                      "NO. KUNJUNGAN",
                       "TOTAL TAGIHAN",
                       "METODE",
                       "JUMLAH BAYAR",
                       "KEMBALIAN",
-                      "CATATAN",
+                      "STATUS",
                     ].map((col, i) => (
                       <th key={i} className={thClass}>
                         {col}
@@ -969,23 +900,56 @@ export default function CommissionReportPage() {
                 </thead>
 
                 <tbody className="bg-white divide-y divide-pink-100">
-                  {displayedPayment.length === 0 ? (
+                  {loading ? (
                     <tr>
-                      <td colSpan={8} className="px-3 py-6 text-center text-pink-600">
+                      <td colSpan={9} className="px-3 py-10 text-center">
+                        <div className="flex justify-center">
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pink-600" />
+                        </div>
+                      </td>
+                    </tr>
+                  ) : displayedPayment.length === 0 ? (
+                    <tr>
+                      <td colSpan={9} className="px-3 py-6 text-center text-pink-600">
                         Tidak ada data pembayaran.
                       </td>
                     </tr>
                   ) : (
                     displayedPayment.map((p) => (
                       <tr key={p.id} className="hover:bg-pink-50">
-                        <td className={tdBase}>{new Date(p.createdAt).toLocaleDateString("id-ID")}</td>
-                        <td className={`${tdBase} font-semibold`}>{p.patientName}</td>
-                        <td className={tdBase}>{p.visitNumber}</td>
-                        <td className={`${tdBase} text-right`}>{formatCurrency(p.totalBill)}</td>
-                        <td className={tdBase}>{p.paymentMethod}</td>
-                        <td className={`${tdBase} text-right`}>{formatCurrency(p.amountPaid)}</td>
-                        <td className={`${tdBase} text-right`}>{formatCurrency(p.change)}</td>
-                        <td className={tdBase}>{p.note || "-"}</td>
+                        <td className={tdBase}>
+                          {formatDate(p.createdAt)}
+                        </td>
+                        <td className={`${tdBase} font-semibold text-pink-700`}>{p.paymentNumber}</td>
+                        <td className={`${tdBase} font-semibold`}>{p.visit.patient.fullName}</td>
+                        <td className={tdBase}>{p.visit.visitNumber}</td>
+                        <td className={`${tdBase} text-right font-semibold`}>
+                          {formatCurrency(p.amount)}
+                        </td>
+                        <td className={tdBase}>{methodLabel(p.paymentMethod)}</td>
+                        <td className={`${tdBase} text-right`}>
+                          {formatCurrency(p.paidAmount)}
+                        </td>
+                        <td className={`${tdBase} text-right`}>
+                          {formatCurrency(p.changeAmount)}
+                        </td>
+                        <td className={tdBase}>
+                          <span
+                            className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${
+                              p.status === "PAID"
+                                ? "bg-green-100 text-green-700 border border-green-200"
+                                : p.status === "PARTIAL"
+                                ? "bg-yellow-100 text-yellow-700 border border-yellow-200"
+                                : "bg-gray-100 text-gray-700 border border-gray-200"
+                            }`}
+                          >
+                            {p.status === "PAID"
+                              ? "Lunas"
+                              : p.status === "PARTIAL"
+                              ? "Sebagian"
+                              : p.status}
+                          </span>
+                        </td>
                       </tr>
                     ))
                   )}
@@ -993,11 +957,19 @@ export default function CommissionReportPage() {
 
                 <tfoot className={tfootClass}>
                   <tr>
-                    <td colSpan={3} className={`${tdBase} font-semibold`}>TOTAL</td>
-                    <td className={`${tdBase} text-right`}>{formatCurrency(totalPayment.totalBill)}</td>
+                    <td colSpan={4} className={`${tdBase} font-semibold`}>
+                      TOTAL
+                    </td>
+                    <td className={`${tdBase} text-right`}>
+                      {formatCurrency(totalPayment.totalBill)}
+                    </td>
                     <td className={tdBase} />
-                    <td className={`${tdBase} text-right`}>{formatCurrency(totalPayment.amountPaid)}</td>
-                    <td className={`${tdBase} text-right`}>{formatCurrency(totalPayment.change)}</td>
+                    <td className={`${tdBase} text-right`}>
+                      {formatCurrency(totalPayment.amountPaid)}
+                    </td>
+                    <td className={`${tdBase} text-right`}>
+                      {formatCurrency(totalPayment.change)}
+                    </td>
                     <td className={tdBase} />
                   </tr>
                 </tfoot>
@@ -1008,156 +980,146 @@ export default function CommissionReportPage() {
               {renderPagination(pagePayment, setPagePayment, totalPagesPayment)}
             </div>
           </Card>
-        </div>
 
-        {/* =======================
-            MODAL: PILIH PDF
-        ======================= */}
-        {showPdfModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
-            <div
-              className="absolute inset-0 bg-black/40"
-              onClick={() => setShowPdfModal(false)}
-              aria-hidden
-            />
-            <div className="relative z-10 w-full max-w-lg rounded-2xl bg-white border border-pink-200 shadow-xl overflow-hidden">
-              <div className="px-5 py-4 border-b border-pink-100 bg-pink-50">
-                <h3 className="text-sm font-bold text-pink-700">Download PDF</h3>
-                <p className="text-xs text-pink-600 mt-1">
-                  Pilih tabel yang ingin diunduh atau unduh semuanya.
-                </p>
-              </div>
+          {showPdfModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+              <div
+                className="absolute inset-0 bg-black/40"
+                onClick={() => setShowPdfModal(false)}
+                aria-hidden
+              />
+              <div className="relative z-10 w-full max-w-lg rounded-2xl bg-white border border-pink-200 shadow-xl overflow-hidden">
+                <div className="px-5 py-4 border-b border-pink-100 bg-pink-50">
+                  <h3 className="text-sm font-bold text-pink-700">Download PDF</h3>
+                  <p className="text-xs text-pink-600 mt-1">
+                    Pilih tabel yang ingin diunduh atau unduh semuanya.
+                  </p>
+                </div>
 
-              <div className="p-5">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {[
-                    { key: "all", label: "Semua Tabel" },
-                    { key: "medical", label: "Komisi Tenaga Medis" },
-                    { key: "procedure", label: "Komisi Prosedur/Layanan" },
-                    { key: "packet", label: "Komisi Paket" },
-                    { key: "payment", label: "Pembayaran" },
-                  ].map((opt: any) => (
-                    <button
-                      key={opt.key}
-                      onClick={() => setPdfScope(opt.key)}
-                      className={`text-left px-4 py-3 rounded-xl border transition ${
-                        pdfScope === opt.key
-                          ? "border-pink-400 bg-pink-50 shadow-sm"
-                          : "border-pink-200 hover:bg-pink-50"
-                      }`}
+                <div className="p-5">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {[
+                      { key: "all", label: "Semua Tabel" },
+                      { key: "medical", label: "Komisi Tenaga Medis" },
+                      { key: "procedure", label: "Komisi Prosedur/Layanan" },
+                      { key: "packet", label: "Komisi Paket" },
+                      { key: "payment", label: "Pembayaran" },
+                    ].map((opt: any) => (
+                      <button
+                        key={opt.key}
+                        onClick={() => setPdfScope(opt.key)}
+                        className={`text-left px-4 py-3 rounded-xl border transition ${
+                          pdfScope === opt.key
+                            ? "border-pink-400 bg-pink-50 shadow-sm"
+                            : "border-pink-200 hover:bg-pink-50"
+                        }`}
+                      >
+                        <div className="text-sm font-semibold text-pink-800">
+                          {opt.label}
+                        </div>
+                        <div className="text-xs text-gray-500 mt-0.5">
+                          {opt.key === "all"
+                            ? "Gabungkan jadi 1 file PDF (multi halaman)"
+                            : "1 tabel menjadi 1 file PDF"}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="flex items-center justify-end gap-2 mt-5">
+                    <Button
+                      variant="outline"
+                      className="border-pink-200 text-pink-700 hover:bg-pink-50"
+                      onClick={() => setShowPdfModal(false)}
                     >
-                      <div className="text-sm font-semibold text-pink-800">
-                        {opt.label}
-                      </div>
-                      <div className="text-xs text-gray-500 mt-0.5">
-                        {opt.key === "all"
-                          ? "Gabungkan jadi 1 file PDF (multi halaman)"
-                          : "1 tabel menjadi 1 file PDF"}
-                      </div>
-                    </button>
-                  ))}
-                </div>
+                      Batal
+                    </Button>
 
-                <div className="flex items-center justify-end gap-2 mt-5">
-                  <Button
-                    variant="outline"
-                    className="border-pink-200 text-pink-700 hover:bg-pink-50"
-                    onClick={() => setShowPdfModal(false)}
-                  >
-                    Batal
-                  </Button>
-
-                  <Button
-                    className="bg-pink-600 hover:bg-pink-700 text-white"
-                    onClick={() => {
-                      setShowPdfModal(false);
-                      exportPDF(pdfScope);
-                    }}
-                  >
-                    Download
-                  </Button>
+                    <Button
+                      className="bg-pink-600 hover:bg-pink-700 text-white"
+                      onClick={() => {
+                        setShowPdfModal(false);
+                        exportPDF(pdfScope);
+                      }}
+                    >
+                      Download
+                    </Button>
+                  </div>
                 </div>
               </div>
-            </div>
-          </div>
-        )}
-
-        {/* =======================
-            MODAL: ADD (existing)
-        ======================= */}
-        {showModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
-            <div
-              className="absolute inset-0 bg-black/40"
-              onClick={() => setShowModal(false)}
-              aria-hidden
-            />
-            <div className="relative z-10 w-full max-w-xl mx-auto">
-              <div className="bg-white rounded-lg shadow-lg border border-pink-100">
-                
-                {/* Header kecil & mepet */}
-                <div className="flex items-center justify-between px-3 py-2 border-b border-pink-100">
-                  <h3 className="text-sm font-semibold text-pink-700">
-                    {modalMode === "medical"
-                      ? "Tambah Laporan Keuangan"
-                      : modalMode === "procedure"
-                      ? "Tambah Prosedur"
-                      : "Tambah Paket"}
-                  </h3>
-
-                  <button
-                    type="button"
-                    onClick={() => setShowModal(false)}
-                    className="h-7 w-7 flex items-center justify-center rounded-md text-pink-600 hover:bg-pink-50 active:bg-pink-100 transition"
-                    aria-label="Tutup"
-                  >
-                    ✕
-                  </button>
-                </div>
-
-                {/* Body – tanpa scroll, mepet */}
-                <div className="p-0">
-                  {modalMode === "medical" && (
-                    <AddFinance
-                      onClose={() => setShowModal(false)}
-                      handleSave={handleSaveFinance}
-                    />
-                  )}
-
-                  {modalMode === "procedure" && (
-                    <AddProcedure
-                      onClose={() => setShowModal(false)}
-                      handleSave={handleSaveProcedure}
-                    />
-                  )}
-
-                  {modalMode === "packet" && (
-                    <AddPacket
-                      onClose={() => setShowModal(false)}
-                      handleSave={handleSavePacket}
-                    />
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* TOAST */}
-        <div className="fixed right-4 bottom-4 z-50">
-          {toast.show && (
-            <div
-              role="status"
-              aria-live="polite"
-              className={`min-w-[220px] max-w-sm px-4 py-3 rounded shadow-md text-sm font-medium ${
-                toast.type === "error"
-                  ? "bg-red-100 text-red-800"
-                  : "bg-white border border-pink-200 text-pink-700"
-              }`}
-            >
-              {toast.msg}
             </div>
           )}
+
+          {showModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+              <div
+                className="absolute inset-0 bg-black/40"
+                onClick={() => setShowModal(false)}
+                aria-hidden
+              />
+              <div className="relative z-10 w-full max-w-xl mx-auto">
+                <div className="bg-white rounded-lg shadow-lg border border-pink-100">
+                  <div className="flex items-center justify-between px-3 py-2 border-b border-pink-100">
+                    <h3 className="text-sm font-semibold text-pink-700">
+                      {modalMode === "medical"
+                        ? "Tambah Laporan Keuangan"
+                        : modalMode === "procedure"
+                        ? "Tambah Prosedur"
+                        : "Tambah Paket"}
+                    </h3>
+
+                    <button
+                      type="button"
+                      onClick={() => setShowModal(false)}
+                      className="h-7 w-7 flex items-center justify-center rounded-md text-pink-600 hover:bg-pink-50 active:bg-pink-100 transition"
+                      aria-label="Tutup"
+                    >
+                      ✕
+                    </button>
+                  </div>
+
+                  <div className="p-0">
+                    {modalMode === "medical" && (
+                      <AddFinance
+                        onClose={() => setShowModal(false)}
+                        handleSave={handleSaveFinance}
+                      />
+                    )}
+
+                    {modalMode === "procedure" && (
+                      <AddProcedure
+                        onClose={() => setShowModal(false)}
+                        handleSave={handleSaveProcedure}
+                      />
+                    )}
+
+                    {modalMode === "packet" && (
+                      <AddPacket
+                        onClose={() => setShowModal(false)}
+                        handleSave={handleSavePacket}
+                      />
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="fixed right-4 bottom-4 z-50">
+            {toast.show && (
+              <div
+                role="status"
+                aria-live="polite"
+                className={`min-w-[220px] max-w-sm px-4 py-3 rounded shadow-md text-sm font-medium ${
+                  toast.type === "error"
+                    ? "bg-red-100 text-red-800"
+                    : "bg-white border border-pink-200 text-pink-700"
+                }`}
+              >
+                {toast.msg}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

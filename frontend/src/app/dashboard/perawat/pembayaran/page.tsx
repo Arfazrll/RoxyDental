@@ -1,3 +1,5 @@
+// path: frontend/src/app/dashboard/perawat/pembayaran/page.tsx         
+
 "use client";
 
 import React, { useMemo, useState, useEffect } from "react";
