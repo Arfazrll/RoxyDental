@@ -2,12 +2,14 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
+import { Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { usePathname } from "next/navigation";
 import DoctorNavbar from "@/components/ui/navbardr";
 import { patientService } from "@/services/patient.service";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
+
+const LIMIT = 20;
 
 export default function PatientListPage() {
   const pathname = usePathname();
@@ -17,13 +19,11 @@ export default function PatientListPage() {
   const [patients, setPatients] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
-  // pagination state
   const [page, setPage] = useState(1);
-  const limit = 20;
   const [pagination, setPagination] = useState({
     total: 0,
     page: 1,
-    limit: 20,
+    limit: LIMIT,
     totalPages: 1,
   });
 
@@ -53,7 +53,7 @@ export default function PatientListPage() {
     try {
       const res = await patientService.getPatients(
         page,
-        limit,
+        LIMIT,
         searchQuery
       );
 
@@ -63,7 +63,7 @@ export default function PatientListPage() {
           res.data.pagination || {
             total: 0,
             page: 1,
-            limit: 20,
+            limit: LIMIT,
             totalPages: 1,
           }
         );
@@ -74,7 +74,8 @@ export default function PatientListPage() {
       toast({
         title: "Error",
         description:
-          error?.response?.data?.message || "Gagal mengambil data pasien",
+          error?.response?.data?.message ||
+          "Gagal mengambil data pasien",
         variant: "destructive",
       });
       setPatients([]);
@@ -86,7 +87,7 @@ export default function PatientListPage() {
   useEffect(() => {
     fetchPatients();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchQuery, page]);
+  }, [page, searchQuery]);
 
   const formatDate = (date: string) => {
     try {
@@ -101,16 +102,12 @@ export default function PatientListPage() {
   };
 
   const calculateAge = (dob: string) => {
-    try {
-      const today = new Date();
-      const birth = new Date(dob);
-      let age = today.getFullYear() - birth.getFullYear();
-      const m = today.getMonth() - birth.getMonth();
-      if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
-      return age;
-    } catch {
-      return "-";
-    }
+    const today = new Date();
+    const birth = new Date(dob);
+    let age = today.getFullYear() - birth.getFullYear();
+    const m = today.getMonth() - birth.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+    return age;
   };
 
   return (
@@ -119,7 +116,7 @@ export default function PatientListPage() {
 
       <div className="pt-6 px-6 max-w-7xl mx-auto space-y-6">
         {/* Tabs */}
-        <div className="flex gap-4 mb-4">
+        <div className="flex gap-4">
           {tabs.map((tab) => {
             const isActive = pathname === tab.href;
             return (
@@ -127,9 +124,7 @@ export default function PatientListPage() {
                 key={tab.value}
                 href={tab.href}
                 className={`
-                  px-6 py-3 rounded-full
-                  text-sm font-semibold
-                  transition-all duration-200
+                  px-6 py-3 rounded-full text-sm font-semibold transition
                   ${
                     isActive
                       ? "bg-pink-600 text-white shadow-lg"
@@ -148,7 +143,7 @@ export default function PatientListPage() {
         </h1>
 
         {/* Search */}
-        <div className="w-full max-w-sm">
+        <div className="max-w-sm">
           <div className="flex items-center gap-2">
             <Search className="w-5 h-5 text-pink-400" />
             <Input
@@ -156,9 +151,9 @@ export default function PatientListPage() {
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value);
-                setPage(1); // reset page saat search
+                setPage(1);
               }}
-              className="flex-1 py-2 rounded-lg border border-pink-200"
+              className="border border-pink-200"
             />
           </div>
         </div>
@@ -178,7 +173,7 @@ export default function PatientListPage() {
                 ].map((h) => (
                   <th
                     key={h}
-                    className="px-4 py-3 text-left font-semibold text-sm"
+                    className="px-4 py-3 text-left text-sm font-semibold"
                   >
                     {h}
                   </th>
@@ -189,9 +184,9 @@ export default function PatientListPage() {
             <tbody className="divide-y divide-pink-100">
               {loading ? (
                 <tr>
-                  <td colSpan={6} className="text-center py-8">
+                  <td colSpan={6} className="py-8 text-center">
                     <div className="flex justify-center">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pink-600" />
+                      <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-pink-600" />
                     </div>
                   </td>
                 </tr>
@@ -199,44 +194,38 @@ export default function PatientListPage() {
                 <tr>
                   <td
                     colSpan={6}
-                    className="px-4 py-6 text-center text-pink-600"
+                    className="py-6 text-center text-pink-600"
                   >
                     Tidak ada data pasien
                   </td>
                 </tr>
               ) : (
-                patients.map((patient) => (
+                patients.map((p) => (
                   <tr
-                    key={patient.id}
+                    key={p.id}
                     className="hover:bg-pink-50 transition"
                   >
                     <td className="px-4 py-2">
-                      {patient.patientNumber || "-"}
+                      {p.patientNumber || "-"}
                     </td>
                     <td className="px-4 py-2 font-medium">
-                      {patient.fullName || "-"}
+                      {p.fullName || "-"}
                     </td>
                     <td className="px-4 py-2">
-                      {patient.gender === "L"
-                        ? "Pria"
-                        : "Wanita"}
+                      {p.gender === "L" ? "Pria" : "Wanita"}
                     </td>
                     <td className="px-4 py-2">
-                      {patient.dateOfBirth
-                        ? `${formatDate(
-                            patient.dateOfBirth
-                          )} (${calculateAge(
-                            patient.dateOfBirth
+                      {p.dateOfBirth
+                        ? `${formatDate(p.dateOfBirth)} (${calculateAge(
+                            p.dateOfBirth
                           )})`
                         : "-"}
                     </td>
                     <td className="px-4 py-2">
-                      {patient.lastVisit
-                        ? formatDate(patient.lastVisit)
-                        : "-"}
+                      {p.lastVisit ? formatDate(p.lastVisit) : "-"}
                     </td>
                     <td className="px-4 py-2">
-                      {patient.chiefComplaint || "-"}
+                      {p.chiefComplaint || "-"}
                     </td>
                   </tr>
                 ))
@@ -246,40 +235,28 @@ export default function PatientListPage() {
 
           {/* Pagination */}
           {pagination.totalPages > 1 && (
-            <div className="flex justify-between items-center px-4 py-4 border-t border-pink-100">
+            <div className="flex items-center justify-between px-4 py-4 border-t border-pink-100">
               <span className="text-sm text-pink-700">
                 Halaman {pagination.page} dari{" "}
                 {pagination.totalPages}
               </span>
 
-              <div className="flex gap-2">
-                {/* Prev */}
+              <div className="flex items-center gap-1">
                 <button
                   disabled={page === 1}
-                  onClick={() =>
-                    setPage((p) => Math.max(p - 1, 1))
-                  }
-                  className={`px-3 py-1 rounded-md border text-sm
-                    ${
-                      page === 1
-                        ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                        : "bg-white border-pink-300 text-pink-600 hover:bg-pink-50"
-                    }`}
+                  onClick={() => setPage((p) => p - 1)}
+                  className="p-2 rounded-md border border-pink-300 text-pink-600 disabled:opacity-40"
                 >
-                  Prev
+                  <ChevronLeft className="w-4 h-4" />
                 </button>
 
-                {/* Page Numbers */}
                 {Array.from(
                   { length: pagination.totalPages },
                   (_, i) => i + 1
                 )
                   .slice(
                     Math.max(0, page - 3),
-                    Math.min(
-                      pagination.totalPages,
-                      page + 2
-                    )
+                    Math.min(pagination.totalPages, page + 2)
                   )
                   .map((p) => (
                     <button
@@ -296,25 +273,12 @@ export default function PatientListPage() {
                     </button>
                   ))}
 
-                {/* Next */}
                 <button
                   disabled={page === pagination.totalPages}
-                  onClick={() =>
-                    setPage((p) =>
-                      Math.min(
-                        p + 1,
-                        pagination.totalPages
-                      )
-                    )
-                  }
-                  className={`px-3 py-1 rounded-md border text-sm
-                    ${
-                      page === pagination.totalPages
-                        ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                        : "bg-white border-pink-300 text-pink-600 hover:bg-pink-50"
-                    }`}
+                  onClick={() => setPage((p) => p + 1)}
+                  className="p-2 rounded-md border border-pink-300 text-pink-600 disabled:opacity-40"
                 >
-                  Next
+                  <ChevronRight className="w-4 h-4" />
                 </button>
               </div>
             </div>

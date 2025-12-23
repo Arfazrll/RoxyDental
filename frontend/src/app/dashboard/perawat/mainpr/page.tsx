@@ -88,45 +88,67 @@ function DashboardContent() {
       <DoctorNavbar />
 
       <div className="p-6 space-y-6">
-        <Card className="bg-linear-to-br from-pink-50 to-pink-25 border-none shadow-md">
-          <CardContent className="p-6 flex items-start justify-between">
-            <div className="flex gap-4">
-              <div className="w-32 h-32 bg-white rounded-2xl border-4 border-yellow-400 overflow-hidden flex items-center justify-center shadow-sm mt-5">
+        <Card className="bg-white border border-gray-200 shadow-sm rounded-2xl hover:shadow-md transition">
+          <CardContent className="p-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            
+            {/* LEFT */}
+            <div className="flex items-center gap-5 mt-5">
+              
+              {/* Avatar (KUNING TETAP) */}
+              <div className="w-24 h-24 md:w-28 md:h-28 bg-gray-50 rounded-2xl border-4 border-yellow-400 overflow-hidden flex items-center justify-center shadow-sm">
                 {profile.profilePhoto ? (
-                  <img src={profile.profilePhoto} alt="Profile" className="w-32 h-32 object-cover rounded-2xl" />
+                  <img
+                    src={profile.profilePhoto}
+                    alt="Profile"
+                    className="w-full h-full object-cover"
+                  />
                 ) : (
-                  <User className="w-20 h-20 text-gray-300" />
+                  <User className="w-14 h-14 text-gray-300" />
                 )}
               </div>
-              <div className="flex flex-col justify-center mt-5">
-                <h2 className="text-2xl font-bold text-gray-900">{profile.fullName}</h2>
-                <p className="text-gray-600 mt-1 text-sm">Perawat</p>
+
+              {/* Profile Info */}
+              <div className="flex flex-col">
+                <h2 className="text-lg md:text-xl font-semibold text-gray-900 leading-tight">
+                  {profile.fullName}
+                </h2>
+
+                <p className="text-sm text-gray-600">
+                  Perawat
+                </p>
 
                 <div className="flex items-center gap-1 text-sm text-gray-500 mt-1">
                   <MapPin className="w-4 h-4" />
                   <span>POLADC</span>
                 </div>
 
-                <Badge className="mt-2 bg-pink-100 text-pink-700 border-none w-fit">
-                  {profile.specialization || 'Perawat Klinik'}
-                </Badge>
+<Badge className="mt-3 bg-pink-50 text-pink-700 border border-pink-200 w-fit px-4 py-1.5 text-xs font-semibold rounded-full shadow-sm">
+  {profile.specialization || "Perawat Klinik"}
+</Badge>
+
+
+
               </div>
             </div>
 
-            <div className="flex flex-col items-end gap-2">
-              {completion && (
-                <div className="flex items-center gap-2 mt-1"></div>
-              )}
+            {/* RIGHT */}
+           <div className="flex items-start md:items-end gap-2">
+            {shiftStatus?.status === "On Duty" && (
+              <div className="relative">
+                {/* glow */}
+                <div className="absolute inset-0 rounded-full bg-pink-400/30 blur-md animate-pulse"></div>
 
-              {shiftStatus && shiftStatus.status === 'On Duty' && (
-                <Badge className="bg-green-100 text-green-800 border-none">
-                  <Clock className="w-3 h-3 mr-1" />
+                <Badge className="relative bg-linear-to-r from-pink-500 via-pink-600 to-rose-500 text-white border border-pink-300 flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold shadow-md rounded-full">
+                  <Clock className="w-3.5 h-3.5 animate-pulse" />
                   {shiftStatus.status}
                 </Badge>
-              )}
-            </div>
+              </div>
+            )}
+          </div>
+
           </CardContent>
         </Card>
+
 
         <div>
           <h3 className="text-xl font-semibold text-gray-900 mb-3">Data Kunjungan</h3>
