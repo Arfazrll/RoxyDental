@@ -75,7 +75,7 @@ def root():
     return {
         "service": "RoxyDental AI Service",
         "status": "running",
-        "endpoints": ["/predict", "/chat"]
+        "endpoints": ["/predict", "/chat", "/health"]
     }
 
 @app.get("/predict")
@@ -144,28 +144,37 @@ def chat_with_tika(item: ChatInput):
             avg_revenue = total_revenue / len(recent_data)
             
             context = f"""
-            Data 5 Minggu Terakhir:
-            - Total Pendapatan: Rp {total_revenue:,.0f}
-            - Rata-rata per Minggu: Rp {avg_revenue:,.0f}
-            - Total Transaksi: {int(total_patients)} pasien
-            - Rata-rata Pasien/Minggu: {int(total_patients/len(recent_data))} pasien
-            """
+Data 5 Minggu Terakhir:
+- Total Pendapatan: Rp {total_revenue:,.0f}
+- Rata-rata per Minggu: Rp {avg_revenue:,.0f}
+- Total Transaksi: {int(total_patients)} pasien
+- Rata-rata Pasien/Minggu: {int(total_patients/len(recent_data))} pasien
+""".strip()
 
+        
         system_prompt = f"""
-        Kamu adalah Tika, asisten virtual untuk RoxyDental Clinic.
-        Tugasmu adalah membantu menjawab pertanyaan tentang klinik dengan ramah dan profesional.
+Kamu adalah Tika AI, asisten profesional untuk Dokter dan Manajemen RoxyDental Clinic.
+
+Konteks data internal (gunakan jika relevan):
+{context}
+
+ATURAN WAJIB:
+- Jangan mengulang salam/perkenalan di setiap jawaban.
+- Jawab langsung ke inti (maks 2 kalimat pembuka).
+- Jangan menjawab normatif/umum tanpa rincian langkah.
+- Jika user minta tips/strategi: berikan minimal 7 langkah yang bisa dieksekusi.
+- Jika user tanya pendapatan: jawab angka + periode + interpretasi singkat 1 kalimat.
+- Boleh membantu: operasional klinik, alur pasien & antrian, SDM, SOP layanan, keuangan, bisnis, pemasaran, analisis data (non-medis).
+- Dilarang memberi diagnosis medis atau instruksi tindakan klinis untuk pasien.
+
+FORMAT JAWABAN:
+1) Jawaban panjang dan detail
+2) Detail 
+3) Rekomendasi aksi (7–10 poin)
+4) Jika relevan: contoh implementasi (template pesan / promo / SOP singkat)
+""".strip()
         
-        Informasi Klinik:
-        {context}
-        
-        Panduan Menjawab:
-        - Jawab dengan ramah dan to-the-point
-        - Gunakan data di atas jika relevan
-        - Jika tidak tahu, katakan dengan jujur
-        - Hindari informasi medis yang memerlukan konsultasi dokter
-        """
-        
-        GEMINI_URL = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_KEY}"
+        GEMINI_URL = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GEMINI_KEY}"
         
         headers = {"Content-Type": "application/json"}
         payload = {
@@ -173,22 +182,32 @@ def chat_with_tika(item: ChatInput):
                 "parts": [{"text": f"{system_prompt}\n\nUser ({item.user_name}): {item.message}"}]
             }],
             "generationConfig": {
-                "temperature": 0.7,
-                "maxOutputTokens": 500
+                "temperature": 0.4,          # ✅ lebih konsisten & tidak normatif
+                "maxOutputTokens": 800       # ✅ biar lebih detail
             }
         }
 
         for attempt in range(3):
-            response = requests.post(GEMINI_URL, headers=headers, json=payload, timeout=10)
+            response = requests.post(GEMINI_URL, headers=headers, json=payload, timeout=15)
             
             if response.status_code == 200:
                 result = response.json()
                 
                 if 'candidates' in result and len(result['candidates']) > 0:
-                    reply_text = result['candidates'][0]['content']['parts'][0]['text']
+                    parts = result['candidates'][0].get('content', {}).get('parts', [])
+                    if not parts:
+                        return {
+                            "status": "error",
+                            "reply": "Maaf, Tika tidak dapat memproses pertanyaan tersebut. Coba pertanyaan lain."
+                        }
+
+                    # ✅ FIX: gabungkan semua text parts supaya tidak kepotong
+                    texts = [p.get("text", "") for p in parts if isinstance(p, dict)]
+                    reply_text = "".join(texts).strip()
+
                     return {
                         "status": "success",
-                        "reply": reply_text.strip()
+                        "reply": reply_text if reply_text else "Maaf, Tika tidak dapat memproses pertanyaan tersebut. Coba pertanyaan lain."
                     }
                 else:
                     return {

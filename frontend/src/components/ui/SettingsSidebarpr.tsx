@@ -44,13 +44,6 @@ export default function SettingsSidebar({ activeMenu, setActiveMenu }: Props) {
       icon: Lock, 
       path: "/dashboard/perawat/profilpr/passwordpr" 
     },
-    { 
-      id: "tentang", 
-      label: "Tentang Aplikasi", 
-      subtitle: "Info & versi aplikasi", 
-      icon: FileText, 
-      path: "/dashboard/perawat/profilpr/settingpr" 
-    },
   ];
 
   useEffect(() => {

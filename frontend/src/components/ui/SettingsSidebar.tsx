@@ -28,7 +28,6 @@ export default function SettingsSidebar({ activeMenu, setActiveMenu, onLogout }:
   const menuItems: MenuItem[] = [
     { id: "informasi-akun", label: "Informasi Akun", subtitle: "Data profil & akun", icon: User, path: "/dashboard/dokter/profil/akun" },
     { id: "ganti-password", label: "Ganti Password", subtitle: "Keamanan akun", icon: Lock, path: "/dashboard/dokter/profil/password" },
-    { id: "tentang", label: "Tentang", subtitle: "Info aplikasi", icon: CreditCard, path: "/dashboard/dokter/profil/setting" },
   ];
 
   const handleMenuClick = (item: MenuItem) => {
