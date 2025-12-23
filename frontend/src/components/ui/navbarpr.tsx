@@ -73,7 +73,7 @@ export default function Navbar() {
           <div className="w-9 h-9 bg-white rounded-lg flex items-center justify-center overflow-hidden">
             <Image src="/images/pink.png" alt="Logo POLADC" width={28} height={28} className="object-contain" />
           </div>
-          <span className="font-bold text-xl tracking-wide">POLADC</span>
+          <span className="font-bold text-xl tracking-wide">POLABDC</span>
         </div>
 
         <div className="flex items-center gap-5">

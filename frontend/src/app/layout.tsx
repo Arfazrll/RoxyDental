@@ -7,7 +7,7 @@ import { ProfileProvider } from "@/contexts/ProfileContext";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "POLADC - Dental Clinic Management",
+  title: "POLABDC - Dental Clinic Management",
   description: "Professional Dental Clinic Management System",
 
   icons: {

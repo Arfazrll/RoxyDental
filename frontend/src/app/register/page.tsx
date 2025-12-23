@@ -170,14 +170,14 @@ export default function RegisterPage() {
               </h2>
             </div>
 
-            <div className="flex flex-col items-center mb-8">
+           <div className="flex flex-col items-center mb-8 animate-in fade-in zoom-in duration-300">
+
+              {/* LOGO */}
               <div
-                className="rounded-full flex items-center justify-center shadow-lg mb-4 overflow-hidden"
-                style={{
-                  width: "80px",
-                  height: "80px",
-                  background: "linear-gradient(135deg, #FF7AA2 0%, #FF5E8A 100%)",
-                }}
+                className="w-20 h-20 rounded-full flex items-center justify-center
+                          bg-linear-to-br from-pink-400 to-pink-600
+                          shadow-[0_12px_30px_rgba(255,94,138,0.4)]
+                          mb-4 transition-transform hover:scale-105 overflow-hidden"
               >
                 <Image
                   src="/images/putih.png"
@@ -189,13 +189,18 @@ export default function RegisterPage() {
                 />
               </div>
 
-              <h2 className="text-2xl sm:text-3xl font-bold text-pink-500 mb-1">
+              {/* TITLE */}
+              <h2 className="text-2xl sm:text-3xl font-bold text-pink-500 mb-1 text-center tracking-wide">
                 Registrasi Perawat
               </h2>
-              <p className="text-gray-500 font-medium text-sm sm:text-base">
+
+              {/* SUBTITLE */}
+              <p className="text-gray-500 font-medium text-sm sm:text-base text-center">
                 Lengkapi data diri Anda
               </p>
+
             </div>
+
 
             {error && (
               <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl text-sm">

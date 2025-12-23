@@ -83,7 +83,7 @@ export default function LoginPage() {
           <div className="text-left w-full mb-8">
             <h1 className="text-5xl xl:text-6xl font-bold text-gray-900 leading-tight mb-2">Selamat Datang</h1>
             <h2 className="text-5xl xl:text-6xl font-bold text-gray-900 leading-tight mb-2">
-              di <span className="text-pink-600 drop-shadow-sm">POLADC</span>
+              di <span className="text-pink-600 drop-shadow-sm">POLABDC</span>
             </h2>
           </div>
 
@@ -126,14 +126,34 @@ export default function LoginPage() {
         <div className="flex flex-col justify-center items-center flex-1 px-6 sm:px-8 md:px-12 py-8 sm:py-10">
           <div className="w-full max-w-md">
             
-            <div className="flex flex-col items-center mb-8">
-              <div className="rounded-full flex items-center justify-center shadow-lg mb-4 transform hover:scale-105 transition-transform"
-                   style={{ width: "80px", height: "80px", background: "linear-gradient(135deg, #FF7AA2 0%, #FF5E8A 100%)" }}>
-                <Image src="/images/putih.png" alt="Logo POLADC" width={60} height={60} className="object-contain" />
-              </div>
-              <h2 className="text-2xl sm:text-3xl font-bold text-pink-500 mb-1 text-center">POLADC</h2>
-              <p className="text-gray-500 font-medium text-sm sm:text-base text-center">Login ke Akun Kamu</p>
-            </div>
+           <div className="flex flex-col items-center mb-8 animate-in fade-in zoom-in duration-300">
+      
+      {/* LOGO */}
+      <div className="w-20 h-20 rounded-full flex items-center justify-center 
+                      bg-linear-to-br from-pink-400 to-pink-600
+                      shadow-[0_12px_30px_rgba(255,94,138,0.4)]
+                      mb-4 transition-transform hover:scale-105">
+        <Image
+          src="/images/putih.png"
+          alt="Logo POLABDC"
+          width={56}
+          height={56}
+          className="object-contain"
+          priority
+        />
+      </div>
+
+      {/* TITLE */}
+      <h2 className="text-3xl font-bold text-pink-500 tracking-wide text-center">
+        POLABDC
+      </h2>
+
+      {/* SUBTITLE */}
+      <p className="text-gray-500 font-medium text-sm mt-1 text-center">
+        Login ke Akun Kamu
+      </p>
+    </div>
+
 
             {error && (
               <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl text-sm">
@@ -258,7 +278,7 @@ export default function LoginPage() {
               </button>
             </div>
 
-            <p className="text-gray-400 text-xs sm:text-sm text-center mt-8">© 2025 POLADC — All rights reserved</p>
+            <p className="text-gray-400 text-xs sm:text-sm text-center mt-8">© 2025 POLABDC — All rights reserved</p>
           </div>
         </div>
       </div>

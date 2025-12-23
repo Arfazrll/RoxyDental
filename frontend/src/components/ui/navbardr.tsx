@@ -82,7 +82,7 @@ export default function Navbar() {
               className="object-contain"
             />
           </div>
-          <span className="font-bold text-xl tracking-wide">POLADC</span>
+          <span className="font-bold text-xl tracking-wide">POLABDC</span>
         </div>
 
         <div className="flex items-center gap-5">

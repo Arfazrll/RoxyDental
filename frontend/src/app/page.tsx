@@ -37,7 +37,7 @@ export default function LandingPagePro() {
   ];
 
   return (
-    <div className="relative flex flex-col min-h-screen font-sans bg-gradient-to-b from-pink-50 to-white overflow-x-hidden">
+    <div className="relative flex flex-col min-h-screen font-sans bg-linear-to-b from-pink-50 to-white overflow-x-hidden">
 
       {/* Floating shapes */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
@@ -120,7 +120,7 @@ export default function LandingPagePro() {
       </nav>
 
       {/* Hero */}
-      <main className="flex-grow relative">
+      <main className="grow relative">
         <section id="home" className="pt-24 md:pt-32 pb-20 px-4 sm:px-6 lg:px-8 w-full relative z-10">
           <div className="container mx-auto grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16 items-center">
 
@@ -131,7 +131,7 @@ export default function LandingPagePro() {
               </div>
               <h1 className="font-bold text-gray-900 leading-tight text-[clamp(1.6rem,4vw,4.5rem)]">
                 Aplikasi Klinik{" "}
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-pink-600 to-pink-500 animate-gradient-x">
+                <span className="text-transparent bg-clip-text bg-linear-to-r from-pink-500 via-pink-600 to-pink-500 animate-gradient-x">
                   Polo
                 </span>{" "}
                 Efisien & Profesional
@@ -144,7 +144,7 @@ export default function LandingPagePro() {
             {/* Right */}
             <div className={`relative w-full flex justify-center transition-all duration-1000 ${animate ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-10'}`}>
               <div className="relative w-full max-w-[450px]">
-                <div className="absolute inset-0 rounded-3xl bg-gradient-to-r from-pink-400 via-pink-500 to-pink-600 opacity-50 animate-gradient-bg blur-3xl"></div>
+                <div className="absolute inset-0 rounded-3xl bg-linear-to-r from-pink-400 via-pink-500 to-pink-600 opacity-50 animate-gradient-bg blur-3xl"></div>
                 <div className="relative bg-white/40 backdrop-blur-xl rounded-3xl p-10 shadow-2xl flex flex-col items-center text-center border border-white/20 hover:shadow-3xl transition-shadow duration-500">
                   <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">Selamat Datang</h2>
                   <p className="text-gray-700 text-base sm:text-lg mb-6">
@@ -152,7 +152,7 @@ export default function LandingPagePro() {
                   </p>
                   <button 
                     onClick={goToLogin}
-                    className="bg-gradient-to-r from-pink-500 via-pink-600 to-pink-500 text-white px-12 py-4 rounded-full shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 font-bold text-lg animate-pulse"
+                    className="bg-linear-to-r from-pink-500 via-pink-600 to-pink-500 text-white px-12 py-4 rounded-full shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 font-bold text-lg animate-pulse"
                   >
                     Masuk Sekarang
                   </button>
