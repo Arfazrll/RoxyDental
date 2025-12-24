@@ -1,80 +1,41 @@
-# Dokumentasi API RoxyDental Backend
+# API Documentation - POLABDC
 
-## Daftar Isi
-1. [Informasi Umum](#informasi-umum)
-2. [Authentication](#authentication)
-3. [Doctor Dashboard](#doctor-dashboard)
-4. [Nurse Dashboard](#nurse-dashboard)
-5. [Patient Management](#patient-management)
-6. [Visit Management](#visit-management)
-7. [Treatment Management](#treatment-management)
-8. [Payment Management](#payment-management)
-9. [Schedule Management](#schedule-management)
-10. [Leave Management](#leave-management)
-11. [Commission Management](#commission-management)
-12. [Finance Management](#finance-management)
-13. [User Management](#user-management)
-14. [Calendar Management](#calendar-management)
-15. [Medication Management](#medication-management)
-16. [AI Services](#ai-services)
-
----
-
-## Informasi Umum
-
-### Base URL
+## Base URL
 ```
-Production: https://api.roxydental.com
-Development: http://localhost:5000
+http://localhost:5000/api
 ```
 
-### Response Format
-Semua response menggunakan format JSON dengan struktur:
-
-**Success Response:**
-```json
-{
-  "success": true,
-  "message": "Pesan sukses",
-  "data": {}
-}
-```
-
-**Error Response:**
-```json
-{
-  "success": false,
-  "message": "Pesan error",
-  "errors": []
-}
-```
-
-### Authentication Header
-```
-Authorization: Bearer {jwt_token}
-```
-
-### User Roles
-- `DOKTER` - Dokter/Doctor
-- `PERAWAT` - Perawat/Nurse
+## Table of Contents
+1. [Authentication](#authentication)
+2. [Calendar & Leave Management](#calendar--leave-management)
+3. [Dashboard](#dashboard)
+4. [Finance](#finance)
+5. [Medications](#medications)
+6. [Patients](#patients)
+7. [Payments](#payments)
+8. [Users](#users)
+9. [Visits](#visits)
+10. [AI Services](#ai-services)
 
 ---
 
 ## Authentication
 
 ### 1. Login
-**Endpoint:** `POST /api/auth/login`
+**Endpoint:** `POST /auth/login`
+
+**Description:** Authenticate user and receive JWT token
 
 **Request Body:**
 ```json
 {
-  "username": "string (min: 3)",
-  "password": "string (min: 6)",
-  "role": "DOKTER | PERAWAT"
+  "username": "dokter01",
+  "password": "password123",
+  "role": "DOKTER" // or "PERAWAT"
 }
 ```
 
-**Response:**
+**Response (200 OK):**
 ```json
 {
   "success": true,
@@ -82,41 +43,44 @@ Authorization: Bearer {jwt_token}
   "data": {
     "user": {
       "id": "uuid",
-      "username": "string",
-      "email": "string",
-      "fullName": "string",
-      "role": "DOKTER | PERAWAT",
-      "phone": "string",
-      "specialization": "string | null",
+      "username": "dokter01",
+      "email": "dokter@example.com",
+      "fullName": "Dr. John Doe",
+      "role": "DOKTER",
+      "phone": "08123456789",
+      "specialization": "Orthodontist",
       "isActive": true
     },
-    "token": "jwt_token"
+    "token": "jwt_token_here"
   }
 }
 ```
 
-**Error Codes:**
-- `401` - Username atau password salah
-- `403` - Role tidak sesuai / Akun tidak aktif
+**Validation Rules:**
+- `username`: minimum 3 characters
+- `password`: minimum 6 characters
+- `role`: must be either "DOKTER" or "PERAWAT"
 
 ---
 
-### 2. Register (Nurse)
-**Endpoint:** `POST /api/auth/register`
+### 2. Register Nurse
+**Endpoint:** `POST /auth/register`
+
+**Description:** Register new nurse account
 
 **Request Body:**
 ```json
 {
-  "username": "string (min: 3)",
-  "email": "string (email)",
-  "password": "string (min: 6)",
-  "fullName": "string (min: 3)",
-  "phone": "string (min: 10)",
-  "specialization": "string (optional)"
+  "username": "perawat01",
+  "email": "perawat@example.com",
+  "password": "password123",
+  "fullName": "Jane Smith",
+  "phone": "08123456789",
+  "specialization": "General Care"
 }
 ```
 
-**Response:**
+**Response (201 Created):**
 ```json
 {
   "success": true,
@@ -124,40 +88,39 @@ Authorization: Bearer {jwt_token}
   "data": {
     "user": {
       "id": "uuid",
-      "username": "string",
-      "email": "string",
-      "fullName": "string",
+      "username": "perawat01",
+      "email": "perawat@example.com",
+      "fullName": "Jane Smith",
       "role": "PERAWAT",
-      "phone": "string",
-      "specialization": "string | null",
+      "phone": "08123456789",
+      "specialization": "General Care",
       "isActive": true
     },
-    "token": "jwt_token"
+    "token": "jwt_token_here"
   }
 }
 ```
 
-**Error Codes:**
-- `400` - Username/email sudah digunakan
-
 ---
 
 ### 3. Register Doctor
-**Endpoint:** `POST /api/auth/register-doctor`
+**Endpoint:** `POST /auth/register-doctor`
+
+**Description:** Register new doctor account
 
 **Request Body:**
 ```json
 {
-  "username": "string (min: 3)",
-  "email": "string (email)",
-  "password": "string (min: 6)",
-  "fullName": "string (min: 3)",
-  "phone": "string (min: 10)",
-  "specialization": "string (required)"
+  "username": "dokter02",
+  "email": "dokter2@example.com",
+  "password": "password123",
+  "fullName": "Dr. Sarah Wilson",
+  "phone": "08123456789",
+  "specialization": "Pediatric Dentistry"
 }
 ```
 
-**Response:**
+**Response (201 Created):**
 ```json
 {
   "success": true,
@@ -165,15 +128,15 @@ Authorization: Bearer {jwt_token}
   "data": {
     "user": {
       "id": "uuid",
-      "username": "string",
-      "email": "string",
-      "fullName": "string",
+      "username": "dokter02",
+      "email": "dokter2@example.com",
+      "fullName": "Dr. Sarah Wilson",
       "role": "DOKTER",
-      "phone": "string",
-      "specialization": "string",
+      "phone": "08123456789",
+      "specialization": "Pediatric Dentistry",
       "isActive": true
     },
-    "token": "jwt_token"
+    "token": "jwt_token_here"
   }
 }
 ```
@@ -181,16 +144,18 @@ Authorization: Bearer {jwt_token}
 ---
 
 ### 4. Forgot Password
-**Endpoint:** `POST /api/auth/forgot-password`
+**Endpoint:** `POST /auth/forgot-password`
+
+**Description:** Request password reset link via email
 
 **Request Body:**
 ```json
 {
-  "email": "string (email)"
+  "email": "user@example.com"
 }
 ```
 
-**Response:**
+**Response (200 OK):**
 ```json
 {
   "success": true,
@@ -199,24 +164,23 @@ Authorization: Bearer {jwt_token}
 }
 ```
 
-**Error Codes:**
-- `404` - Email tidak ditemukan
-
 ---
 
 ### 5. Reset Password
-**Endpoint:** `POST /api/auth/reset-password`
+**Endpoint:** `POST /auth/reset-password`
+
+**Description:** Reset password using token from email
 
 **Request Body:**
 ```json
 {
-  "email": "string (email)",
-  "token": "string",
-  "newPassword": "string (min: 6)"
+  "email": "user@example.com",
+  "token": "reset_token_from_email",
+  "newPassword": "newpassword123"
 }
 ```
 
-**Response:**
+**Response (200 OK):**
 ```json
 {
   "success": true,
@@ -225,26 +189,27 @@ Authorization: Bearer {jwt_token}
 }
 ```
 
-**Error Codes:**
-- `400` - Token tidak valid atau sudah kadaluarsa
-- `404` - User tidak ditemukan
-
 ---
 
 ### 6. Change Password
-**Endpoint:** `PUT /api/auth/change-password`
+**Endpoint:** `PUT /auth/change-password`
 
-**Headers:** `Authorization: Bearer {token}`
+**Description:** Change password for authenticated user
+
+**Headers:**
+```
+Authorization: Bearer {jwt_token}
+```
 
 **Request Body:**
 ```json
 {
-  "currentPassword": "string (min: 6)",
-  "newPassword": "string (min: 6)"
+  "currentPassword": "oldpassword123",
+  "newPassword": "newpassword123"
 }
 ```
 
-**Response:**
+**Response (200 OK):**
 ```json
 {
   "success": true,
@@ -253,70 +218,460 @@ Authorization: Bearer {jwt_token}
 }
 ```
 
-**Error Codes:**
-- `400` - Password saat ini salah
-
 ---
 
 ### 7. Get Current User
-**Endpoint:** `GET /api/auth/me`
+**Endpoint:** `GET /auth/me`
 
-**Headers:** `Authorization: Bearer {token}`
+**Description:** Get authenticated user information
 
-**Response:**
+**Headers:**
+```
+Authorization: Bearer {jwt_token}
+```
+
+**Response (200 OK):**
 ```json
 {
   "success": true,
   "message": "Data user berhasil diambil",
   "data": {
     "id": "uuid",
-    "username": "string",
-    "email": "string",
-    "fullName": "string",
-    "role": "DOKTER | PERAWAT",
-    "phone": "string",
-    "specialization": "string | null",
+    "username": "dokter01",
+    "email": "dokter@example.com",
+    "fullName": "Dr. John Doe",
+    "role": "DOKTER",
+    "phone": "08123456789",
+    "specialization": "Orthodontist",
     "isActive": true,
-    "createdAt": "timestamp"
+    "createdAt": "2024-01-01T00:00:00.000Z"
   }
 }
 ```
 
 ---
 
-## Doctor Dashboard
+## Calendar & Leave Management
 
-### 1. Get Doctor Summary
-**Endpoint:** `GET /api/doctor/dashboard/summary`
+### 1. Get All Leave Requests
+**Endpoint:** `GET /calendar/leaves`
 
-**Headers:** `Authorization: Bearer {token}`
+**Description:** Get all leave requests (Doctor only)
 
-**Role Required:** `DOKTER`
+**Headers:**
+```
+Authorization: Bearer {jwt_token}
+```
 
-**Response:**
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "uuid",
+      "userId": "uuid",
+      "approvedBy": "uuid",
+      "startDate": "2024-01-15",
+      "endDate": "2024-01-17",
+      "leaveType": "SICK",
+      "reason": "Flu and fever",
+      "status": "APPROVED",
+      "rejectionReason": null,
+      "approvedAt": "2024-01-14T10:30:00.000Z",
+      "createdAt": "2024-01-14T08:00:00.000Z",
+      "updatedAt": "2024-01-14T10:30:00.000Z",
+      "requester": {
+        "id": "uuid",
+        "fullName": "Jane Smith",
+        "email": "jane@example.com",
+        "role": "PERAWAT"
+      },
+      "approver": {
+        "id": "uuid",
+        "fullName": "Dr. John Doe",
+        "email": "john@example.com"
+      }
+    }
+  ]
+}
+```
+
+---
+
+### 2. Get My Leave Requests
+**Endpoint:** `GET /calendar/my-leaves`
+
+**Description:** Get leave requests for authenticated user
+
+**Headers:**
+```
+Authorization: Bearer {jwt_token}
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "uuid",
+      "userId": "uuid",
+      "startDate": "2024-01-15",
+      "endDate": "2024-01-17",
+      "leaveType": "ANNUAL",
+      "reason": "Family vacation",
+      "status": "PENDING",
+      "createdAt": "2024-01-10T09:00:00.000Z",
+      "requester": {
+        "id": "uuid",
+        "fullName": "Jane Smith",
+        "email": "jane@example.com",
+        "role": "PERAWAT"
+      }
+    }
+  ]
+}
+```
+
+---
+
+### 3. Get Pending Leave Requests
+**Endpoint:** `GET /calendar/pending-leaves`
+
+**Description:** Get pending leave requests from nurses (Doctor only)
+
+**Headers:**
+```
+Authorization: Bearer {jwt_token}
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "uuid",
+      "userId": "uuid",
+      "startDate": "2024-02-01",
+      "endDate": "2024-02-03",
+      "leaveType": "EMERGENCY",
+      "reason": "Family emergency",
+      "status": "PENDING",
+      "createdAt": "2024-01-28T14:30:00.000Z",
+      "requester": {
+        "id": "uuid",
+        "fullName": "Jane Smith",
+        "email": "jane@example.com",
+        "role": "PERAWAT"
+      }
+    }
+  ]
+}
+```
+
+---
+
+### 4. Create Leave Request
+**Endpoint:** `POST /calendar/leave`
+
+**Description:** Create new leave request
+
+**Headers:**
+```
+Authorization: Bearer {jwt_token}
+```
+
+**Request Body:**
+```json
+{
+  "startDate": "2024-02-15",
+  "endDate": "2024-02-17",
+  "leaveType": "SICK",
+  "reason": "Medical treatment needed"
+}
+```
+
+**Leave Types:**
+- `SICK`: Sick leave
+- `ANNUAL`: Annual leave
+- `EMERGENCY`: Emergency leave
+- `UNPAID`: Unpaid leave
+
+**Response (201 Created):**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "uuid",
+    "userId": "uuid",
+    "startDate": "2024-02-15",
+    "endDate": "2024-02-17",
+    "leaveType": "SICK",
+    "reason": "Medical treatment needed",
+    "status": "PENDING",
+    "createdAt": "2024-01-20T10:00:00.000Z",
+    "requester": {
+      "id": "uuid",
+      "fullName": "Jane Smith",
+      "email": "jane@example.com",
+      "role": "PERAWAT"
+    }
+  },
+  "message": "Pengajuan cuti berhasil dibuat dan menunggu persetujuan dokter"
+}
+```
+
+**Note:** 
+- Doctor's leave requests are auto-approved
+- Nurse's leave requests require doctor approval
+
+---
+
+### 5. Update Leave Request
+**Endpoint:** `PUT /calendar/leave/:id`
+
+**Description:** Update pending leave request (only by requester)
+
+**Headers:**
+```
+Authorization: Bearer {jwt_token}
+```
+
+**Request Body:**
+```json
+{
+  "startDate": "2024-02-16",
+  "endDate": "2024-02-18",
+  "leaveType": "SICK",
+  "reason": "Updated: Medical treatment and recovery"
+}
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "uuid",
+    "startDate": "2024-02-16",
+    "endDate": "2024-02-18",
+    "leaveType": "SICK",
+    "reason": "Updated: Medical treatment and recovery",
+    "status": "PENDING",
+    "updatedAt": "2024-01-21T11:00:00.000Z"
+  },
+  "message": "Pengajuan cuti berhasil diubah"
+}
+```
+
+---
+
+### 6. Delete Leave Request
+**Endpoint:** `DELETE /calendar/leave/:id`
+
+**Description:** Delete pending leave request (only by requester)
+
+**Headers:**
+```
+Authorization: Bearer {jwt_token}
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Pengajuan cuti berhasil dihapus"
+}
+```
+
+---
+
+### 7. Approve Leave Request
+**Endpoint:** `POST /calendar/leave/:id/approve`
+
+**Description:** Approve leave request (Doctor only)
+
+**Headers:**
+```
+Authorization: Bearer {jwt_token}
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "uuid",
+    "status": "APPROVED",
+    "approvedBy": "uuid",
+    "approvedAt": "2024-01-22T09:30:00.000Z",
+    "requester": {
+      "fullName": "Jane Smith"
+    },
+    "approver": {
+      "fullName": "Dr. John Doe"
+    }
+  },
+  "message": "Pengajuan cuti Jane Smith berhasil disetujui"
+}
+```
+
+---
+
+### 8. Reject Leave Request
+**Endpoint:** `POST /calendar/leave/:id/reject`
+
+**Description:** Reject leave request (Doctor only)
+
+**Headers:**
+```
+Authorization: Bearer {jwt_token}
+```
+
+**Request Body:**
+```json
+{
+  "rejectionReason": "Insufficient staff during requested period"
+}
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "uuid",
+    "status": "REJECTED",
+    "approvedBy": "uuid",
+    "approvedAt": "2024-01-22T09:45:00.000Z",
+    "rejectionReason": "Insufficient staff during requested period",
+    "requester": {
+      "fullName": "Jane Smith"
+    }
+  },
+  "message": "Pengajuan cuti Jane Smith berhasil ditolak"
+}
+```
+
+---
+
+### 9. Get Calendar Events
+**Endpoint:** `GET /calendar/events`
+
+**Description:** Get all calendar events (leaves and visits) within date range
+
+**Headers:**
+```
+Authorization: Bearer {jwt_token}
+```
+
+**Query Parameters:**
+- `startDate` (required): Start date (YYYY-MM-DD)
+- `endDate` (required): End date (YYYY-MM-DD)
+
+**Example:**
+```
+GET /calendar/events?startDate=2024-01-01&endDate=2024-01-31
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "uuid",
+      "title": "Cuti - Jane Smith",
+      "description": "Family vacation",
+      "startDate": "2024-01-15",
+      "endDate": "2024-01-17",
+      "startTime": "00:00",
+      "endTime": "23:59",
+      "type": "LEAVE",
+      "status": "APPROVED",
+      "userId": "uuid",
+      "userName": "Jane Smith",
+      "patientName": null,
+      "color": "bg-yellow-100"
+    },
+    {
+      "id": "uuid",
+      "title": "Kunjungan - Ahmad Rizki",
+      "description": "Tooth extraction",
+      "startDate": "2024-01-20",
+      "endDate": "2024-01-20",
+      "startTime": "10:00",
+      "endTime": "10:30",
+      "type": "VISIT",
+      "status": "COMPLETED",
+      "patientName": "Ahmad Rizki",
+      "userName": "Jane Smith",
+      "color": "bg-blue-100"
+    }
+  ]
+}
+```
+
+---
+
+### 10. Get My Calendar Events
+**Endpoint:** `GET /calendar/my-events`
+
+**Description:** Get calendar events for authenticated user
+
+**Headers:**
+```
+Authorization: Bearer {jwt_token}
+```
+
+**Query Parameters:**
+- `startDate` (required): Start date (YYYY-MM-DD)
+- `endDate` (required): End date (YYYY-MM-DD)
+
+**Response:** Same structure as "Get Calendar Events"
+
+---
+
+## Dashboard
+
+### 1. Doctor Dashboard Summary
+**Endpoint:** `GET /doctor/dashboard/summary`
+
+**Description:** Get dashboard summary for doctor
+
+**Headers:**
+```
+Authorization: Bearer {jwt_token}
+```
+
+**Access:** Doctor only
+
+**Response (200 OK):**
 ```json
 {
   "success": true,
   "message": "Summary berhasil diambil",
   "data": {
     "totalVisits": 150,
-    "todayVisits": 5,
+    "todayVisits": 8,
     "monthlyVisits": 45,
     "profile": {
       "id": "uuid",
-      "username": "string",
-      "fullName": "string",
-      "email": "string",
-      "phone": "string",
-      "specialization": "string",
-      "education": "string | null",
-      "experience": "string | null",
-      "sipNumber": "string | null",
-      "sipStartDate": "date | null",
-      "sipEndDate": "date | null",
-      "profilePhoto": "string | null",
+      "username": "dokter01",
+      "fullName": "Dr. John Doe",
+      "email": "john@example.com",
+      "phone": "08123456789",
+      "specialization": "Orthodontist",
+      "education": "DDS, University of Indonesia",
+      "experience": "10 years",
+      "sipNumber": "SIP-001-2020",
+      "sipStartDate": "2020-01-01",
+      "sipEndDate": "2025-12-31",
+      "profilePhoto": "/uploads/profiles/photo.jpg",
       "isActive": true,
-      "createdAt": "timestamp"
+      "createdAt": "2020-01-01T00:00:00.000Z"
     },
     "schedules": [
       {
@@ -324,14 +679,20 @@ Authorization: Bearer {jwt_token}
         "start": "08:00",
         "end": "17:00",
         "location": "POLADC"
+      },
+      {
+        "day": "Selasa",
+        "start": "08:00",
+        "end": "17:00",
+        "location": "POLADC"
       }
     ],
-    "practiceStatus": "ACTIVE | INACTIVE | EXPIRED",
+    "practiceStatus": "ACTIVE",
     "sipRemaining": {
-      "percentage": 75.5,
-      "years": 2,
-      "months": 3,
-      "days": 730
+      "percentage": 65,
+      "years": 1,
+      "months": 8,
+      "days": 610
     }
   }
 }
@@ -339,42 +700,45 @@ Authorization: Bearer {jwt_token}
 
 ---
 
-## Nurse Dashboard
+### 2. Nurse Dashboard Summary
+**Endpoint:** `GET /nurse/dashboard/summary`
 
-### 1. Get Nurse Summary
-**Endpoint:** `GET /api/nurse/dashboard/summary`
+**Description:** Get dashboard summary for nurse
 
-**Headers:** `Authorization: Bearer {token}`
+**Headers:**
+```
+Authorization: Bearer {jwt_token}
+```
 
-**Role Required:** `PERAWAT`
+**Access:** Nurse only
 
-**Response:**
+**Response (200 OK):**
 ```json
 {
   "success": true,
   "message": "Summary berhasil diambil",
   "data": {
     "totalVisits": 200,
-    "todayVisits": 8,
-    "monthlyVisits": 60,
+    "todayVisits": 12,
+    "monthlyVisits": 65,
     "profile": {
       "id": "uuid",
-      "username": "string",
-      "fullName": "string",
-      "email": "string",
-      "phone": "string",
-      "specialization": "string | null",
-      "education": "string | null",
-      "experience": "string | null",
-      "profilePhoto": "string | null",
+      "username": "perawat01",
+      "fullName": "Jane Smith",
+      "email": "jane@example.com",
+      "phone": "08123456789",
+      "specialization": "General Care",
+      "education": "Bachelor of Nursing",
+      "experience": "5 years",
+      "profilePhoto": "/uploads/profiles/photo.jpg",
       "isActive": true,
-      "createdAt": "timestamp"
+      "createdAt": "2021-06-01T00:00:00.000Z"
     },
     "schedules": [
       {
         "day": "Senin",
         "start": "08:00",
-        "end": "17:00",
+        "end": "16:00",
         "location": "POLADC"
       }
     ]
@@ -384,19 +748,472 @@ Authorization: Bearer {jwt_token}
 
 ---
 
-## Patient Management
+## Finance
 
-### 1. Get All Patients
-**Endpoint:** `GET /api/doctor/patients`
+### 1. Get Finance Reports
+**Endpoint:** `GET /doctor/finance/reports`
 
-**Headers:** `Authorization: Bearer {token}`
+**Description:** Get all finance reports for doctor
+
+**Headers:**
+```
+Authorization: Bearer {jwt_token}
+```
+
+**Access:** Doctor only
 
 **Query Parameters:**
-- `page` (number, default: 1)
-- `limit` (number, default: 10)
-- `search` (string, optional)
+- `search` (optional): Search by name
 
-**Response:**
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Data laporan keuangan berhasil diambil",
+  "data": {
+    "reports": [
+      {
+        "id": "uuid",
+        "userId": "uuid",
+        "tipe": "BHP",
+        "nama": "Bahan Habis Pakai - Januari",
+        "prosedur": "Scaling",
+        "potongan": 50000,
+        "bhpHarga": 200000,
+        "bhpKomisi": 15,
+        "farmasiHarga": 0,
+        "farmasiKomisi": 0,
+        "paketHarga": 0,
+        "paketKomisi": 0,
+        "labHarga": 0,
+        "labKomisi": 0,
+        "createdAt": "2024-01-31T10:00:00.000Z",
+        "updatedAt": "2024-01-31T10:00:00.000Z"
+      }
+    ],
+    "total": {
+      "potongan": 150000,
+      "bhpHarga": 500000,
+      "farmasiHarga": 300000,
+      "paketHarga": 1000000,
+      "labHarga": 200000
+    }
+  }
+}
+```
+
+---
+
+### 2. Create Finance Report
+**Endpoint:** `POST /doctor/finance/reports`
+
+**Description:** Create new finance report
+
+**Headers:**
+```
+Authorization: Bearer {jwt_token}
+```
+
+**Access:** Doctor only
+
+**Request Body:**
+```json
+{
+  "tipe": "BHP",
+  "nama": "Bahan Habis Pakai - Februari",
+  "prosedur": "Filling",
+  "potongan": 30000,
+  "bhpHarga": 150000,
+  "bhpKomisi": 12,
+  "farmasiHarga": 50000,
+  "farmasiKomisi": 10,
+  "paketHarga": 0,
+  "paketKomisi": 0,
+  "labHarga": 0,
+  "labKomisi": 0
+}
+```
+
+**Response (201 Created):**
+```json
+{
+  "success": true,
+  "message": "Laporan keuangan berhasil ditambahkan",
+  "data": {
+    "id": "uuid",
+    "userId": "uuid",
+    "tipe": "BHP",
+    "nama": "Bahan Habis Pakai - Februari",
+    "prosedur": "Filling",
+    "potongan": 30000,
+    "bhpHarga": 150000,
+    "bhpKomisi": 12,
+    "farmasiHarga": 50000,
+    "farmasiKomisi": 10,
+    "paketHarga": 0,
+    "paketKomisi": 0,
+    "labHarga": 0,
+    "labKomisi": 0,
+    "createdAt": "2024-02-01T09:00:00.000Z",
+    "updatedAt": "2024-02-01T09:00:00.000Z"
+  }
+}
+```
+
+---
+
+### 3. Get Procedures
+**Endpoint:** `GET /doctor/finance/procedures`
+
+**Description:** Get all procedures for doctor
+
+**Headers:**
+```
+Authorization: Bearer {jwt_token}
+```
+
+**Access:** Doctor only
+
+**Query Parameters:**
+- `search` (optional): Search by name
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Data prosedur berhasil diambil",
+  "data": {
+    "procedures": [
+      {
+        "id": "uuid",
+        "userId": "uuid",
+        "name": "Teeth Whitening",
+        "code": "PROC-0001",
+        "quantity": 5,
+        "salePrice": 500000,
+        "avgComm": 15,
+        "totalSale": 2500000,
+        "totalComm": 375000,
+        "createdAt": "2024-01-15T10:00:00.000Z",
+        "updatedAt": "2024-01-15T10:00:00.000Z"
+      }
+    ],
+    "total": {
+      "totalSale": 5000000,
+      "totalComm": 750000
+    }
+  }
+}
+```
+
+---
+
+### 4. Create Procedure
+**Endpoint:** `POST /doctor/finance/procedures`
+
+**Description:** Create new procedure
+
+**Headers:**
+```
+Authorization: Bearer {jwt_token}
+```
+
+**Access:** Doctor only
+
+**Request Body:**
+```json
+{
+  "name": "Root Canal Treatment",
+  "code": "PROC-0002",
+  "quantity": 3,
+  "salePrice": 1500000,
+  "avgComm": "12.5"
+}
+```
+
+**Response (201 Created):**
+```json
+{
+  "success": true,
+  "message": "Prosedur berhasil ditambahkan",
+  "data": {
+    "id": "uuid",
+    "userId": "uuid",
+    "name": "Root Canal Treatment",
+    "code": "PROC-0002",
+    "quantity": 3,
+    "salePrice": 1500000,
+    "avgComm": 12.5,
+    "totalSale": 4500000,
+    "totalComm": 562500,
+    "createdAt": "2024-02-01T10:30:00.000Z",
+    "updatedAt": "2024-02-01T10:30:00.000Z"
+  }
+}
+```
+
+---
+
+### 5. Get Packages
+**Endpoint:** `GET /doctor/finance/packages`
+
+**Description:** Get all packages for doctor
+
+**Headers:**
+```
+Authorization: Bearer {jwt_token}
+```
+
+**Access:** Doctor only
+
+**Query Parameters:**
+- `search` (optional): Search by name
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Data paket berhasil diambil",
+  "data": {
+    "packages": [
+      {
+        "id": "uuid",
+        "userId": "uuid",
+        "name": "Complete Dental Checkup Package",
+        "sku": "PKG-0001",
+        "quantity": 10,
+        "salePrice": 750000,
+        "avgComm": 18,
+        "totalSale": 7500000,
+        "totalComm": 1350000,
+        "createdAt": "2024-01-10T09:00:00.000Z",
+        "updatedAt": "2024-01-10T09:00:00.000Z"
+      }
+    ],
+    "total": {
+      "totalSale": 15000000,
+      "totalComm": 2700000
+    }
+  }
+}
+```
+
+---
+
+### 6. Create Package
+**Endpoint:** `POST /doctor/finance/packages`
+
+**Description:** Create new package
+
+**Headers:**
+```
+Authorization: Bearer {jwt_token}
+```
+
+**Access:** Doctor only
+
+**Request Body:**
+```json
+{
+  "name": "Orthodontic Consultation Package",
+  "sku": "PKG-0002",
+  "quantity": 5,
+  "salePrice": 1200000,
+  "avgComm": "20"
+}
+```
+
+**Response (201 Created):**
+```json
+{
+  "success": true,
+  "message": "Paket berhasil ditambahkan",
+  "data": {
+    "id": "uuid",
+    "userId": "uuid",
+    "name": "Orthodontic Consultation Package",
+    "sku": "PKG-0002",
+    "quantity": 5,
+    "salePrice": 1200000,
+    "avgComm": 20,
+    "totalSale": 6000000,
+    "totalComm": 1200000,
+    "createdAt": "2024-02-01T11:00:00.000Z",
+    "updatedAt": "2024-02-01T11:00:00.000Z"
+  }
+}
+```
+
+---
+
+## Medications
+
+### 1. Get Medications by Visit
+**Endpoint:** `GET /medications/visit/:visitId`
+
+**Description:** Get all medications for a specific visit
+
+**Headers:**
+```
+Authorization: Bearer {jwt_token}
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Daftar obat berhasil diambil",
+  "data": [
+    {
+      "id": "uuid",
+      "visitId": "uuid",
+      "patientId": "uuid",
+      "name": "Amoxicillin 500mg",
+      "quantity": "3x1 tablet",
+      "instructions": "Take after meals for 7 days",
+      "createdAt": "2024-01-20T10:30:00.000Z",
+      "updatedAt": "2024-01-20T10:30:00.000Z"
+    },
+    {
+      "id": "uuid",
+      "visitId": "uuid",
+      "patientId": "uuid",
+      "name": "Paracetamol 500mg",
+      "quantity": "3x1 tablet",
+      "instructions": "Take when needed for pain",
+      "createdAt": "2024-01-20T10:35:00.000Z",
+      "updatedAt": "2024-01-20T10:35:00.000Z"
+    }
+  ]
+}
+```
+
+---
+
+### 2. Create Medication
+**Endpoint:** `POST /medications`
+
+**Description:** Add new medication to a visit
+
+**Headers:**
+```
+Authorization: Bearer {jwt_token}
+```
+
+**Request Body:**
+```json
+{
+  "visitId": "uuid",
+  "patientId": "uuid",
+  "name": "Ibuprofen 400mg",
+  "quantity": "3x1 tablet",
+  "instructions": "Take after meals, avoid if stomach upset"
+}
+```
+
+**Response (201 Created):**
+```json
+{
+  "success": true,
+  "message": "Obat berhasil ditambahkan",
+  "data": {
+    "id": "uuid",
+    "visitId": "uuid",
+    "patientId": "uuid",
+    "name": "Ibuprofen 400mg",
+    "quantity": "3x1 tablet",
+    "instructions": "Take after meals, avoid if stomach upset",
+    "createdAt": "2024-01-20T11:00:00.000Z",
+    "updatedAt": "2024-01-20T11:00:00.000Z"
+  }
+}
+```
+
+---
+
+### 3. Update Medication
+**Endpoint:** `PUT /medications/:id`
+
+**Description:** Update existing medication
+
+**Headers:**
+```
+Authorization: Bearer {jwt_token}
+```
+
+**Request Body:**
+```json
+{
+  "name": "Ibuprofen 600mg",
+  "quantity": "2x1 tablet",
+  "instructions": "Take after meals for 5 days"
+}
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Obat berhasil diupdate",
+  "data": {
+    "id": "uuid",
+    "visitId": "uuid",
+    "patientId": "uuid",
+    "name": "Ibuprofen 600mg",
+    "quantity": "2x1 tablet",
+    "instructions": "Take after meals for 5 days",
+    "createdAt": "2024-01-20T11:00:00.000Z",
+    "updatedAt": "2024-01-20T11:30:00.000Z"
+  }
+}
+```
+
+---
+
+### 4. Delete Medication
+**Endpoint:** `DELETE /medications/:id`
+
+**Description:** Delete medication
+
+**Headers:**
+```
+Authorization: Bearer {jwt_token}
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Obat berhasil dihapus",
+  "data": null
+}
+```
+
+---
+
+## Patients
+
+### 1. Get All Patients
+**Endpoint:** `GET /doctor/patients`
+
+**Description:** Get all patients with pagination and search
+
+**Headers:**
+```
+Authorization: Bearer {jwt_token}
+```
+
+**Query Parameters:**
+- `page` (optional, default: 1): Page number
+- `limit` (optional, default: 10): Items per page
+- `search` (optional): Search by name, patient number, medical record number, or phone
+
+**Example:**
+```
+GET /doctor/patients?page=1&limit=10&search=ahmad
+```
+
+**Response (200 OK):**
 ```json
 {
   "success": true,
@@ -405,24 +1222,24 @@ Authorization: Bearer {jwt_token}
     "patients": [
       {
         "id": "uuid",
-        "patientNumber": "P-202412-0001",
-        "medicalRecordNumber": "RM-202412-0001",
-        "fullName": "string",
-        "dateOfBirth": "date",
-        "gender": "L | P",
-        "phone": "string",
-        "email": "string | null",
-        "address": "string | null",
-        "bloodType": "string | null",
-        "allergies": "string | null",
-        "medicalHistory": "string | null",
-        "createdAt": "timestamp",
-        "lastVisit": "timestamp | null",
-        "lastVisitId": "uuid | null",
-        "lastVisitNumber": "string | null",
-        "chiefComplaint": "string | null",
-        "lastDiagnosis": "string | null",
-        "lastServiceName": "string | null"
+        "patientNumber": "P-202401-0001",
+        "medicalRecordNumber": "RM-202401-0001",
+        "fullName": "Ahmad Rizki",
+        "dateOfBirth": "1990-05-15",
+        "gender": "L",
+        "phone": "08123456789",
+        "email": "ahmad@example.com",
+        "address": "Jl. Sudirman No. 123, Jakarta",
+        "bloodType": "O",
+        "allergies": "Penicillin",
+        "medicalHistory": "Diabetes Type 2",
+        "createdAt": "2024-01-15T09:00:00.000Z",
+        "lastVisit": "2024-01-20T10:00:00.000Z",
+        "lastVisitId": "uuid",
+        "lastVisitNumber": "V-20240120-1234567",
+        "chiefComplaint": "Tooth pain",
+        "lastDiagnosis": "Dental caries",
+        "lastServiceName": "Tooth Filling"
       }
     ],
     "pagination": {
@@ -438,45 +1255,53 @@ Authorization: Bearer {jwt_token}
 ---
 
 ### 2. Get Patient by ID
-**Endpoint:** `GET /api/doctor/patients/:id`
+**Endpoint:** `GET /doctor/patients/:id`
 
-**Headers:** `Authorization: Bearer {token}`
+**Description:** Get detailed patient information
 
-**Response:**
+**Headers:**
+```
+Authorization: Bearer {jwt_token}
+```
+
+**Response (200 OK):**
 ```json
 {
   "success": true,
   "message": "Detail pasien berhasil diambil",
   "data": {
     "id": "uuid",
-    "patientNumber": "P-202412-0001",
-    "medicalRecordNumber": "RM-202412-0001",
-    "fullName": "string",
-    "dateOfBirth": "date",
-    "gender": "L | P",
-    "phone": "string",
-    "email": "string | null",
-    "address": "string | null",
-    "bloodType": "string | null",
-    "allergies": "string | null",
-    "medicalHistory": "string | null",
-    "createdAt": "timestamp",
+    "patientNumber": "P-202401-0001",
+    "medicalRecordNumber": "RM-202401-0001",
+    "fullName": "Ahmad Rizki",
+    "dateOfBirth": "1990-05-15",
+    "gender": "L",
+    "phone": "08123456789",
+    "email": "ahmad@example.com",
+    "address": "Jl. Sudirman No. 123, Jakarta",
+    "bloodType": "O",
+    "allergies": "Penicillin",
+    "medicalHistory": "Diabetes Type 2, Previous tooth extraction (2023)",
+    "createdAt": "2024-01-15T09:00:00.000Z",
+    "updatedAt": "2024-01-20T10:30:00.000Z",
     "visits": [
       {
         "id": "uuid",
-        "visitNumber": "V-20241224-1234567",
-        "visitDate": "timestamp",
+        "visitNumber": "V-20240120-1234567",
+        "visitDate": "2024-01-20T10:00:00.000Z",
+        "queueNumber": 5,
         "status": "COMPLETED",
-        "chiefComplaint": "string | null",
+        "chiefComplaint": "Tooth pain on upper right molar",
+        "bloodPressure": "120/80",
+        "notes": "Patient complained of severe pain",
+        "totalCost": 350000,
         "nurse": {
-          "fullName": "string"
-        },
-        "treatments": []
+          "fullName": "Jane Smith"
+        }
       }
     ],
     "_count": {
-      "visits": 10,
-      "treatments": 25
+      "visits": 15
     }
   }
 }
@@ -484,57 +1309,17 @@ Authorization: Bearer {jwt_token}
 
 ---
 
-### 3. Create Patient
-**Endpoint:** `POST /api/doctor/patients`
+### 3. Get Patient Records
+**Endpoint:** `GET /doctor/patients/:id/records`
 
-**Headers:** `Authorization: Bearer {token}`
+**Description:** Get patient's medical records (visit history)
 
-**Request Body:**
-```json
-{
-  "fullName": "string (min: 3)",
-  "dateOfBirth": "date (ISO format)",
-  "gender": "L | P",
-  "phone": "string (min: 10)",
-  "email": "string (email, optional)",
-  "address": "string (optional)",
-  "bloodType": "string (optional)",
-  "allergies": "string (optional)",
-  "medicalHistory": "string (optional)"
-}
+**Headers:**
+```
+Authorization: Bearer {jwt_token}
 ```
 
-**Response:**
-```json
-{
-  "success": true,
-  "message": "Pasien berhasil ditambahkan",
-  "data": {
-    "id": "uuid",
-    "patientNumber": "P-202412-0001",
-    "medicalRecordNumber": "RM-202412-0001",
-    "fullName": "string",
-    "dateOfBirth": "date",
-    "gender": "L | P",
-    "phone": "string",
-    "email": "string | null",
-    "address": "string | null",
-    "bloodType": "string | null",
-    "allergies": "string | null",
-    "medicalHistory": "string | null",
-    "createdAt": "timestamp"
-  }
-}
-```
-
----
-
-### 4. Get Patient Records
-**Endpoint:** `GET /api/doctor/patients/:id/records`
-
-**Headers:** `Authorization: Bearer {token}`
-
-**Response:**
+**Response (200 OK):**
 ```json
 {
   "success": true,
@@ -542,109 +1327,13 @@ Authorization: Bearer {jwt_token}
   "data": {
     "patient": {
       "id": "uuid",
-      "patientNumber": "P-202412-0001",
-      "fullName": "string"
-    },
-    "treatments": [
-      {
-        "id": "uuid",
-        "diagnosis": "string",
-        "treatmentNotes": "string | null",
-        "toothNumber": "string | null",
-        "quantity": 1,
-        "unitPrice": 500000,
-        "discount": 0,
-        "subtotal": 500000,
-        "images": [],
-        "createdAt": "timestamp",
-        "visit": {
-          "visitNumber": "V-20241224-1234567",
-          "visitDate": "timestamp"
-        },
-        "service": {
-          "serviceName": "string",
-          "category": "CONSULTATION"
-        },
-        "performer": {
-          "fullName": "string",
-          "role": "DOKTER"
-        }
-      }
-    ]
-  }
-}
-```
-
----
-
-### 5. Update Medical History
-**Endpoint:** `PUT /api/doctor/patients/:id/medical-history`
-
-**Headers:** `Authorization: Bearer {token}`
-
-**Request Body:**
-```json
-{
-  "medicalHistory": "string"
-}
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "message": "Riwayat medis berhasil diupdate",
-  "data": {
-    "id": "uuid",
-    "medicalHistory": "string"
-  }
-}
-```
-
----
-
-### 6. Create Treatment for Patient
-**Endpoint:** `POST /api/doctor/patients/:id/records`
-
-**Headers:** `Authorization: Bearer {token}`
-
-**Request Body:**
-```json
-{
-  "visitId": "uuid",
-  "serviceId": "uuid",
-  "toothNumber": "string (optional)",
-  "diagnosis": "string (optional)",
-  "treatmentNotes": "string (optional)",
-  "quantity": 1,
-  "discount": 0,
-  "images": []
-}
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "message": "Treatment berhasil ditambahkan",
-  "data": {
-    "id": "uuid",
-    "visitId": "uuid",
-    "patientId": "uuid",
-    "serviceId": "uuid",
-    "performedBy": "uuid",
-    "toothNumber": "string | null",
-    "diagnosis": "string | null",
-    "treatmentNotes": "string | null",
-    "quantity": 1,
-    "unitPrice": 500000,
-    "discount": 0,
-    "subtotal": 500000,
-    "images": [],
-    "createdAt": "timestamp",
-    "service": {},
-    "performer": {
-      "fullName": "string"
+      "patientNumber": "P-202401-0001",
+      "medicalRecordNumber": "RM-202401-0001",
+      "fullName": "Ahmad Rizki",
+      "dateOfBirth": "1990-05-15",
+      "gender": "L",
+      "phone": "08123456789",
+      "medicalHistory": "Diabetes Type 2"
     }
   }
 }
@@ -652,20 +1341,993 @@ Authorization: Bearer {jwt_token}
 
 ---
 
-## Visit Management
+### 4. Create Patient
+**Endpoint:** `POST /doctor/patients`
 
-### 1. Get All Visits
-**Endpoint:** `GET /api/doctor/visits`
+**Description:** Create new patient or return existing if phone number matches
 
-**Headers:** `Authorization: Bearer {token}`
+**Headers:**
+```
+Authorization: Bearer {jwt_token}
+```
+
+**Request Body:**
+```json
+{
+  "fullName": "Budi Santoso",
+  "dateOfBirth": "1985-08-20",
+  "gender": "L",
+  "phone": "08198765432",
+  "email": "budi@example.com",
+  "address": "Jl. Thamrin No. 45, Jakarta",
+  "bloodType": "A",
+  "allergies": "None",
+  "medicalHistory": "Hypertension"
+}
+```
+
+**Validation Rules:**
+- `fullName`: minimum 3 characters
+- `dateOfBirth`: valid date format
+- `gender`: "L" (Male) or "P" (Female)
+- `phone`: minimum 10 digits
+- `email`: valid email format (optional)
+
+**Response (201 Created):**
+```json
+{
+  "success": true,
+  "message": "Pasien berhasil ditambahkan",
+  "data": {
+    "id": "uuid",
+    "patientNumber": "P-202402-0010",
+    "medicalRecordNumber": "RM-202402-0010",
+    "fullName": "Budi Santoso",
+    "dateOfBirth": "1985-08-20",
+    "gender": "L",
+    "phone": "08198765432",
+    "email": "budi@example.com",
+    "address": "Jl. Thamrin No. 45, Jakarta",
+    "bloodType": "A",
+    "allergies": "None",
+    "medicalHistory": "Hypertension",
+    "createdAt": "2024-02-01T09:00:00.000Z",
+    "updatedAt": "2024-02-01T09:00:00.000Z"
+  }
+}
+```
+
+---
+
+### 5. Update Patient Medical History
+**Endpoint:** `PUT /doctor/patients/:id/medical-history`
+
+**Description:** Update patient's medical history
+
+**Headers:**
+```
+Authorization: Bearer {jwt_token}
+```
+
+**Request Body:**
+```json
+{
+  "medicalHistory": "Diabetes Type 2, Hypertension, Previous tooth extraction (2023), Root canal treatment (2024-01)"
+}
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Riwayat medis berhasil diupdate",
+  "data": {
+    "id": "uuid",
+    "patientNumber": "P-202401-0001",
+    "medicalRecordNumber": "RM-202401-0001",
+    "fullName": "Ahmad Rizki",
+    "medicalHistory": "Diabetes Type 2, Hypertension, Previous tooth extraction (2023), Root canal treatment (2024-01)",
+    "updatedAt": "2024-02-01T10:30:00.000Z"
+  }
+}
+```
+
+---
+
+## Payments
+
+### 1. Get All Payments
+**Endpoint:** `GET /payments`
+
+**Description:** Get all payments with search functionality
+
+**Headers:**
+```
+Authorization: Bearer {jwt_token}
+```
 
 **Query Parameters:**
-- `page` (number, default: 1)
-- `limit` (number, default: 10)
-- `status` (WAITING | IN_PROGRESS | COMPLETED | CANCELLED, optional)
-- `search` (string, optional)
+- `search` (optional): Search by payment number, visit number, or patient name
 
-**Response:**
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Daftar pembayaran berhasil diambil",
+  "data": [
+    {
+      "id": "uuid",
+      "visitId": "uuid",
+      "paymentNumber": "PAY-202401-0001",
+      "paymentDate": "2024-01-20T11:00:00.000Z",
+      "paymentMethod": "CASH",
+      "amount": 350000,
+      "paidAmount": 400000,
+      "changeAmount": 50000,
+      "status": "PAID",
+      "referenceNumber": null,
+      "notes": null,
+      "createdAt": "2024-01-20T11:00:00.000Z",
+      "visit": {
+        "id": "uuid",
+        "visitNumber": "V-20240120-1234567",
+        "visitDate": "2024-01-20T10:00:00.000Z",
+        "patient": {
+          "id": "uuid",
+          "patientNumber": "P-202401-0001",
+          "medicalRecordNumber": "RM-202401-0001",
+          "fullName": "Ahmad Rizki"
+        }
+      }
+    }
+  ]
+}
+```
+
+---
+
+### 2. Get Payment by ID
+**Endpoint:** `GET /payments/:id`
+
+**Description:** Get detailed payment information
+
+**Headers:**
+```
+Authorization: Bearer {jwt_token}
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Detail pembayaran berhasil diambil",
+  "data": {
+    "id": "uuid",
+    "visitId": "uuid",
+    "paymentNumber": "PAY-202401-0001",
+    "paymentDate": "2024-01-20T11:00:00.000Z",
+    "paymentMethod": "TRANSFER",
+    "amount": 500000,
+    "paidAmount": 500000,
+    "changeAmount": 0,
+    "status": "PAID",
+    "referenceNumber": "TRF20240120001",
+    "notes": "Bank BCA transfer",
+    "createdAt": "2024-01-20T11:00:00.000Z",
+    "visit": {
+      "id": "uuid",
+      "visitNumber": "V-20240120-1234567",
+      "visitDate": "2024-01-20T10:00:00.000Z",
+      "patient": {
+        "id": "uuid",
+        "patientNumber": "P-202401-0001",
+        "medicalRecordNumber": "RM-202401-0001",
+        "fullName": "Ahmad Rizki",
+        "phone": "08123456789"
+      }
+    }
+  }
+}
+```
+
+---
+
+### 3. Get Payments by Visit
+**Endpoint:** `GET /payments/visit/:visitId`
+
+**Description:** Get all payments for a specific visit
+
+**Headers:**
+```
+Authorization: Bearer {jwt_token}
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Daftar pembayaran berhasil diambil",
+  "data": [
+    {
+      "id": "uuid",
+      "visitId": "uuid",
+      "paymentNumber": "PAY-202401-0001",
+      "paymentDate": "2024-01-20T11:00:00.000Z",
+      "paymentMethod": "CASH",
+      "amount": 350000,
+      "paidAmount": 350000,
+      "changeAmount": 0,
+      "status": "PAID",
+      "referenceNumber": null,
+      "notes": null,
+      "createdAt": "2024-01-20T11:00:00.000Z",
+      "updatedAt": "2024-01-20T11:00:00.000Z"
+    }
+  ]
+}
+```
+
+---
+
+### 4. Create Payment
+**Endpoint:** `POST /payments`
+
+**Description:** Create new payment for a visit
+
+**Headers:**
+```
+Authorization: Bearer {jwt_token}
+```
+
+**Request Body:**
+```json
+{
+  "visitId": "uuid",
+  "paymentMethod": "CASH",
+  "amount": 350000,
+  "paidAmount": 400000,
+  "referenceNumber": "",
+  "notes": "Full payment"
+}
+```
+
+**Payment Methods:**
+- `CASH`: Cash payment
+- `TRANSFER`: Bank transfer
+- `CARD`: Credit/Debit card
+- `QRIS`: QRIS payment
+
+**Payment Status (Auto-calculated):**
+- `PENDING`: paidAmount = 0
+- `PARTIAL`: 0 < paidAmount < amount
+- `PAID`: paidAmount >= amount
+- `REFUNDED`: Manual status update
+
+**Response (201 Created):**
+```json
+{
+  "success": true,
+  "message": "Pembayaran berhasil dibuat",
+  "data": {
+    "id": "uuid",
+    "visitId": "uuid",
+    "paymentNumber": "PAY-202402-0015",
+    "paymentDate": "2024-02-01T14:00:00.000Z",
+    "paymentMethod": "CASH",
+    "amount": 350000,
+    "paidAmount": 400000,
+    "changeAmount": 50000,
+    "status": "PAID",
+    "referenceNumber": "",
+    "notes": "Full payment",
+    "createdAt": "2024-02-01T14:00:00.000Z",
+    "visit": {
+      "id": "uuid",
+      "visitNumber": "V-20240201-1234567",
+      "visitDate": "2024-02-01T10:00:00.000Z",
+      "patient": {
+        "id": "uuid",
+        "patientNumber": "P-202401-0005",
+        "medicalRecordNumber": "RM-202401-0005",
+        "fullName": "Siti Nurhaliza"
+      }
+    }
+  }
+}
+```
+
+---
+
+### 5. Update Payment
+**Endpoint:** `PUT /payments/:id`
+
+**Description:** Update existing payment
+
+**Headers:**
+```
+Authorization: Bearer {jwt_token}
+```
+
+**Request Body:**
+```json
+{
+  "paymentMethod": "TRANSFER",
+  "amount": 350000,
+  "paidAmount": 350000,
+  "referenceNumber": "TRF20240201001",
+  "notes": "Bank Mandiri transfer"
+}
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Pembayaran berhasil diupdate",
+  "data": {
+    "id": "uuid",
+    "visitId": "uuid",
+    "paymentNumber": "PAY-202402-0015",
+    "paymentDate": "2024-02-01T14:30:00.000Z",
+    "paymentMethod": "TRANSFER",
+    "amount": 350000,
+    "paidAmount": 350000,
+    "changeAmount": 0,
+    "status": "PAID",
+    "referenceNumber": "TRF20240201001",
+    "notes": "Bank Mandiri transfer",
+    "createdAt": "2024-02-01T14:00:00.000Z",
+    "visit": {
+      "id": "uuid",
+      "visitNumber": "V-20240201-1234567",
+      "visitDate": "2024-02-01T10:00:00.000Z",
+      "patient": {
+        "id": "uuid",
+        "patientNumber": "P-202401-0005",
+        "medicalRecordNumber": "RM-202401-0005",
+        "fullName": "Siti Nurhaliza"
+      }
+    }
+  }
+}
+```
+
+---
+
+## Users
+
+### 1. Get All Users
+**Endpoint:** `GET /users`
+
+**Description:** Get all users (Doctor only)
+
+**Headers:**
+```
+Authorization: Bearer {jwt_token}
+```
+
+**Access:** Doctor only
+
+**Query Parameters:**
+- `role` (optional): Filter by role ("DOKTER" or "PERAWAT")
+
+**Example:**
+```
+GET /users?role=PERAWAT
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Daftar user berhasil diambil",
+  "data": [
+    {
+      "id": "uuid",
+      "username": "perawat01",
+      "email": "jane@example.com",
+      "fullName": "Jane Smith",
+      "role": "PERAWAT",
+      "phone": "08123456789",
+      "specialization": "General Care",
+      "isActive": true,
+      "createdAt": "2023-06-15T09:00:00.000Z"
+    },
+    {
+      "id": "uuid",
+      "username": "dokter02",
+      "email": "sarah@example.com",
+      "fullName": "Dr. Sarah Wilson",
+      "role": "DOKTER",
+      "phone": "08198765432",
+      "specialization": "Pediatric Dentistry",
+      "isActive": true,
+      "createdAt": "2023-08-20T10:00:00.000Z"
+    }
+  ]
+}
+```
+
+---
+
+### 2. Get User by ID
+**Endpoint:** `GET /users/:id`
+
+**Description:** Get detailed user information (Doctor only)
+
+**Headers:**
+```
+Authorization: Bearer {jwt_token}
+```
+
+**Access:** Doctor only
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Detail user berhasil diambil",
+  "data": {
+    "id": "uuid",
+    "username": "perawat01",
+    "email": "jane@example.com",
+    "fullName": "Jane Smith",
+    "role": "PERAWAT",
+    "phone": "08123456789",
+    "specialization": "General Care",
+    "isActive": true,
+    "createdAt": "2023-06-15T09:00:00.000Z",
+    "_count": {
+      "visitsAsNurse": 145,
+      "schedules": 52,
+      "leaveRequests": 8
+    }
+  }
+}
+```
+
+---
+
+### 3. Create User
+**Endpoint:** `POST /users`
+
+**Description:** Create new user (Doctor only)
+
+**Headers:**
+```
+Authorization: Bearer {jwt_token}
+```
+
+**Access:** Doctor only
+
+**Request Body:**
+```json
+{
+  "username": "perawat02",
+  "email": "nurse2@example.com",
+  "password": "password123",
+  "fullName": "Maria Garcia",
+  "phone": "08187654321",
+  "role": "PERAWAT",
+  "specialization": "Emergency Care"
+}
+```
+
+**Response (201 Created):**
+```json
+{
+  "success": true,
+  "message": "User berhasil dibuat",
+  "data": {
+    "id": "uuid",
+    "username": "perawat02",
+    "email": "nurse2@example.com",
+    "fullName": "Maria Garcia",
+    "role": "PERAWAT",
+    "phone": "08187654321",
+    "specialization": "Emergency Care",
+    "isActive": true,
+    "createdAt": "2024-02-01T10:00:00.000Z"
+  }
+}
+```
+
+---
+
+### 4. Update User
+**Endpoint:** `PUT /users/:id`
+
+**Description:** Update user information (Doctor only)
+
+**Headers:**
+```
+Authorization: Bearer {jwt_token}
+```
+
+**Access:** Doctor only
+
+**Request Body:**
+```json
+{
+  "fullName": "Maria Garcia RN",
+  "phone": "08187654321",
+  "specialization": "ICU Specialist",
+  "isActive": true
+}
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "User berhasil diupdate",
+  "data": {
+    "id": "uuid",
+    "username": "perawat02",
+    "email": "nurse2@example.com",
+    "fullName": "Maria Garcia RN",
+    "role": "PERAWAT",
+    "phone": "08187654321",
+    "specialization": "ICU Specialist",
+    "isActive": true,
+    "updatedAt": "2024-02-01T11:00:00.000Z"
+  }
+}
+```
+
+---
+
+### 5. Delete User
+**Endpoint:** `DELETE /users/:id`
+
+**Description:** Delete user (Doctor only)
+
+**Headers:**
+```
+Authorization: Bearer {jwt_token}
+```
+
+**Access:** Doctor only
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "User berhasil dihapus",
+  "data": null
+}
+```
+
+---
+
+### 6. Toggle User Status
+**Endpoint:** `PATCH /users/:id/toggle-status`
+
+**Description:** Activate/deactivate user (Doctor only)
+
+**Headers:**
+```
+Authorization: Bearer {jwt_token}
+```
+
+**Access:** Doctor only
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Status user berhasil diubah",
+  "data": {
+    "id": "uuid",
+    "username": "perawat02",
+    "fullName": "Maria Garcia RN",
+    "isActive": false
+  }
+}
+```
+
+---
+
+### 7. Get My Profile
+**Endpoint:** `GET /users/profile`
+
+**Description:** Get authenticated user's profile (Doctor only)
+
+**Headers:**
+```
+Authorization: Bearer {jwt_token}
+```
+
+**Access:** Doctor only
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Profil berhasil diambil",
+  "data": {
+    "id": "uuid",
+    "username": "dokter01",
+    "email": "john@example.com",
+    "fullName": "Dr. John Doe",
+    "role": "DOKTER",
+    "phone": "08123456789",
+    "specialization": "Orthodontist",
+    "education": "DDS, University of Indonesia",
+    "experience": "10 years",
+    "sipNumber": "SIP-001-2020",
+    "sipStartDate": "2020-01-01",
+    "sipEndDate": "2025-12-31",
+    "profilePhoto": "/uploads/profiles/photo.jpg",
+    "isActive": true,
+    "createdAt": "2020-01-01T00:00:00.000Z"
+  }
+}
+```
+
+---
+
+### 8. Update My Profile
+**Endpoint:** `PUT /users/profile`
+
+**Description:** Update authenticated user's profile (Doctor only)
+
+**Headers:**
+```
+Authorization: Bearer {jwt_token}
+```
+
+**Access:** Doctor only
+
+**Request Body:**
+```json
+{
+  "fullName": "Dr. John Doe DDS",
+  "email": "john.doe@example.com",
+  "phone": "08123456789",
+  "specialization": "Orthodontist & Cosmetic Dentistry",
+  "education": "DDS, University of Indonesia; Fellowship in Orthodontics",
+  "experience": "12 years",
+  "sipNumber": "SIP-001-2020",
+  "sipStartDate": "2020-01-01",
+  "sipEndDate": "2025-12-31",
+  "profilePhoto": "/uploads/profiles/new-photo.jpg"
+}
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Profil berhasil diupdate",
+  "data": {
+    "id": "uuid",
+    "username": "dokter01",
+    "email": "john.doe@example.com",
+    "fullName": "Dr. John Doe DDS",
+    "role": "DOKTER",
+    "phone": "08123456789",
+    "specialization": "Orthodontist & Cosmetic Dentistry",
+    "education": "DDS, University of Indonesia; Fellowship in Orthodontics",
+    "experience": "12 years",
+    "sipNumber": "SIP-001-2020",
+    "sipStartDate": "2020-01-01",
+    "sipEndDate": "2025-12-31",
+    "profilePhoto": "/uploads/profiles/new-photo.jpg",
+    "isActive": true,
+    "updatedAt": "2024-02-01T14:00:00.000Z"
+  }
+}
+```
+
+---
+
+### 9. Delete My Account
+**Endpoint:** `DELETE /users/account`
+
+**Description:** Delete authenticated user's account (Doctor only)
+
+**Headers:**
+```
+Authorization: Bearer {jwt_token}
+```
+
+**Access:** Doctor only
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Akun berhasil dihapus",
+  "data": null
+}
+```
+
+---
+
+### 10. Get Nurse Profile
+**Endpoint:** `GET /nurse/profile`
+
+**Description:** Get authenticated nurse's profile
+
+**Headers:**
+```
+Authorization: Bearer {jwt_token}
+```
+
+**Access:** Nurse only
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Profil berhasil diambil",
+  "data": {
+    "id": "uuid",
+    "username": "perawat01",
+    "email": "jane@example.com",
+    "fullName": "Jane Smith",
+    "role": "PERAWAT",
+    "phone": "08123456789",
+    "specialization": "General Care",
+    "education": "Bachelor of Nursing",
+    "experience": "5 years",
+    "sipNumber": "SIPP-123-2022",
+    "sipStartDate": "2022-06-01",
+    "sipEndDate": "2027-05-31",
+    "profilePhoto": "/uploads/profiles/jane.jpg",
+    "isActive": true,
+    "createdAt": "2022-06-01T00:00:00.000Z",
+    "updatedAt": "2024-01-15T10:00:00.000Z"
+  }
+}
+```
+
+---
+
+### 11. Update Nurse Profile
+**Endpoint:** `PUT /nurse/profile`
+
+**Description:** Update authenticated nurse's profile
+
+**Headers:**
+```
+Authorization: Bearer {jwt_token}
+```
+
+**Access:** Nurse only
+
+**Request Body:**
+```json
+{
+  "fullName": "Jane Smith RN",
+  "email": "jane.smith@example.com",
+  "phone": "08123456789",
+  "specialization": "Emergency & Critical Care",
+  "education": "Bachelor of Nursing, Critical Care Certification",
+  "experience": "6 years",
+  "sipNumber": "SIPP-123-2022",
+  "sipStartDate": "2022-06-01",
+  "sipEndDate": "2027-05-31",
+  "profilePhoto": "/uploads/profiles/jane-updated.jpg"
+}
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Profil berhasil diupdate",
+  "data": {
+    "id": "uuid",
+    "username": "perawat01",
+    "email": "jane.smith@example.com",
+    "fullName": "Jane Smith RN",
+    "role": "PERAWAT",
+    "phone": "08123456789",
+    "specialization": "Emergency & Critical Care",
+    "education": "Bachelor of Nursing, Critical Care Certification",
+    "experience": "6 years",
+    "sipNumber": "SIPP-123-2022",
+    "sipStartDate": "2022-06-01",
+    "sipEndDate": "2027-05-31",
+    "profilePhoto": "/uploads/profiles/jane-updated.jpg",
+    "isActive": true,
+    "updatedAt": "2024-02-01T15:00:00.000Z"
+  }
+}
+```
+
+---
+
+### 12. Get Profile Completion
+**Endpoint:** `GET /nurse/profile/completion`
+
+**Description:** Get profile completion percentage for nurse
+
+**Headers:**
+```
+Authorization: Bearer {jwt_token}
+```
+
+**Access:** Nurse only
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Kelengkapan profil berhasil diambil",
+  "data": {
+    "percentage": 90,
+    "filledFields": 9,
+    "totalFields": 10,
+    "missingFields": 1
+  }
+}
+```
+
+---
+
+### 13. Get Current Shift Status
+**Endpoint:** `GET /nurse/profile/shift-status`
+
+**Description:** Get current shift status for nurse
+
+**Headers:**
+```
+Authorization: Bearer {jwt_token}
+```
+
+**Access:** Nurse only
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Status shift berhasil diambil",
+  "data": {
+    "status": "On Duty",
+    "shift": {
+      "patientName": "Ahmad Rizki",
+      "complaint": "Tooth pain",
+      "startTime": "10:00",
+      "endTime": "10:30",
+      "location": "POLADC"
+    },
+    "remainingTime": {
+      "hours": 0,
+      "minutes": 15,
+      "formatted": "15 menit"
+    }
+  }
+}
+```
+
+---
+
+### 14. Get Account Status
+**Endpoint:** `GET /nurse/profile/account-status`
+
+**Description:** Get account status for nurse
+
+**Headers:**
+```
+Authorization: Bearer {jwt_token}
+```
+
+**Access:** Nurse only
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Status akun berhasil diambil",
+  "data": {
+    "isActive": true,
+    "isVerified": true,
+    "completionPercentage": 90,
+    "shiftStatus": "On Duty"
+  }
+}
+```
+
+---
+
+### 15. Get License Info
+**Endpoint:** `GET /nurse/profile/license`
+
+**Description:** Get license (SIP) information for nurse
+
+**Headers:**
+```
+Authorization: Bearer {jwt_token}
+```
+
+**Access:** Nurse only
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Informasi lisensi berhasil diambil",
+  "data": {
+    "hasLicense": true,
+    "sipNumber": "SIPP-123-2022",
+    "startDate": "2022-06-01",
+    "endDate": "2027-05-31",
+    "status": "ACTIVE",
+    "remaining": {
+      "percentage": 68,
+      "years": 3,
+      "months": 4,
+      "days": 1216,
+      "formatted": "3 tahun 4 bulan"
+    }
+  }
+}
+```
+
+**License Status:**
+- `ACTIVE`: More than 90 days remaining
+- `EXPIRING_SOON`: 1-90 days remaining
+- `EXPIRED`: Past expiration date
+- `INACTIVE`: No license information
+
+---
+
+### 16. Delete Nurse Account
+**Endpoint:** `DELETE /nurse/account`
+
+**Description:** Delete authenticated nurse's account
+
+**Headers:**
+```
+Authorization: Bearer {jwt_token}
+```
+
+**Access:** Nurse only
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Akun berhasil dihapus",
+  "data": null
+}
+```
+
+---
+
+## Visits
+
+### 1. Get All Visits
+**Endpoint:** `GET /doctor/visits`
+
+**Description:** Get all visits with pagination and filters
+
+**Headers:**
+```
+Authorization: Bearer {jwt_token}
+```
+
+**Query Parameters:**
+- `page` (optional, default: 1): Page number
+- `limit` (optional, default: 10): Items per page
+- `status` (optional): Filter by status
+- `search` (optional): Search by visit number, patient name, patient number, or medical record number
+
+**Visit Status:**
+- `WAITING`: Waiting in queue
+- `IN_PROGRESS`: Currently being treated
+- `COMPLETED`: Treatment completed
+- `CANCELLED`: Visit cancelled
+
+**Example:**
+```
+GET /doctor/visits?page=1&limit=10&status=COMPLETED&search=ahmad
+```
+
+**Response (200 OK):**
 ```json
 {
   "success": true,
@@ -674,35 +2336,36 @@ Authorization: Bearer {jwt_token}
     "visits": [
       {
         "id": "uuid",
-        "visitNumber": "V-20241224-1234567",
-        "visitDate": "timestamp",
-        "queueNumber": 1,
-        "status": "WAITING | IN_PROGRESS | COMPLETED | CANCELLED",
-        "chiefComplaint": "string | null",
-        "bloodPressure": "string | null",
-        "notes": "string | null",
-        "totalCost": 0,
-        "createdAt": "timestamp",
+        "visitNumber": "V-20240120-1234567",
+        "visitDate": "2024-01-20T10:00:00.000Z",
+        "queueNumber": 5,
+        "status": "COMPLETED",
+        "chiefComplaint": "Tooth pain on upper right molar",
+        "bloodPressure": "120/80",
+        "notes": "Patient complained of severe pain",
+        "totalCost": 350000,
+        "createdAt": "2024-01-20T09:30:00.000Z",
+        "updatedAt": "2024-01-20T11:00:00.000Z",
         "patient": {
           "id": "uuid",
-          "patientNumber": "P-202412-0001",
-          "medicalRecordNumber": "RM-202412-0001",
-          "fullName": "string",
-          "phone": "string",
-          "gender": "L | P",
-          "dateOfBirth": "date"
+          "patientNumber": "P-202401-0001",
+          "medicalRecordNumber": "RM-202401-0001",
+          "fullName": "Ahmad Rizki",
+          "phone": "08123456789",
+          "gender": "L",
+          "dateOfBirth": "1990-05-15"
         },
         "nurse": {
           "id": "uuid",
-          "fullName": "string"
+          "fullName": "Jane Smith"
         }
       }
     ],
     "pagination": {
-      "total": 100,
+      "total": 150,
       "page": 1,
       "limit": 10,
-      "totalPages": 10
+      "totalPages": 15
     }
   }
 }
@@ -711,46 +2374,62 @@ Authorization: Bearer {jwt_token}
 ---
 
 ### 2. Get Visit by ID
-**Endpoint:** `GET /api/doctor/visits/:id`
+**Endpoint:** `GET /doctor/visits/:id`
 
-**Headers:** `Authorization: Bearer {token}`
+**Description:** Get detailed visit information
 
-**Response:**
+**Headers:**
+```
+Authorization: Bearer {jwt_token}
+```
+
+**Response (200 OK):**
 ```json
 {
   "success": true,
   "message": "Detail kunjungan berhasil diambil",
   "data": {
     "id": "uuid",
-    "visitNumber": "V-20241224-1234567",
-    "visitDate": "timestamp",
-    "queueNumber": 1,
-    "status": "WAITING",
-    "chiefComplaint": "string | null",
-    "bloodPressure": "string | null",
-    "notes": "string | null",
-    "totalCost": 0,
-    "createdAt": "timestamp",
+    "visitNumber": "V-20240120-1234567",
+    "visitDate": "2024-01-20T10:00:00.000Z",
+    "queueNumber": 5,
+    "status": "COMPLETED",
+    "chiefComplaint": "Tooth pain on upper right molar",
+    "bloodPressure": "120/80",
+    "notes": "Patient complained of severe pain, X-ray shows cavity",
+    "totalCost": 350000,
+    "createdAt": "2024-01-20T09:30:00.000Z",
+    "updatedAt": "2024-01-20T11:00:00.000Z",
     "patient": {
       "id": "uuid",
-      "patientNumber": "P-202412-0001",
-      "medicalRecordNumber": "RM-202412-0001",
-      "fullName": "string",
-      "dateOfBirth": "date",
-      "gender": "L | P",
-      "phone": "string",
-      "email": "string | null",
-      "address": "string | null",
-      "bloodType": "string | null",
-      "allergies": "string | null",
-      "medicalHistory": "string | null"
+      "patientNumber": "P-202401-0001",
+      "medicalRecordNumber": "RM-202401-0001",
+      "fullName": "Ahmad Rizki",
+      "dateOfBirth": "1990-05-15",
+      "gender": "L",
+      "phone": "08123456789",
+      "email": "ahmad@example.com",
+      "address": "Jl. Sudirman No. 123, Jakarta",
+      "bloodType": "O",
+      "allergies": "Penicillin",
+      "medicalHistory": "Diabetes Type 2"
     },
     "nurse": {
       "id": "uuid",
-      "fullName": "string"
+      "fullName": "Jane Smith"
     },
-    "treatments": [],
-    "payments": []
+    "payments": [
+      {
+        "id": "uuid",
+        "paymentNumber": "PAY-202401-0001",
+        "paymentDate": "2024-01-20T11:00:00.000Z",
+        "paymentMethod": "CASH",
+        "amount": 350000,
+        "paidAmount": 400000,
+        "changeAmount": 50000,
+        "status": "PAID"
+      }
+    ]
   }
 }
 ```
@@ -758,54 +2437,87 @@ Authorization: Bearer {jwt_token}
 ---
 
 ### 3. Get Visit by Visit Number
-**Endpoint:** `GET /api/doctor/visits/number/:visitNumber`
+**Endpoint:** `GET /doctor/visits/number/:visitNumber`
 
-**Headers:** `Authorization: Bearer {token}`
+**Description:** Get visit details by visit number
 
-**Response:** Same as Get Visit by ID
+**Headers:**
+```
+Authorization: Bearer {jwt_token}
+```
+
+**Example:**
+```
+GET /doctor/visits/number/V-20240120-1234567
+```
+
+**Response:** Same structure as "Get Visit by ID"
 
 ---
 
 ### 4. Get Visit by Medical Record Number
-**Endpoint:** `GET /api/doctor/visits/medical-record/:medicalRecordNumber`
+**Endpoint:** `GET /doctor/visits/medical-record/:medicalRecordNumber`
 
-**Headers:** `Authorization: Bearer {token}`
+**Description:** Get visit details by patient's medical record number
 
-**Response:** Same as Get Visit by ID
+**Headers:**
+```
+Authorization: Bearer {jwt_token}
+```
+
+**Example:**
+```
+GET /doctor/visits/medical-record/RM-202401-0001
+```
+
+**Response:** Same structure as "Get Visit by ID"
 
 ---
 
 ### 5. Create Visit
-**Endpoint:** `POST /api/doctor/visits`
+**Endpoint:** `POST /doctor/visits`
 
-**Headers:** `Authorization: Bearer {token}`
+**Description:** Create new visit (register patient visit)
+
+**Headers:**
+```
+Authorization: Bearer {jwt_token}
+```
 
 **Request Body:**
 ```json
 {
   "patient": {
-    "id": "uuid (optional, for existing patient)",
-    "fullName": "string (min: 3)",
-    "dateOfBirth": "date (ISO format)",
-    "gender": "L | P",
-    "phone": "string (min: 10)",
-    "email": "string (email, optional)",
-    "address": "string (optional)",
-    "bloodType": "string (optional)",
-    "allergies": "string (optional)",
-    "medicalHistory": "string (optional)"
+    "id": "uuid",
+    "fullName": "Ahmad Rizki",
+    "dateOfBirth": "1990-05-15",
+    "gender": "L",
+    "phone": "08123456789",
+    "email": "ahmad@example.com",
+    "address": "Jl. Sudirman No. 123, Jakarta",
+    "bloodType": "O",
+    "allergies": "Penicillin",
+    "medicalHistory": "Diabetes Type 2"
   },
   "visit": {
-    "visitDate": "datetime (ISO format)",
-    "chiefComplaint": "string (optional)",
-    "bloodPressure": "string (optional)",
-    "notes": "string (optional)",
-    "status": "WAITING | IN_PROGRESS (optional)"
+    "visitDate": "2024-02-01T10:00:00.000Z",
+    "chiefComplaint": "Regular checkup",
+    "bloodPressure": "120/80",
+    "notes": "Annual dental checkup",
+    "status": "WAITING"
   }
 }
 ```
 
-**Response:**
+**Notes:**
+- If `patient.id` is provided, the system will use existing patient
+- If `patient.id` is not provided but phone number matches existing patient, the system will use that patient
+- If patient doesn't exist, a new patient will be created
+- Medical record number is auto-generated if patient doesn't have one
+- Visit number and queue number are auto-generated
+- Visit date can be in the past (up to 30 days) or future
+
+**Response (201 Created):**
 ```json
 {
   "success": true,
@@ -814,19 +2526,33 @@ Authorization: Bearer {jwt_token}
     "id": "uuid",
     "patientId": "uuid",
     "nurseId": "uuid",
-    "visitNumber": "V-20241224-1234567",
-    "visitDate": "timestamp",
+    "visitNumber": "V-20240201-9876543",
+    "visitDate": "2024-02-01T10:00:00.000Z",
     "queueNumber": 1,
     "status": "WAITING",
-    "chiefComplaint": "string | null",
-    "bloodPressure": "string | null",
-    "notes": "string | null",
+    "chiefComplaint": "Regular checkup",
+    "bloodPressure": "120/80",
+    "notes": "Annual dental checkup",
     "totalCost": 0,
-    "createdAt": "timestamp",
-    "patient": {},
+    "createdAt": "2024-02-01T09:00:00.000Z",
+    "updatedAt": "2024-02-01T09:00:00.000Z",
+    "patient": {
+      "id": "uuid",
+      "patientNumber": "P-202401-0001",
+      "medicalRecordNumber": "RM-202401-0001",
+      "fullName": "Ahmad Rizki",
+      "dateOfBirth": "1990-05-15",
+      "gender": "L",
+      "phone": "08123456789",
+      "email": "ahmad@example.com",
+      "address": "Jl. Sudirman No. 123, Jakarta",
+      "bloodType": "O",
+      "allergies": "Penicillin",
+      "medicalHistory": "Diabetes Type 2"
+    },
     "nurse": {
       "id": "uuid",
-      "fullName": "string"
+      "fullName": "Jane Smith"
     }
   }
 }
@@ -835,14 +2561,19 @@ Authorization: Bearer {jwt_token}
 ---
 
 ### 6. Get Queue
-**Endpoint:** `GET /api/doctor/visits/queue`
+**Endpoint:** `GET /doctor/visits/queue`
 
-**Headers:** `Authorization: Bearer {token}`
+**Description:** Get current visit queue (WAITING and IN_PROGRESS visits from 7 days ago to 7 days ahead)
+
+**Headers:**
+```
+Authorization: Bearer {jwt_token}
+```
 
 **Query Parameters:**
-- `search` (string, optional)
+- `search` (optional): Search by visit number, patient name, patient number, or medical record number
 
-**Response:**
+**Response (200 OK):**
 ```json
 {
   "success": true,
@@ -850,21 +2581,48 @@ Authorization: Bearer {jwt_token}
   "data": [
     {
       "id": "uuid",
-      "visitNumber": "V-20241224-1234567",
-      "visitDate": "timestamp",
+      "visitNumber": "V-20240201-1111111",
+      "visitDate": "2024-02-01T09:00:00.000Z",
       "queueNumber": 1,
-      "status": "WAITING | IN_PROGRESS",
-      "chiefComplaint": "string | null",
+      "status": "IN_PROGRESS",
+      "chiefComplaint": "Tooth extraction",
+      "bloodPressure": "130/85",
+      "notes": null,
+      "totalCost": 0,
+      "createdAt": "2024-02-01T08:30:00.000Z",
       "patient": {
         "id": "uuid",
-        "patientNumber": "P-202412-0001",
-        "medicalRecordNumber": "RM-202412-0001",
-        "fullName": "string",
-        "phone": "string"
+        "patientNumber": "P-202401-0010",
+        "medicalRecordNumber": "RM-202401-0010",
+        "fullName": "Budi Santoso",
+        "phone": "08198765432"
       },
       "nurse": {
         "id": "uuid",
-        "fullName": "string"
+        "fullName": "Jane Smith"
+      }
+    },
+    {
+      "id": "uuid",
+      "visitNumber": "V-20240201-2222222",
+      "visitDate": "2024-02-01T10:00:00.000Z",
+      "queueNumber": 2,
+      "status": "WAITING",
+      "chiefComplaint": "Dental checkup",
+      "bloodPressure": null,
+      "notes": null,
+      "totalCost": 0,
+      "createdAt": "2024-02-01T09:15:00.000Z",
+      "patient": {
+        "id": "uuid",
+        "patientNumber": "P-202401-0015",
+        "medicalRecordNumber": "RM-202401-0015",
+        "fullName": "Siti Nurhaliza",
+        "phone": "08176543210"
+      },
+      "nurse": {
+        "id": "uuid",
+        "fullName": "Maria Garcia"
       }
     }
   ]
@@ -874,27 +2632,40 @@ Authorization: Bearer {jwt_token}
 ---
 
 ### 7. Update Visit Status
-**Endpoint:** `PATCH /api/doctor/visits/:id/status`
+**Endpoint:** `PATCH /doctor/visits/:id/status`
 
-**Headers:** `Authorization: Bearer {token}`
+**Description:** Update visit status
+
+**Headers:**
+```
+Authorization: Bearer {jwt_token}
+```
 
 **Request Body:**
 ```json
 {
-  "status": "WAITING | IN_PROGRESS | COMPLETED | CANCELLED"
+  "status": "IN_PROGRESS"
 }
 ```
 
-**Response:**
+**Valid Status Transitions:**
+- `WAITING` → `IN_PROGRESS`, `CANCELLED`
+- `IN_PROGRESS` → `COMPLETED`, `CANCELLED`
+- `COMPLETED` → No transitions allowed
+- `CANCELLED` → No transitions allowed
+
+**Response (200 OK):**
 ```json
 {
   "success": true,
   "message": "Status kunjungan berhasil diupdate",
   "data": {
     "id": "uuid",
-    "status": "COMPLETED",
+    "visitNumber": "V-20240201-2222222",
+    "status": "IN_PROGRESS",
+    "updatedAt": "2024-02-01T10:05:00.000Z",
     "patient": {
-      "fullName": "string"
+      "fullName": "Siti Nurhaliza"
     }
   }
 }
@@ -903,16 +2674,21 @@ Authorization: Bearer {jwt_token}
 ---
 
 ### 8. Get Completed Visits
-**Endpoint:** `GET /api/doctor/visits/completed`
+**Endpoint:** `GET /doctor/visits/completed`
 
-**Headers:** `Authorization: Bearer {token}`
+**Description:** Get all completed visits with pagination
+
+**Headers:**
+```
+Authorization: Bearer {jwt_token}
+```
 
 **Query Parameters:**
-- `page` (number, default: 1)
-- `limit` (number, default: 10)
-- `search` (string, optional)
+- `page` (optional, default: 1): Page number
+- `limit` (optional, default: 10): Items per page
+- `search` (optional): Search by visit number, patient name, patient number, or medical record number
 
-**Response:**
+**Response (200 OK):**
 ```json
 {
   "success": true,
@@ -921,27 +2697,25 @@ Authorization: Bearer {jwt_token}
     "visits": [
       {
         "id": "uuid",
-        "visitNumber": "V-20241224-1234567",
-        "visitDate": "timestamp",
+        "visitNumber": "V-20240120-1234567",
+        "visitDate": "2024-01-20T10:00:00.000Z",
+        "queueNumber": 5,
         "status": "COMPLETED",
+        "chiefComplaint": "Tooth pain",
+        "bloodPressure": "120/80",
+        "notes": "Treatment completed successfully",
+        "totalCost": 350000,
+        "createdAt": "2024-01-20T09:30:00.000Z",
+        "updatedAt": "2024-01-20T11:00:00.000Z",
         "patient": {
           "id": "uuid",
-          "patientNumber": "P-202412-0001",
-          "medicalRecordNumber": "RM-202412-0001",
-          "fullName": "string",
-          "dateOfBirth": "date",
-          "gender": "L | P",
-          "phone": "string"
-        },
-        "treatments": [
-          {
-            "id": "uuid",
-            "diagnosis": "string",
-            "service": {
-              "serviceName": "string"
-            }
-          }
-        ]
+          "patientNumber": "P-202401-0001",
+          "medicalRecordNumber": "RM-202401-0001",
+          "fullName": "Ahmad Rizki",
+          "dateOfBirth": "1990-05-15",
+          "gender": "L",
+          "phone": "08123456789"
+        }
       }
     ],
     "pagination": {
@@ -957,35 +2731,51 @@ Authorization: Bearer {jwt_token}
 ---
 
 ### 9. Update Visit
-**Endpoint:** `PUT /api/doctor/visits/:id`
+**Endpoint:** `PUT /doctor/visits/:id`
 
-**Headers:** `Authorization: Bearer {token}`
+**Description:** Update visit information
+
+**Headers:**
+```
+Authorization: Bearer {jwt_token}
+```
 
 **Request Body:**
 ```json
 {
-  "visitDate": "datetime (ISO format, optional)",
-  "chiefComplaint": "string (optional)",
-  "bloodPressure": "string (optional)",
-  "notes": "string (optional)"
+  "visitDate": "2024-02-01T11:00:00.000Z",
+  "chiefComplaint": "Updated: Tooth pain and sensitivity",
+  "bloodPressure": "125/82",
+  "notes": "Patient also mentioned sensitivity to cold"
 }
 ```
 
-**Response:**
+**Response (200 OK):**
 ```json
 {
   "success": true,
   "message": "Kunjungan berhasil diupdate",
   "data": {
     "id": "uuid",
-    "visitNumber": "V-20241224-1234567",
-    "visitDate": "timestamp",
-    "chiefComplaint": "string | null",
-    "bloodPressure": "string | null",
-    "notes": "string | null",
-    "patient": {},
-    "nurse": {},
-    "treatments": []
+    "visitNumber": "V-20240201-2222222",
+    "visitDate": "2024-02-01T11:00:00.000Z",
+    "queueNumber": 2,
+    "status": "WAITING",
+    "chiefComplaint": "Updated: Tooth pain and sensitivity",
+    "bloodPressure": "125/82",
+    "notes": "Patient also mentioned sensitivity to cold",
+    "totalCost": 0,
+    "updatedAt": "2024-02-01T10:30:00.000Z",
+    "patient": {
+      "id": "uuid",
+      "patientNumber": "P-202401-0015",
+      "medicalRecordNumber": "RM-202401-0015",
+      "fullName": "Siti Nurhaliza"
+    },
+    "nurse": {
+      "id": "uuid",
+      "fullName": "Maria Garcia"
+    }
   }
 }
 ```
@@ -993,625 +2783,38 @@ Authorization: Bearer {jwt_token}
 ---
 
 ### 10. Update Visit Examination
-**Endpoint:** `PUT /api/doctor/visits/:id/examination`
+**Endpoint:** `PUT /doctor/visits/:id/examination`
 
-**Headers:** `Authorization: Bearer {token}`
+**Description:** Update visit examination details specifically
+
+**Headers:**
+```
+Authorization: Bearer {jwt_token}
+```
 
 **Request Body:**
 ```json
 {
-  "chiefComplaint": "string (optional)",
-  "bloodPressure": "string (optional)",
-  "notes": "string (optional)"
+  "chiefComplaint": "Severe tooth pain on lower left molar",
+  "bloodPressure": "130/85",
+  "notes": "Patient indicates pain when chewing, X-ray recommended"
 }
 ```
 
-**Response:** Same as Update Visit
-
----
-
-## Treatment Management
-
-### 1. Get All Treatments
-**Endpoint:** `GET /api/doctor/treatments`
-
-**Headers:** `Authorization: Bearer {token}`
-
-**Role Required:** `DOKTER`
-
-**Query Parameters:**
-- `page` (number, default: 1)
-- `limit` (number, default: 10)
-- `patientId` (uuid, optional)
-- `startDate` (ISO date, optional)
-- `endDate` (ISO date, optional)
-- `search` (string, optional)
-
-**Response:**
+**Response (200 OK):**
 ```json
 {
   "success": true,
-  "message": "Daftar treatment berhasil diambil",
-  "data": {
-    "treatments": [
-      {
-        "id": "uuid",
-        "visitId": "uuid",
-        "patientId": "uuid",
-        "serviceId": "uuid",
-        "performedBy": "uuid",
-        "toothNumber": "string | null",
-        "diagnosis": "string | null",
-        "treatmentNotes": "string | null",
-        "quantity": 1,
-        "unitPrice": 500000,
-        "discount": 0,
-        "subtotal": 500000,
-        "images": [],
-        "createdAt": "timestamp",
-        "patient": {
-          "id": "uuid",
-          "patientNumber": "P-202412-0001",
-          "fullName": "string",
-          "gender": "L | P"
-        },
-        "service": {
-          "id": "uuid",
-          "serviceName": "string",
-          "category": "CONSULTATION"
-        },
-        "visit": {
-          "id": "uuid",
-          "visitNumber": "V-20241224-1234567",
-          "visitDate": "timestamp"
-        }
-      }
-    ],
-    "pagination": {
-      "total": 50,
-      "page": 1,
-      "limit": 10,
-      "totalPages": 5
-    }
-  }
-}
-```
-
----
-
-### 2. Get Treatment by ID
-**Endpoint:** `GET /api/doctor/treatments/:id`
-
-**Headers:** `Authorization: Bearer {token}`
-
-**Response:**
-```json
-{
-  "success": true,
-  "message": "Detail treatment berhasil diambil",
+  "message": "Detail pemeriksaan berhasil diupdate",
   "data": {
     "id": "uuid",
-    "visitId": "uuid",
-    "patientId": "uuid",
-    "serviceId": "uuid",
-    "performedBy": "uuid",
-    "toothNumber": "string | null",
-    "diagnosis": "string | null",
-    "treatmentNotes": "string | null",
-    "quantity": 1,
-    "unitPrice": 500000,
-    "discount": 0,
-    "subtotal": 500000,
-    "images": [],
-    "createdAt": "timestamp",
+    "visitNumber": "V-20240201-2222222",
+    "chiefComplaint": "Severe tooth pain on lower left molar",
+    "bloodPressure": "130/85",
+    "notes": "Patient indicates pain when chewing, X-ray recommended",
+    "updatedAt": "2024-02-01T10:45:00.000Z",
     "patient": {
-      "id": "uuid",
-      "patientNumber": "P-202412-0001",
-      "fullName": "string",
-      "dateOfBirth": "date",
-      "gender": "L | P",
-      "phone": "string",
-      "email": "string | null",
-      "address": "string | null",
-      "bloodType": "string | null",
-      "allergies": "string | null",
-      "medicalHistory": "string | null"
-    },
-    "service": {
-      "id": "uuid",
-      "serviceCode": "SRV-0001",
-      "serviceName": "string",
-      "category": "CONSULTATION",
-      "description": "string | null",
-      "basePrice": 500000,
-      "commissionRate": 10.00,
-      "durationMinutes": 30,
-      "isActive": true
-    },
-    "visit": {
-      "id": "uuid",
-      "visitNumber": "V-20241224-1234567",
-      "visitDate": "timestamp",
-      "patient": {
-        "fullName": "string"
-      }
-    },
-    "performer": {
-      "id": "uuid",
-      "fullName": "string",
-      "specialization": "string | null"
-    },
-    "commissions": [
-      {
-        "id": "uuid",
-        "commissionAmount": 50000,
-        "status": "PENDING | PAID"
-      }
-    ]
-  }
-}
-```
-
----
-
-### 3. Get Treatments by Visit
-**Endpoint:** `GET /api/doctor/treatments/visit/:visitId`
-
-**Headers:** `Authorization: Bearer {token}`
-
-**Response:**
-```json
-{
-  "success": true,
-  "message": "Daftar treatment berhasil diambil",
-  "data": [
-    {
-      "id": "uuid",
-      "toothNumber": "string | null",
-      "diagnosis": "string | null",
-      "treatmentNotes": "string | null",
-      "quantity": 1,
-      "unitPrice": 500000,
-      "discount": 0,
-      "subtotal": 500000,
-      "images": [],
-      "createdAt": "timestamp",
-      "service": {
-        "id": "uuid",
-        "serviceName": "string",
-        "category": "CONSULTATION",
-        "basePrice": 500000
-      },
-      "performer": {
-        "id": "uuid",
-        "fullName": "string",
-        "specialization": "string | null"
-      }
-    }
-  ]
-}
-```
-
----
-
-### 4. Create Treatment
-**Endpoint:** `POST /api/doctor/treatments`
-
-**Headers:** `Authorization: Bearer {token}`
-
-**Role Required:** `DOKTER`
-
-**Request Body:**
-```json
-{
-  "visitId": "uuid",
-  "patientId": "uuid",
-  "serviceId": "uuid",
-  "toothNumber": "string (optional)",
-  "diagnosis": "string (min: 10, optional)",
-  "treatmentNotes": "string (optional)",
-  "quantity": 1,
-  "discount": 0,
-  "images": []
-}
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "message": "Treatment berhasil ditambahkan",
-  "data": {
-    "id": "uuid",
-    "visitId": "uuid",
-    "patientId": "uuid",
-    "serviceId": "uuid",
-    "performedBy": "uuid",
-    "toothNumber": "string | null",
-    "diagnosis": "string | null",
-    "treatmentNotes": "string | null",
-    "quantity": 1,
-    "unitPrice": 500000,
-    "discount": 0,
-    "subtotal": 500000,
-    "images": [],
-    "createdAt": "timestamp",
-    "service": {},
-    "performer": {
-      "fullName": "string"
-    }
-  }
-}
-```
-
-**Notes:**
-- Automatically updates visit.totalCost
-- Creates commission record for the doctor
-
----
-
-### 5. Update Treatment
-**Endpoint:** `PUT /api/doctor/treatments/:id`
-
-**Headers:** `Authorization: Bearer {token}`
-
-**Role Required:** `DOKTER`
-
-**Request Body:**
-```json
-{
-  "toothNumber": "string (optional)",
-  "diagnosis": "string (min: 10, optional)",
-  "treatmentNotes": "string (min: 10, optional)",
-  "quantity": 1,
-  "discount": 0,
-  "images": []
-}
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "message": "Treatment berhasil diupdate",
-  "data": {
-    "id": "uuid",
-    "toothNumber": "string | null",
-    "diagnosis": "string | null",
-    "treatmentNotes": "string | null",
-    "quantity": 1,
-    "unitPrice": 500000,
-    "discount": 0,
-    "subtotal": 500000,
-    "images": [],
-    "service": {},
-    "patient": {
-      "fullName": "string"
-    }
-  }
-}
-```
-
-**Notes:**
-- Only the doctor who performed the treatment can update it
-- Automatically updates visit.totalCost and commission
-
----
-
-### 6. Delete Treatment
-**Endpoint:** `DELETE /api/doctor/treatments/:id`
-
-**Headers:** `Authorization: Bearer {token}`
-
-**Role Required:** `DOKTER`
-
-**Response:**
-```json
-{
-  "success": true,
-  "message": "Treatment berhasil dihapus",
-  "data": null
-}
-```
-
-**Notes:**
-- Only the doctor who performed the treatment can delete it
-- Automatically updates visit.totalCost
-
----
-
-### 7. Upload Treatment Images
-**Endpoint:** `POST /api/doctor/treatments/upload-images`
-
-**Headers:** 
-- `Authorization: Bearer {token}`
-- `Content-Type: multipart/form-data`
-
-**Role Required:** `DOKTER`
-
-**Request Body:**
-- Form data with field `images` (max 5 files)
-- Allowed types: JPEG, JPG, PNG, WEBP
-- Max file size: 5MB each
-
-**Response:**
-```json
-{
-  "success": true,
-  "message": "Gambar berhasil diupload",
-  "data": {
-    "images": [
-      "/uploads/treatments/treatment-1234567890-123456789.jpg",
-      "/uploads/treatments/treatment-1234567890-987654321.jpg"
-    ]
-  }
-}
-```
-
----
-
-### 8. Get Visit with Treatments
-**Endpoint:** `GET /api/doctor/treatments/visit/:visitId/full`
-
-**Headers:** `Authorization: Bearer {token}`
-
-**Response:**
-```json
-{
-  "success": true,
-  "message": "Data kunjungan berhasil diambil",
-  "data": {
-    "id": "uuid",
-    "visitNumber": "V-20241224-1234567",
-    "visitDate": "timestamp",
-    "queueNumber": 1,
-    "status": "COMPLETED",
-    "chiefComplaint": "string | null",
-    "bloodPressure": "string | null",
-    "notes": "string | null",
-    "totalCost": 1000000,
-    "patient": {
-      "id": "uuid",
-      "patientNumber": "P-202412-0001",
-      "medicalRecordNumber": "RM-202412-0001",
-      "fullName": "string",
-      "dateOfBirth": "date",
-      "gender": "L | P",
-      "phone": "string",
-      "email": "string | null",
-      "address": "string | null",
-      "bloodType": "string | null",
-      "allergies": "string | null",
-      "medicalHistory": "string | null"
-    },
-    "nurse": {
-      "id": "uuid",
-      "fullName": "string"
-    },
-    "treatments": [
-      {
-        "id": "uuid",
-        "toothNumber": "string | null",
-        "diagnosis": "string | null",
-        "treatmentNotes": "string | null",
-        "quantity": 1,
-        "unitPrice": 500000,
-        "discount": 0,
-        "subtotal": 500000,
-        "images": [],
-        "service": {
-          "id": "uuid",
-          "serviceName": "string",
-          "category": "CONSULTATION"
-        },
-        "performer": {
-          "id": "uuid",
-          "fullName": "string",
-          "specialization": "string | null"
-        }
-      }
-    ]
-  }
-}
-```
-
----
-
-## Payment Management
-
-### 1. Create Payment
-**Endpoint:** `POST /api/payments`
-
-**Headers:** `Authorization: Bearer {token}`
-
-**Request Body:**
-```json
-{
-  "visitId": "uuid",
-  "paymentMethod": "CASH | TRANSFER | CARD | QRIS",
-  "amount": 1000000,
-  "paidAmount": 1000000,
-  "referenceNumber": "string (optional)",
-  "notes": "string (optional)"
-}
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "message": "Pembayaran berhasil dibuat",
-  "data": {
-    "id": "uuid",
-    "visitId": "uuid",
-    "paymentNumber": "PAY-202412-0001",
-    "paymentDate": "timestamp",
-    "paymentMethod": "CASH",
-    "amount": 1000000,
-    "paidAmount": 1000000,
-    "changeAmount": 0,
-    "status": "PAID | PENDING | PARTIAL",
-    "referenceNumber": "string | null",
-    "notes": "string | null",
-    "createdAt": "timestamp",
-    "visit": {
-      "id": "uuid",
-      "visitNumber": "V-20241224-1234567",
-      "visitDate": "timestamp",
-      "patient": {
-        "id": "uuid",
-        "patientNumber": "P-202412-0001",
-        "medicalRecordNumber": "RM-202412-0001",
-        "fullName": "string"
-      }
-    }
-  }
-}
-```
-
-**Notes:**
-- Status automatically calculated based on paidAmount vs amount
-- `changeAmount` automatically calculated
-
----
-
-### 2. Update Payment
-**Endpoint:** `PUT /api/payments/:id`
-
-**Headers:** `Authorization: Bearer {token}`
-
-**Request Body:**
-```json
-{
-  "paymentMethod": "CASH | TRANSFER | CARD | QRIS (optional)",
-  "amount": 1000000,
-  "paidAmount": 1000000,
-  "referenceNumber": "string (optional)",
-  "notes": "string (optional)"
-}
-```
-
-**Response:** Same as Create Payment
-
----
-
-### 3. Get Payments by Visit
-**Endpoint:** `GET /api/payments/visit/:visitId`
-
-**Headers:** `Authorization: Bearer {token}`
-
-**Response:**
-```json
-{
-  "success": true,
-  "message": "Daftar pembayaran berhasil diambil",
-  "data": [
-    {
-      "id": "uuid",
-      "visitId": "uuid",
-      "paymentNumber": "PAY-202412-0001",
-      "paymentDate": "timestamp",
-      "paymentMethod": "CASH",
-      "amount": 1000000,
-      "paidAmount": 1000000,
-      "changeAmount": 0,
-      "status": "PAID",
-      "referenceNumber": "string | null",
-      "notes": "string | null",
-      "createdAt": "timestamp"
-    }
-  ]
-}
-```
-
----
-
-### 4. Get All Payments
-**Endpoint:** `GET /api/payments`
-
-**Headers:** `Authorization: Bearer {token}`
-
-**Query Parameters:**
-- `search` (string, optional)
-
-**Response:**
-```json
-{
-  "success": true,
-  "message": "Daftar pembayaran berhasil diambil",
-  "data": [
-    {
-      "id": "uuid",
-      "visitId": "uuid",
-      "paymentNumber": "PAY-202412-0001",
-      "paymentDate": "timestamp",
-      "paymentMethod": "CASH",
-      "amount": 1000000,
-      "paidAmount": 1000000,
-      "changeAmount": 0,
-      "status": "PAID",
-      "referenceNumber": "string | null",
-      "notes": "string | null",
-      "createdAt": "timestamp",
-      "visit": {
-        "id": "uuid",
-        "visitNumber": "V-20241224-1234567",
-        "visitDate": "timestamp",
-        "patient": {
-          "id": "uuid",
-          "patientNumber": "P-202412-0001",
-          "medicalRecordNumber": "RM-202412-0001",
-          "fullName": "string"
-        }
-      }
-    }
-  ]
-}
-```
-
----
-
-### 5. Get Payment by ID
-**Endpoint:** `GET /api/payments/:id`
-
-**Headers:** `Authorization: Bearer {token}`
-
-**Response:**
-```json
-{
-  "success": true,
-  "message": "Detail pembayaran berhasil diambil",
-  "data": {
-    "id": "uuid",
-    "visitId": "uuid",
-    "paymentNumber": "PAY-202412-0001",
-    "paymentDate": "timestamp",
-    "paymentMethod": "CASH",
-    "amount": 1000000,
-    "paidAmount": 1000000,
-    "changeAmount": 0,
-    "status": "PAID",
-    "referenceNumber": "string | null",
-    "notes": "string | null",
-    "createdAt": "timestamp",
-    "visit": {
-      "id": "uuid",
-      "visitNumber": "V-20241224-1234567",
-      "visitDate": "timestamp",
-      "patient": {
-        "id": "uuid",
-        "patientNumber": "P-202412-0001",
-        "medicalRecordNumber": "RM-202412-0001",
-        "fullName": "string",
-        "dateOfBirth": "date",
-        "gender": "L | P",
-        "phone": "string",
-        "email": "string | null",
-        "address": "string | null",
-        "bloodType": "string | null",
-        "allergies": "string | null",
-        "medicalHistory": "string | null"
-      }
+      "fullName": "Siti Nurhaliza"
     }
   }
 }
@@ -1619,1707 +2822,101 @@ Authorization: Bearer {jwt_token}
 
 ---
 
-## Schedule Management
+### 11. Get Visit by Medical Record (Nurse)
+**Endpoint:** `GET /nurse/visits/medical-record/:medicalRecordNumber`
 
-### 1. Get Schedules
-**Endpoint:** `GET /api/doctor/schedules`
+**Description:** Get most recent completed visit by patient's medical record number (Nurse access)
 
-**Headers:** `Authorization: Bearer {token}`
-
-**Query Parameters:**
-- `type` (SHIFT | MEETING | ACTIVITY, optional)
-
-**Response:**
-```json
-{
-  "success": true,
-  "message": "Jadwal berhasil diambil",
-  "data": [
-    {
-      "id": "uuid",
-      "userId": "uuid",
-      "title": "string",
-      "description": "string | null",
-      "scheduleType": "SHIFT | MEETING | ACTIVITY",
-      "startDatetime": "timestamp",
-      "endDatetime": "timestamp",
-      "location": "string | null",
-      "isRecurring": false,
-      "recurrencePattern": "string | null",
-      "createdAt": "timestamp",
-      "updatedAt": "timestamp"
-    }
-  ]
-}
+**Headers:**
+```
+Authorization: Bearer {jwt_token}
 ```
 
----
+**Access:** Nurse only
 
-### 2. Create Schedule
-**Endpoint:** `POST /api/doctor/schedules`
-
-**Headers:** `Authorization: Bearer {token}`
-
-**Request Body:**
-```json
-{
-  "title": "string (min: 3)",
-  "description": "string (optional)",
-  "scheduleType": "SHIFT | MEETING | ACTIVITY",
-  "startDatetime": "datetime (ISO format)",
-  "endDatetime": "datetime (ISO format)",
-  "location": "string (optional)",
-  "isRecurring": false,
-  "recurrencePattern": "string (optional)"
-}
+**Example:**
+```
+GET /nurse/visits/medical-record/RM-202401-0001
 ```
 
-**Response:**
-```json
-{
-  "success": true,
-  "message": "Jadwal berhasil ditambahkan",
-  "data": {
-    "id": "uuid",
-    "userId": "uuid",
-    "title": "string",
-    "description": "string | null",
-    "scheduleType": "SHIFT",
-    "startDatetime": "timestamp",
-    "endDatetime": "timestamp",
-    "location": "string | null",
-    "isRecurring": false,
-    "recurrencePattern": "string | null",
-    "createdAt": "timestamp",
-    "updatedAt": "timestamp"
-  }
-}
-```
-
-**Validation:**
-- `endDatetime` must be after `startDatetime`
-
----
-
-### 3. Get Activities
-**Endpoint:** `GET /api/doctor/schedules/activities`
-
-**Headers:** `Authorization: Bearer {token}`
-
-**Response:** Same structure as Get Schedules, filtered by `scheduleType: ACTIVITY`
-
----
-
-### 4. Get Meetings
-**Endpoint:** `GET /api/doctor/schedules/meetings`
-
-**Headers:** `Authorization: Bearer {token}`
-
-**Response:** Same structure as Get Schedules, filtered by `scheduleType: MEETING`
-
----
-
-## Leave Management
-
-### 1. Get Leave Requests
-**Endpoint:** `GET /api/doctor/leaves`
-
-**Headers:** `Authorization: Bearer {token}`
-
-**Response:**
-```json
-{
-  "success": true,
-  "message": "Daftar cuti berhasil diambil",
-  "data": [
-    {
-      "id": "uuid",
-      "userId": "uuid",
-      "approvedBy": "uuid | null",
-      "startDate": "date",
-      "endDate": "date",
-      "leaveType": "SICK | ANNUAL | EMERGENCY | UNPAID",
-      "reason": "string",
-      "status": "PENDING | APPROVED | REJECTED",
-      "rejectionReason": "string | null",
-      "approvedAt": "timestamp | null",
-      "createdAt": "timestamp",
-      "updatedAt": "timestamp",
-      "approver": {
-        "fullName": "string"
-      } | null
-    }
-  ]
-}
-```
-
----
-
-### 2. Create Leave Request
-**Endpoint:** `POST /api/doctor/leaves`
-
-**Headers:** `Authorization: Bearer {token}`
-
-**Request Body:**
-```json
-{
-  "startDate": "date (ISO format)",
-  "endDate": "date (ISO format)",
-  "leaveType": "SICK | ANNUAL | EMERGENCY | UNPAID",
-  "reason": "string (min: 10)"
-}
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "message": "Pengajuan cuti berhasil",
-  "data": {
-    "id": "uuid",
-    "userId": "uuid",
-    "startDate": "date",
-    "endDate": "date",
-    "leaveType": "ANNUAL",
-    "reason": "string",
-    "status": "PENDING",
-    "createdAt": "timestamp"
-  }
-}
-```
-
-**Validation:**
-- `endDate` must be >= `startDate`
-- `reason` minimum 10 characters
-
-**Notes:**
-- For DOKTER role, status is automatically `APPROVED`
-- For PERAWAT role, status is `PENDING` and requires doctor approval
-
----
-
-## Commission Management
-
-All commission endpoints require `DOKTER` role.
-
-### 1. Get Commission Summary
-**Endpoint:** `GET /api/doctor/finance/commissions/summary`
-
-**Headers:** `Authorization: Bearer {token}`
-
-**Role Required:** `DOKTER`
-
-**Query Parameters:**
-- `month` (number 1-12, optional)
-- `year` (number, optional)
-
-**Response:**
-```json
-{
-  "success": true,
-  "message": "Summary komisi berhasil diambil",
-  "data": {
-    "total": 5000000,
-    "byCategory": {
-      "CONSULTATION": 2000000,
-      "SCALING": 1500000,
-      "FILLING": 1000000,
-      "EXTRACTION": 500000
-    },
-    "commissions": [
-      {
-        "id": "uuid",
-        "userId": "uuid",
-        "treatmentId": "uuid",
-        "baseAmount": 500000,
-        "commissionRate": 10.00,
-        "commissionAmount": 50000,
-        "periodMonth": 12,
-        "periodYear": 2024,
-        "status": "PENDING | PAID",
-        "paidAt": "timestamp | null",
-        "notes": "string | null",
-        "createdAt": "timestamp",
-        "treatment": {
-          "id": "uuid",
-          "service": {
-            "serviceName": "string",
-            "category": "CONSULTATION"
-          }
-        }
-      }
-    ]
-  }
-}
-```
-
----
-
-### 2. Get Services Commission
-**Endpoint:** `GET /api/doctor/finance/commissions/services`
-
-**Headers:** `Authorization: Bearer {token}`
-
-**Role Required:** `DOKTER`
-
-**Query Parameters:**
-- `month` (number 1-12, optional)
-- `year` (number, optional)
-
-**Response:**
-```json
-{
-  "success": true,
-  "message": "Komisi layanan berhasil diambil",
-  "data": {
-    "category": "CONSULTATION",
-    "total": 2000000,
-    "commissions": [
-      {
-        "id": "uuid",
-        "baseAmount": 500000,
-        "commissionRate": 10.00,
-        "commissionAmount": 50000,
-        "periodMonth": 12,
-        "periodYear": 2024,
-        "status": "PENDING",
-        "createdAt": "timestamp",
-        "treatment": {
-          "service": {
-            "serviceName": "Konsultasi Umum",
-            "category": "CONSULTATION"
-          },
-          "visit": {
-            "visitNumber": "V-20241224-1234567",
-            "patient": {
-              "fullName": "string"
-            }
-          }
-        }
-      }
-    ]
-  }
-}
-```
-
----
-
-### 3. Get Pharmacy Commission
-**Endpoint:** `GET /api/doctor/finance/commissions/pharmacy`
-
-**Headers:** `Authorization: Bearer {token}`
-
-**Role Required:** `DOKTER`
-
-**Query Parameters:**
-- `month` (number 1-12, optional)
-- `year` (number, optional)
-
-**Response:** Same structure as Get Services Commission, filtered by pharmacy-related services
-
----
-
-### 4. Get Packages Commission
-**Endpoint:** `GET /api/doctor/finance/commissions/packages`
-
-**Headers:** `Authorization: Bearer {token}`
-
-**Role Required:** `DOKTER`
-
-**Query Parameters:**
-- `month` (number 1-12, optional)
-- `year` (number, optional)
-
-**Response:** Same structure as Get Services Commission, filtered by package services
-
----
-
-### 5. Get Labs Commission
-**Endpoint:** `GET /api/doctor/finance/commissions/labs`
-
-**Headers:** `Authorization: Bearer {token}`
-
-**Role Required:** `DOKTER`
-
-**Query Parameters:**
-- `month` (number 1-12, optional)
-- `year` (number, optional)
-
-**Response:** Same structure as Get Services Commission, filtered by laboratory services
-
----
-
-## Finance Management
-
-All finance endpoints require `DOKTER` role.
-
-### 1. Get Finance Reports
-**Endpoint:** `GET /api/doctor/finance/reports`
-
-**Headers:** `Authorization: Bearer {token}`
-
-**Role Required:** `DOKTER`
-
-**Query Parameters:**
-- `search` (string, optional)
-
-**Response:**
-```json
-{
-  "success": true,
-  "message": "Data laporan keuangan berhasil diambil",
-  "data": {
-    "reports": [
-      {
-        "id": "uuid",
-        "userId": "uuid",
-        "tipe": "string",
-        "nama": "string",
-        "prosedur": "string | null",
-        "potongan": 0,
-        "bhpHarga": 0,
-        "bhpKomisi": 0,
-        "farmasiHarga": 0,
-        "farmasiKomisi": 0,
-        "paketHarga": 0,
-        "paketKomisi": 0,
-        "labHarga": 0,
-        "labKomisi": 0,
-        "createdAt": "timestamp",
-        "updatedAt": "timestamp"
-      }
-    ],
-    "total": {
-      "potongan": 0,
-      "bhpHarga": 0,
-      "farmasiHarga": 0,
-      "paketHarga": 0,
-      "labHarga": 0
-    }
-  }
-}
-```
-
----
-
-### 2. Create Finance Report
-**Endpoint:** `POST /api/doctor/finance/reports`
-
-**Headers:** `Authorization: Bearer {token}`
-
-**Role Required:** `DOKTER`
-
-**Request Body:**
-```json
-{
-  "tipe": "string",
-  "nama": "string",
-  "prosedur": "string (optional)",
-  "potongan": 0,
-  "bhpHarga": 0,
-  "bhpKomisi": 0,
-  "farmasiHarga": 0,
-  "farmasiKomisi": 0,
-  "paketHarga": 0,
-  "paketKomisi": 0,
-  "labHarga": 0,
-  "labKomisi": 0
-}
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "message": "Laporan keuangan berhasil ditambahkan",
-  "data": {
-    "id": "uuid",
-    "userId": "uuid",
-    "tipe": "string",
-    "nama": "string",
-    "prosedur": "string | null",
-    "potongan": 0,
-    "bhpHarga": 0,
-    "bhpKomisi": 0,
-    "farmasiHarga": 0,
-    "farmasiKomisi": 0,
-    "paketHarga": 0,
-    "paketKomisi": 0,
-    "labHarga": 0,
-    "labKomisi": 0,
-    "createdAt": "timestamp",
-    "updatedAt": "timestamp"
-  }
-}
-```
-
----
-
-### 3. Get Procedures
-**Endpoint:** `GET /api/doctor/finance/procedures`
-
-**Headers:** `Authorization: Bearer {token}`
-
-**Role Required:** `DOKTER`
-
-**Query Parameters:**
-- `search` (string, optional)
-
-**Response:**
-```json
-{
-  "success": true,
-  "message": "Data prosedur berhasil diambil",
-  "data": {
-    "procedures": [
-      {
-        "id": "uuid",
-        "userId": "uuid",
-        "name": "string",
-        "code": "string",
-        "quantity": 1,
-        "salePrice": 500000,
-        "avgComm": 10.00,
-        "totalSale": 500000,
-        "totalComm": 50000,
-        "createdAt": "timestamp",
-        "updatedAt": "timestamp"
-      }
-    ],
-    "total": {
-      "totalSale": 5000000,
-      "totalComm": 500000
-    }
-  }
-}
-```
-
----
-
-### 4. Create Procedure
-**Endpoint:** `POST /api/doctor/finance/procedures`
-
-**Headers:** `Authorization: Bearer {token}`
-
-**Role Required:** `DOKTER`
-
-**Request Body:**
-```json
-{
-  "name": "string",
-  "code": "string (unique)",
-  "quantity": 1,
-  "salePrice": 500000,
-  "avgComm": "10.00"
-}
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "message": "Prosedur berhasil ditambahkan",
-  "data": {
-    "id": "uuid",
-    "userId": "uuid",
-    "name": "string",
-    "code": "string",
-    "quantity": 1,
-    "salePrice": 500000,
-    "avgComm": 10.00,
-    "totalSale": 500000,
-    "totalComm": 50000,
-    "createdAt": "timestamp",
-    "updatedAt": "timestamp"
-  }
-}
-```
-
-**Error Codes:**
-- `400` - Kode prosedur sudah digunakan
-
----
-
-### 5. Get Packages
-**Endpoint:** `GET /api/doctor/finance/packages`
-
-**Headers:** `Authorization: Bearer {token}`
-
-**Role Required:** `DOKTER`
-
-**Query Parameters:**
-- `search` (string, optional)
-
-**Response:**
-```json
-{
-  "success": true,
-  "message": "Data paket berhasil diambil",
-  "data": {
-    "packages": [
-      {
-        "id": "uuid",
-        "userId": "uuid",
-        "name": "string",
-        "sku": "string",
-        "quantity": 1,
-        "salePrice": 1000000,
-        "avgComm": 15.00,
-        "totalSale": 1000000,
-        "totalComm": 150000,
-        "createdAt": "timestamp",
-        "updatedAt": "timestamp"
-      }
-    ],
-    "total": {
-      "totalSale": 10000000,
-      "totalComm": 1500000
-    }
-  }
-}
-```
-
----
-
-### 6. Create Package
-**Endpoint:** `POST /api/doctor/finance/packages`
-
-**Headers:** `Authorization: Bearer {token}`
-
-**Role Required:** `DOKTER`
-
-**Request Body:**
-```json
-{
-  "name": "string",
-  "sku": "string (unique)",
-  "quantity": 1,
-  "salePrice": 1000000,
-  "avgComm": "15.00"
-}
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "message": "Paket berhasil ditambahkan",
-  "data": {
-    "id": "uuid",
-    "userId": "uuid",
-    "name": "string",
-    "sku": "string",
-    "quantity": 1,
-    "salePrice": 1000000,
-    "avgComm": 15.00,
-    "totalSale": 1000000,
-    "totalComm": 150000,
-    "createdAt": "timestamp",
-    "updatedAt": "timestamp"
-  }
-}
-```
-
-**Error Codes:**
-- `400` - SKU sudah digunakan
-
----
-
-## User Management
-
-All user management endpoints require `DOKTER` role.
-
-### 1. Get All Users
-**Endpoint:** `GET /api/users`
-
-**Headers:** `Authorization: Bearer {token}`
-
-**Role Required:** `DOKTER`
-
-**Query Parameters:**
-- `role` (DOKTER | PERAWAT, optional)
-
-**Response:**
-```json
-{
-  "success": true,
-  "message": "Daftar user berhasil diambil",
-  "data": [
-    {
-      "id": "uuid",
-      "username": "string",
-      "email": "string",
-      "fullName": "string",
-      "role": "DOKTER | PERAWAT",
-      "phone": "string",
-      "specialization": "string | null",
-      "isActive": true,
-      "createdAt": "timestamp"
-    }
-  ]
-}
-```
-
----
-
-### 2. Get User by ID
-**Endpoint:** `GET /api/users/:id`
-
-**Headers:** `Authorization: Bearer {token}`
-
-**Role Required:** `DOKTER`
-
-**Response:**
-```json
-{
-  "success": true,
-  "message": "Detail user berhasil diambil",
-  "data": {
-    "id": "uuid",
-    "username": "string",
-    "email": "string",
-    "fullName": "string",
-    "role": "DOKTER | PERAWAT",
-    "phone": "string",
-    "specialization": "string | null",
-    "isActive": true,
-    "createdAt": "timestamp",
-    "_count": {
-      "visitsAsNurse": 50,
-      "treatmentsPerformed": 150,
-      "schedules": 20,
-      "leaveRequests": 5,
-      "commissions": 100
-    }
-  }
-}
-```
-
----
-
-### 3. Create User
-**Endpoint:** `POST /api/users`
-
-**Headers:** `Authorization: Bearer {token}`
-
-**Role Required:** `DOKTER`
-
-**Request Body:**
-```json
-{
-  "username": "string (min: 3)",
-  "email": "string (email)",
-  "password": "string (min: 6)",
-  "fullName": "string (min: 3)",
-  "phone": "string (min: 10)",
-  "role": "DOKTER | PERAWAT",
-  "specialization": "string (optional)"
-}
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "message": "User berhasil dibuat",
-  "data": {
-    "id": "uuid",
-    "username": "string",
-    "email": "string",
-    "fullName": "string",
-    "role": "PERAWAT",
-    "phone": "string",
-    "specialization": "string | null",
-    "isActive": true,
-    "createdAt": "timestamp"
-  }
-}
-```
-
-**Error Codes:**
-- `400` - Username atau email sudah terdaftar
-
----
-
-### 4. Update User
-**Endpoint:** `PUT /api/users/:id`
-
-**Headers:** `Authorization: Bearer {token}`
-
-**Role Required:** `DOKTER`
-
-**Request Body:**
-```json
-{
-  "fullName": "string (min: 3, optional)",
-  "phone": "string (min: 10, optional)",
-  "specialization": "string (optional)",
-  "isActive": true
-}
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "message": "User berhasil diupdate",
-  "data": {
-    "id": "uuid",
-    "username": "string",
-    "email": "string",
-    "fullName": "string",
-    "role": "PERAWAT",
-    "phone": "string",
-    "specialization": "string | null",
-    "isActive": true,
-    "updatedAt": "timestamp"
-  }
-}
-```
-
----
-
-### 5. Delete User
-**Endpoint:** `DELETE /api/users/:id`
-
-**Headers:** `Authorization: Bearer {token}`
-
-**Role Required:** `DOKTER`
-
-**Response:**
-```json
-{
-  "success": true,
-  "message": "User berhasil dihapus",
-  "data": null
-}
-```
-
----
-
-### 6. Toggle User Status
-**Endpoint:** `PATCH /api/users/:id/toggle-status`
-
-**Headers:** `Authorization: Bearer {token}`
-
-**Role Required:** `DOKTER`
-
-**Response:**
-```json
-{
-  "success": true,
-  "message": "Status user berhasil diubah",
-  "data": {
-    "id": "uuid",
-    "username": "string",
-    "fullName": "string",
-    "isActive": false
-  }
-}
-```
-
----
-
-### 7. Get User Profile
-**Endpoint:** `GET /api/users/profile`
-
-**Headers:** `Authorization: Bearer {token}`
-
-**Role Required:** `DOKTER`
-
-**Response:**
-```json
-{
-  "success": true,
-  "message": "Profil berhasil diambil",
-  "data": {
-    "id": "uuid",
-    "username": "string",
-    "email": "string",
-    "fullName": "string",
-    "role": "DOKTER",
-    "phone": "string",
-    "specialization": "string | null",
-    "education": "string | null",
-    "experience": "string | null",
-    "sipNumber": "string | null",
-    "sipStartDate": "date | null",
-    "sipEndDate": "date | null",
-    "profilePhoto": "string | null",
-    "isActive": true,
-    "createdAt": "timestamp"
-  }
-}
-```
-
----
-
-### 8. Update User Profile
-**Endpoint:** `PUT /api/users/profile`
-
-**Headers:** `Authorization: Bearer {token}`
-
-**Role Required:** `DOKTER`
-
-**Request Body:**
-```json
-{
-  "fullName": "string (min: 3, optional)",
-  "email": "string (email, optional)",
-  "phone": "string (min: 10, optional)",
-  "specialization": "string (optional)",
-  "education": "string (optional)",
-  "experience": "string (optional)",
-  "sipNumber": "string (optional)",
-  "sipStartDate": "date (ISO format, optional)",
-  "sipEndDate": "date (ISO format, optional)",
-  "profilePhoto": "string (optional)"
-}
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "message": "Profil berhasil diupdate",
-  "data": {
-    "id": "uuid",
-    "username": "string",
-    "email": "string",
-    "fullName": "string",
-    "role": "DOKTER",
-    "phone": "string",
-    "specialization": "string | null",
-    "education": "string | null",
-    "experience": "string | null",
-    "sipNumber": "string | null",
-    "sipStartDate": "date | null",
-    "sipEndDate": "date | null",
-    "profilePhoto": "string | null",
-    "isActive": true,
-    "updatedAt": "timestamp"
-  }
-}
-```
-
-**Error Codes:**
-- `400` - Email sudah digunakan
-
----
-
-### 9. Delete Account
-**Endpoint:** `DELETE /api/users/account`
-
-**Headers:** `Authorization: Bearer {token}`
-
-**Role Required:** `DOKTER`
-
-**Response:**
-```json
-{
-  "success": true,
-  "message": "Akun berhasil dihapus",
-  "data": null
-}
-```
-
----
-
-## Nurse Profile Management
-
-All nurse profile endpoints require `PERAWAT` role.
-
-### 1. Get Nurse Profile
-**Endpoint:** `GET /api/nurse/profile`
-
-**Headers:** `Authorization: Bearer {token}`
-
-**Role Required:** `PERAWAT`
-
-**Response:**
-```json
-{
-  "success": true,
-  "message": "Profil berhasil diambil",
-  "data": {
-    "id": "uuid",
-    "username": "string",
-    "email": "string",
-    "fullName": "string",
-    "role": "PERAWAT",
-    "phone": "string",
-    "specialization": "string | null",
-    "education": "string | null",
-    "experience": "string | null",
-    "sipNumber": "string | null",
-    "sipStartDate": "date | null",
-    "sipEndDate": "date | null",
-    "profilePhoto": "string | null",
-    "isActive": true,
-    "createdAt": "timestamp",
-    "updatedAt": "timestamp"
-  }
-}
-```
-
----
-
-### 2. Update Nurse Profile
-**Endpoint:** `PUT /api/nurse/profile`
-
-**Headers:** `Authorization: Bearer {token}`
-
-**Role Required:** `PERAWAT`
-
-**Request Body:**
-```json
-{
-  "fullName": "string (min: 3, optional)",
-  "email": "string (email, optional)",
-  "phone": "string (min: 10, optional)",
-  "specialization": "string (optional)",
-  "education": "string (optional)",
-  "experience": "string (optional)",
-  "sipNumber": "string (optional)",
-  "sipStartDate": "date (ISO format, optional)",
-  "sipEndDate": "date (ISO format, optional)",
-  "profilePhoto": "string (optional)"
-}
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "message": "Profil berhasil diupdate",
-  "data": {
-    "id": "uuid",
-    "username": "string",
-    "email": "string",
-    "fullName": "string",
-    "role": "PERAWAT",
-    "phone": "string",
-    "specialization": "string | null",
-    "education": "string | null",
-    "experience": "string | null",
-    "sipNumber": "string | null",
-    "sipStartDate": "date | null",
-    "sipEndDate": "date | null",
-    "profilePhoto": "string | null",
-    "isActive": true,
-    "updatedAt": "timestamp"
-  }
-}
-```
-
----
-
-### 3. Get Profile Completion
-**Endpoint:** `GET /api/nurse/profile/completion`
-
-**Headers:** `Authorization: Bearer {token}`
-
-**Role Required:** `PERAWAT`
-
-**Response:**
-```json
-{
-  "success": true,
-  "message": "Kelengkapan profil berhasil diambil",
-  "data": {
-    "percentage": 80,
-    "filledFields": 8,
-    "totalFields": 10,
-    "missingFields": 2
-  }
-}
-```
-
----
-
-### 4. Get Current Shift Status
-**Endpoint:** `GET /api/nurse/profile/shift-status`
-
-**Headers:** `Authorization: Bearer {token}`
-
-**Role Required:** `PERAWAT`
-
-**Response:**
-```json
-{
-  "success": true,
-  "message": "Status shift berhasil diambil",
-  "data": {
-    "status": "On Duty | Off Duty",
-    "shift": {
-      "patientName": "string",
-      "complaint": "string",
-      "startTime": "08:00",
-      "endTime": "08:30",
-      "location": "POLADC"
-    } | null,
-    "remainingTime": {
-      "hours": 0,
-      "minutes": 25,
-      "formatted": "25 menit"
-    } | null
-  }
-}
-```
-
----
-
-### 5. Get Account Status
-**Endpoint:** `GET /api/nurse/profile/account-status`
-
-**Headers:** `Authorization: Bearer {token}`
-
-**Role Required:** `PERAWAT`
-
-**Response:**
-```json
-{
-  "success": true,
-  "message": "Status akun berhasil diambil",
-  "data": {
-    "isActive": true,
-    "isVerified": true,
-    "completionPercentage": 80,
-    "shiftStatus": "On Duty"
-  }
-}
-```
-
----
-
-### 6. Get License Info
-**Endpoint:** `GET /api/nurse/profile/license`
-
-**Headers:** `Authorization: Bearer {token}`
-
-**Role Required:** `PERAWAT`
-
-**Response:**
-```json
-{
-  "success": true,
-  "message": "Informasi lisensi berhasil diambil",
-  "data": {
-    "hasLicense": true,
-    "sipNumber": "SIP-12345",
-    "startDate": "2023-01-01",
-    "endDate": "2026-01-01",
-    "status": "ACTIVE | EXPIRED | EXPIRING_SOON",
-    "remaining": {
-      "percentage": 75,
-      "years": 2,
-      "months": 3,
-      "days": 730,
-      "formatted": "2 tahun 3 bulan"
-    }
-  }
-}
-```
-
----
-
-### 7. Delete Nurse Account
-**Endpoint:** `DELETE /api/nurse/account`
-
-**Headers:** `Authorization: Bearer {token}`
-
-**Role Required:** `PERAWAT`
-
-**Response:**
-```json
-{
-  "success": true,
-  "message": "Akun berhasil dihapus",
-  "data": null
-}
-```
-
----
-
-## Calendar Management
-
-### 1. Get All Leave Requests
-**Endpoint:** `GET /api/calendar/leaves`
-
-**Headers:** `Authorization: Bearer {token}`
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": [
-    {
-      "id": "uuid",
-      "userId": "uuid",
-      "approvedBy": "uuid | null",
-      "startDate": "date",
-      "endDate": "date",
-      "leaveType": "SICK | ANNUAL | EMERGENCY | UNPAID",
-      "reason": "string",
-      "status": "PENDING | APPROVED | REJECTED",
-      "rejectionReason": "string | null",
-      "approvedAt": "timestamp | null",
-      "createdAt": "timestamp",
-      "updatedAt": "timestamp",
-      "requester": {
-        "id": "uuid",
-        "fullName": "string",
-        "email": "string",
-        "role": "PERAWAT"
-      },
-      "approver": {
-        "id": "uuid",
-        "fullName": "string",
-        "email": "string"
-      } | null
-    }
-  ]
-}
-```
-
----
-
-### 2. Get My Leave Requests
-**Endpoint:** `GET /api/calendar/my-leaves`
-
-**Headers:** `Authorization: Bearer {token}`
-
-**Response:** Same structure as Get All Leave Requests, filtered by current user
-
----
-
-### 3. Get Pending Leave Requests
-**Endpoint:** `GET /api/calendar/pending-leaves`
-
-**Headers:** `Authorization: Bearer {token}`
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": [
-    {
-      "id": "uuid",
-      "userId": "uuid",
-      "startDate": "date",
-      "endDate": "date",
-      "leaveType": "ANNUAL",
-      "reason": "string",
-      "status": "PENDING",
-      "createdAt": "timestamp",
-      "requester": {
-        "id": "uuid",
-        "fullName": "string",
-        "email": "string",
-        "role": "PERAWAT"
-      }
-    }
-  ]
-}
-```
-
-**Notes:**
-- Only returns PENDING leaves from PERAWAT users
-
----
-
-### 4. Create Leave Request
-**Endpoint:** `POST /api/calendar/leave`
-
-**Headers:** `Authorization: Bearer {token}`
-
-**Request Body:**
-```json
-{
-  "startDate": "date (ISO format)",
-  "endDate": "date (ISO format)",
-  "leaveType": "SICK | ANNUAL | EMERGENCY | UNPAID",
-  "reason": "string"
-}
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": {
-    "id": "uuid",
-    "userId": "uuid",
-    "startDate": "date",
-    "endDate": "date",
-    "leaveType": "ANNUAL",
-    "reason": "string",
-    "status": "PENDING | APPROVED",
-    "approvedBy": "uuid | null",
-    "approvedAt": "timestamp | null",
-    "createdAt": "timestamp",
-    "requester": {
-      "id": "uuid",
-      "fullName": "string",
-      "email": "string",
-      "role": "PERAWAT"
-    },
-    "approver": null
-  },
-  "message": "Pengajuan cuti berhasil dibuat"
-}
-```
-
-**Notes:**
-- For DOKTER: auto-approved
-- For PERAWAT: status PENDING
-
----
-
-### 5. Update Leave Request
-**Endpoint:** `PUT /api/calendar/leave/:id`
-
-**Headers:** `Authorization: Bearer {token}`
-
-**Request Body:**
-```json
-{
-  "startDate": "date (ISO format, optional)",
-  "endDate": "date (ISO format, optional)",
-  "leaveType": "SICK | ANNUAL | EMERGENCY | UNPAID (optional)",
-  "reason": "string (optional)"
-}
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": {
-    "id": "uuid",
-    "userId": "uuid",
-    "startDate": "date",
-    "endDate": "date",
-    "leaveType": "ANNUAL",
-    "reason": "string",
-    "status": "PENDING",
-    "createdAt": "timestamp",
-    "updatedAt": "timestamp",
-    "requester": {
-      "id": "uuid",
-      "fullName": "string",
-      "email": "string",
-      "role": "PERAWAT"
-    }
-  },
-  "message": "Pengajuan cuti berhasil diubah"
-}
-```
-
-**Validation:**
-- Only requester can update
-- Only PENDING leaves can be updated
-
----
-
-### 6. Delete Leave Request
-**Endpoint:** `DELETE /api/calendar/leave/:id`
-
-**Headers:** `Authorization: Bearer {token}`
-
-**Response:**
-```json
-{
-  "success": true,
-  "message": "Pengajuan cuti berhasil dihapus"
-}
-```
-
-**Validation:**
-- Only requester can delete
-- Only PENDING leaves can be deleted
-
----
-
-### 7. Approve Leave Request
-**Endpoint:** `POST /api/calendar/leave/:id/approve`
-
-**Headers:** `Authorization: Bearer {token}`
-
-**Role Required:** `DOKTER`
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": {
-    "id": "uuid",
-    "userId": "uuid",
-    "startDate": "date",
-    "endDate": "date",
-    "leaveType": "ANNUAL",
-    "reason": "string",
-    "status": "APPROVED",
-    "approvedBy": "uuid",
-    "approvedAt": "timestamp",
-    "requester": {
-      "id": "uuid",
-      "fullName": "string",
-      "email": "string",
-      "role": "PERAWAT"
-    },
-    "approver": {
-      "id": "uuid",
-      "fullName": "string",
-      "email": "string"
-    }
-  },
-  "message": "Pengajuan cuti [requester name] berhasil disetujui"
-}
-```
-
-**Validation:**
-- Only DOKTER can approve
-- Only PENDING leaves can be approved
-
----
-
-### 8. Reject Leave Request
-**Endpoint:** `POST /api/calendar/leave/:id/reject`
-
-**Headers:** `Authorization: Bearer {token}`
-
-**Role Required:** `DOKTER`
-
-**Request Body:**
-```json
-{
-  "rejectionReason": "string (required)"
-}
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": {
-    "id": "uuid",
-    "userId": "uuid",
-    "startDate": "date",
-    "endDate": "date",
-    "leaveType": "ANNUAL",
-    "reason": "string",
-    "status": "REJECTED",
-    "rejectionReason": "string",
-    "approvedBy": "uuid",
-    "approvedAt": "timestamp",
-    "requester": {
-      "id": "uuid",
-      "fullName": "string",
-      "email": "string",
-      "role": "PERAWAT"
-    },
-    "approver": {
-      "id": "uuid",
-      "fullName": "string",
-      "email": "string"
-    }
-  },
-  "message": "Pengajuan cuti [requester name] berhasil ditolak"
-}
-```
-
-**Validation:**
-- Only DOKTER can reject
-- Only PENDING leaves can be rejected
-- Rejection reason is required
-
----
-
-### 9. Get Calendar Events
-**Endpoint:** `GET /api/calendar/events`
-
-**Headers:** `Authorization: Bearer {token}`
-
-**Query Parameters:**
-- `startDate` (ISO date, required)
-- `endDate` (ISO date, required)
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": [
-    {
-      "id": "uuid",
-      "title": "Cuti - John Doe",
-      "description": "Cuti tahunan",
-      "startDate": "2024-12-24",
-      "endDate": "2024-12-26",
-      "startTime": "00:00",
-      "endTime": "23:59",
-      "type": "LEAVE",
-      "status": "APPROVED",
-      "userId": "uuid",
-      "userName": "John Doe",
-      "patientName": null,
-      "color": "bg-yellow-100"
-    },
-    {
-      "id": "uuid",
-      "title": "Kunjungan - Jane Smith",
-      "description": "Sakit gigi",
-      "startDate": "2024-12-24",
-      "endDate": "2024-12-24",
-      "startTime": "09:00",
-      "endTime": "09:30",
-      "type": "VISIT",
-      "status": "WAITING",
-      "patientName": "Jane Smith",
-      "userName": "John Doe",
-      "color": "bg-blue-100"
-    }
-  ]
-}
-```
-
-**Notes:**
-- Combines approved leaves and visits in date range
-- Leave events span full days (00:00-23:59)
-- Visit events have specific time slots (30min duration)
-
----
-
-### 10. Get My Calendar Events
-**Endpoint:** `GET /api/calendar/my-events`
-
-**Headers:** `Authorization: Bearer {token}`
-
-**Query Parameters:**
-- `startDate` (ISO date, required)
-- `endDate` (ISO date, required)
-
-**Response:** Same structure as Get Calendar Events, filtered by current user
-
----
-
-## Medication Management
-
-### 1. Get Medications by Visit
-**Endpoint:** `GET /api/medications/visit/:visitId`
-
-**Headers:** `Authorization: Bearer {token}`
-
-**Response:**
-```json
-{
-  "success": true,
-  "message": "Daftar obat berhasil diambil",
-  "data": [
-    {
-      "id": "uuid",
-      "visitId": "uuid",
-      "patientId": "uuid",
-      "name": "string",
-      "quantity": "string",
-      "instructions": "string | null",
-      "createdAt": "timestamp",
-      "updatedAt": "timestamp"
-    }
-  ]
-}
-```
-
----
-
-### 2. Create Medication
-**Endpoint:** `POST /api/medications`
-
-**Headers:** `Authorization: Bearer {token}`
-
-**Request Body:**
-```json
-{
-  "visitId": "uuid",
-  "patientId": "uuid",
-  "name": "string",
-  "quantity": "string",
-  "instructions": "string (optional)"
-}
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "message": "Obat berhasil ditambahkan",
-  "data": {
-    "id": "uuid",
-    "visitId": "uuid",
-    "patientId": "uuid",
-    "name": "string",
-    "quantity": "string",
-    "instructions": "string | null",
-    "createdAt": "timestamp",
-    "updatedAt": "timestamp"
-  }
-}
-```
-
----
-
-### 3. Update Medication
-**Endpoint:** `PUT /api/medications/:id`
-
-**Headers:** `Authorization: Bearer {token}`
-
-**Request Body:**
-```json
-{
-  "name": "string (optional)",
-  "quantity": "string (optional)",
-  "instructions": "string (optional)"
-}
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "message": "Obat berhasil diupdate",
-  "data": {
-    "id": "uuid",
-    "visitId": "uuid",
-    "patientId": "uuid",
-    "name": "string",
-    "quantity": "string",
-    "instructions": "string | null",
-    "createdAt": "timestamp",
-    "updatedAt": "timestamp"
-  }
-}
-```
-
----
-
-### 4. Delete Medication
-**Endpoint:** `DELETE /api/medications/:id`
-
-**Headers:** `Authorization: Bearer {token}`
-
-**Response:**
-```json
-{
-  "success": true,
-  "message": "Obat berhasil dihapus",
-  "data": null
-}
-```
-
----
-
-## Nurse Visit Management
-
-### Get Visit by Medical Record (Nurse)
-**Endpoint:** `GET /api/nurse/visits/medical-record/:medicalRecordNumber`
-
-**Headers:** `Authorization: Bearer {token}`
-
-**Role Required:** `PERAWAT`
-
-**Response:**
+**Response (200 OK):**
 ```json
 {
   "success": true,
   "message": "Berhasil mengambil data kunjungan",
   "data": {
     "id": "uuid",
-    "visitNumber": "V-20241224-1234567",
-    "visitDate": "timestamp",
-    "queueNumber": 1,
+    "visitNumber": "V-20240120-1234567",
+    "visitDate": "2024-01-20T10:00:00.000Z",
+    "queueNumber": 5,
     "status": "COMPLETED",
-    "chiefComplaint": "string | null",
-    "bloodPressure": "string | null",
-    "notes": "string | null",
-    "totalCost": 1000000,
-    "createdAt": "timestamp",
+    "chiefComplaint": "Tooth pain on upper right molar",
+    "bloodPressure": "120/80",
+    "notes": "Treatment completed successfully",
+    "totalCost": 350000,
+    "createdAt": "2024-01-20T09:30:00.000Z",
+    "updatedAt": "2024-01-20T11:00:00.000Z",
     "patient": {
       "id": "uuid",
-      "patientNumber": "P-202412-0001",
-      "medicalRecordNumber": "RM-202412-0001",
-      "fullName": "string",
-      "dateOfBirth": "date",
-      "gender": "L | P",
-      "address": "string | null",
-      "phone": "string",
-      "email": "string | null",
-      "allergies": "string | null",
-      "medicalHistory": "string | null"
+      "patientNumber": "P-202401-0001",
+      "medicalRecordNumber": "RM-202401-0001",
+      "fullName": "Ahmad Rizki",
+      "dateOfBirth": "1990-05-15",
+      "gender": "L",
+      "address": "Jl. Sudirman No. 123, Jakarta",
+      "phone": "08123456789",
+      "email": "ahmad@example.com",
+      "allergies": "Penicillin",
+      "medicalHistory": "Diabetes Type 2"
     },
-    "treatments": [
-      {
-        "id": "uuid",
-        "toothNumber": "string | null",
-        "diagnosis": "string | null",
-        "treatmentNotes": "string | null",
-        "quantity": 1,
-        "unitPrice": 500000,
-        "discount": 0,
-        "subtotal": 500000,
-        "images": [],
-        "createdAt": "timestamp",
-        "service": {
-          "serviceName": "string",
-          "category": "CONSULTATION"
-        },
-        "performer": {
-          "fullName": "string",
-          "role": "DOKTER"
-        }
-      }
-    ],
     "medications": [
       {
         "id": "uuid",
-        "name": "string",
-        "quantity": "string",
-        "instructions": "string | null",
-        "createdAt": "timestamp"
+        "visitId": "uuid",
+        "patientId": "uuid",
+        "name": "Amoxicillin 500mg",
+        "quantity": "3x1 tablet",
+        "instructions": "Take after meals for 7 days",
+        "createdAt": "2024-01-20T10:30:00.000Z",
+        "updatedAt": "2024-01-20T10:30:00.000Z"
       }
     ]
   }
 }
 ```
 
-**Notes:**
-- Returns most recent COMPLETED visit for the medical record number
-- Includes full patient details, treatments, and medications
-
 ---
 
 ## AI Services
 
 ### 1. Get Prediction
-**Endpoint:** `GET /api/ai/predict`
+**Endpoint:** `GET /ai/predict`
 
-**Headers:** None required
+**Description:** Get AI predictions from external AI service
 
-**Response:**
+**Response (200 OK):**
 ```json
 {
   "status": "success",
-  "message": "Prediksi berhasil",
+  "message": "Prediction successful",
   "data": [
     {
-      "date": "2024-12-24",
-      "predicted_visits": 15,
+      "date": "2024-02",
+      "predicted_visits": 125,
       "confidence": 0.85
+    },
+    {
+      "date": "2024-03",
+      "predicted_visits": 132,
+      "confidence": 0.82
     }
   ]
 }
 ```
 
-**Error Response:**
+**Error Responses:**
+
+Service Unavailable (503):
 ```json
 {
   "status": "error",
@@ -3328,39 +2925,49 @@ All nurse profile endpoints require `PERAWAT` role.
 }
 ```
 
-**Error Codes:**
-- `503` - AI Service tidak tersedia
-- `504` - Request timeout
-
-**Notes:**
-- Connects to Python AI Service at `http://localhost:8000`
-- Timeout: 30 seconds
+Timeout (504):
+```json
+{
+  "status": "error",
+  "message": "Request timeout. AI Service membutuhkan waktu terlalu lama.",
+  "data": []
+}
+```
 
 ---
 
 ### 2. Chat with Tika (AI Assistant)
-**Endpoint:** `POST /api/ai/chat`
+**Endpoint:** `POST /ai/chat`
 
-**Headers:** None required
+**Description:** Chat with Tika AI assistant
 
 **Request Body:**
 ```json
 {
-  "message": "string (required)",
-  "user_name": "string (optional, default: 'User')"
+  "message": "Apa saja layanan yang tersedia di klinik?",
+  "user_name": "Ahmad"
 }
 ```
 
-**Response:**
+**Response (200 OK):**
 ```json
 {
   "status": "success",
-  "reply": "Halo! Ada yang bisa saya bantu?",
-  "timestamp": "timestamp"
+  "reply": "Di klinik kami tersedia berbagai layanan seperti konsultasi gigi, scaling, penambalan, pencabutan gigi, pemutihan gigi, dan pemasangan behel. Apakah ada layanan tertentu yang ingin Anda ketahui lebih lanjut?"
 }
 ```
 
-**Error Response:**
+**Error Responses:**
+
+Bad Request (400):
+```json
+{
+  "status": "error",
+  "reply": "Pesan tidak boleh kosong"
+}
+```
+
+Service Unavailable (503):
 ```json
 {
   "status": "error",
@@ -3368,189 +2975,164 @@ All nurse profile endpoints require `PERAWAT` role.
 }
 ```
 
-**Error Codes:**
-- `400` - Pesan tidak boleh kosong
-- `503` - AI Service tidak tersedia
-- `504` - Request timeout
-
-**Notes:**
-- Connects to Python AI Service at `http://localhost:8000`
-- Timeout: 15 seconds
-- Tika is an AI chatbot assistant for the clinic
-
 ---
 
-## Service Management
+## Error Responses
 
-### 1. Get All Services
-**Endpoint:** `GET /api/services` (Note: Not under /doctor or /nurse)
+### Common Error Codes
 
-**Headers:** `Authorization: Bearer {token}`
-
-**Query Parameters:**
-- `page` (number, default: 1)
-- `limit` (number, default: 50)
-- `category` (CONSULTATION | SCALING | FILLING | EXTRACTION | WHITENING | ORTHODONTIC | OTHER, optional)
-- `search` (string, optional)
-
-**Response:**
+**400 Bad Request:**
 ```json
 {
-  "success": true,
-  "message": "Daftar layanan berhasil diambil",
-  "data": {
-    "services": [
-      {
-        "id": "uuid",
-        "serviceCode": "SRV-0001",
-        "serviceName": "string",
-        "category": "CONSULTATION",
-        "description": "string | null",
-        "basePrice": 500000,
-        "commissionRate": 10.00,
-        "durationMinutes": 30,
-        "isActive": true,
-        "createdAt": "timestamp",
-        "updatedAt": "timestamp"
-      }
-    ],
-    "pagination": {
-      "total": 100,
-      "page": 1,
-      "limit": 50,
-      "totalPages": 2
+  "success": false,
+  "message": "Validasi gagal",
+  "errors": [
+    {
+      "field": "email",
+      "message": "Format email tidak valid"
     }
-  }
+  ]
+}
+```
+
+**401 Unauthorized:**
+```json
+{
+  "success": false,
+  "message": "Token tidak ditemukan"
+}
+```
+
+**403 Forbidden:**
+```json
+{
+  "success": false,
+  "message": "Akses ditolak"
+}
+```
+
+**404 Not Found:**
+```json
+{
+  "success": false,
+  "message": "Resource tidak ditemukan"
+}
+```
+
+**500 Internal Server Error:**
+```json
+{
+  "success": false,
+  "message": "Internal server error"
 }
 ```
 
 ---
 
-### 2. Get Service by ID
-**Endpoint:** `GET /api/services/:id`
+## Data Types & Enums
 
-**Headers:** `Authorization: Bearer {token}`
+### UserRole
+```typescript
+enum UserRole {
+  DOKTER = "DOKTER",
+  PERAWAT = "PERAWAT"
+}
+```
 
-**Response:**
-```json
-{
-  "success": true,
-  "message": "Detail layanan berhasil diambil",
-  "data": {
-    "id": "uuid",
-    "serviceCode": "SRV-0001",
-    "serviceName": "string",
-    "category": "CONSULTATION",
-    "description": "string | null",
-    "basePrice": 500000,
-    "commissionRate": 10.00,
-    "durationMinutes": 30,
-    "isActive": true,
-    "createdAt": "timestamp",
-    "updatedAt": "timestamp"
-  }
+### Gender
+```typescript
+enum Gender {
+  L = "L",  // Laki-laki (Male)
+  P = "P"   // Perempuan (Female)
+}
+```
+
+### VisitStatus
+```typescript
+enum VisitStatus {
+  WAITING = "WAITING",
+  IN_PROGRESS = "IN_PROGRESS",
+  COMPLETED = "COMPLETED",
+  CANCELLED = "CANCELLED"
+}
+```
+
+### LeaveType
+```typescript
+enum LeaveType {
+  SICK = "SICK",
+  ANNUAL = "ANNUAL",
+  EMERGENCY = "EMERGENCY",
+  UNPAID = "UNPAID"
+}
+```
+
+### LeaveStatus
+```typescript
+enum LeaveStatus {
+  PENDING = "PENDING",
+  APPROVED = "APPROVED",
+  REJECTED = "REJECTED"
+}
+```
+
+### PaymentMethod
+```typescript
+enum PaymentMethod {
+  CASH = "CASH",
+  TRANSFER = "TRANSFER",
+  CARD = "CARD",
+  QRIS = "QRIS"
+}
+```
+
+### PaymentStatus
+```typescript
+enum PaymentStatus {
+  PENDING = "PENDING",
+  PAID = "PAID",
+  PARTIAL = "PARTIAL",
+  REFUNDED = "REFUNDED"
 }
 ```
 
 ---
 
-### 3. Create Service
-**Endpoint:** `POST /api/services`
+## Rate Limiting & Best Practices
 
-**Headers:** `Authorization: Bearer {token}`
+### Rate Limiting
+- Not currently implemented
+- Recommended: 100 requests per minute per user
 
-**Role Required:** `DOKTER`
-
-**Request Body:**
-```json
-{
-  "serviceName": "string",
-  "category": "CONSULTATION | SCALING | FILLING | EXTRACTION | WHITENING | ORTHODONTIC | OTHER",
-  "basePrice": 500000,
-  "commissionRate": 10.00,
-  "description": "string (optional)"
-}
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "message": "Layanan berhasil ditambahkan",
-  "data": {
-    "id": "uuid",
-    "serviceCode": "SRV-0001",
-    "serviceName": "string",
-    "category": "CONSULTATION",
-    "description": "string | null",
-    "basePrice": 500000,
-    "commissionRate": 10.00,
-    "durationMinutes": null,
-    "isActive": true,
-    "createdAt": "timestamp",
-    "updatedAt": "timestamp"
-  }
-}
-```
-
-**Notes:**
-- Service code is auto-generated (SRV-XXXX)
+### Best Practices
+1. **Always include Authorization header** for protected endpoints
+2. **Use pagination** for list endpoints to improve performance
+3. **Validate input** on client side before sending requests
+4. **Handle errors gracefully** using the standard error response format
+5. **Use specific endpoints** rather than filtering on client side
+6. **Cache static data** (e.g., enum values) on client side
+7. **Implement retry logic** for network failures
+8. **Use HTTPS** in production environment
 
 ---
 
-### 4. Update Service
-**Endpoint:** `PUT /api/services/:id`
+## Changelog
 
-**Headers:** `Authorization: Bearer {token}`
-
-**Role Required:** `DOKTER`
-
-**Request Body:**
-```json
-{
-  "serviceName": "string (optional)",
-  "category": "CONSULTATION | ... (optional)",
-  "basePrice": 500000,
-  "commissionRate": 10.00,
-  "description": "string (optional)"
-}
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "message": "Layanan berhasil diupdate",
-  "data": {
-    "id": "uuid",
-    "serviceCode": "SRV-0001",
-    "serviceName": "string",
-    "category": "CONSULTATION",
-    "description": "string | null",
-    "basePrice": 500000,
-    "commissionRate": 10.00,
-    "durationMinutes": null,
-    "isActive": true,
-    "createdAt": "timestamp",
-    "updatedAt": "timestamp"
-  }
-}
-```
+### Version 1.0.1 (Current)
+- Initial API documentation
+- Authentication system
+- Calendar & Leave management
+- Dashboard for Doctor & Nurse
+- Finance management
+- Medication tracking
+- Patient management
+- Payment system
+- User management
+- Visit management
+- AI services integration
 
 ---
 
-### 5. Delete Service
-**Endpoint:** `DELETE /api/services/:id`
-
-**Headers:** `Authorization: Bearer {token}`
-
-**Role Required:** `DOKTER`
-
-**Response:**
-```json
-{
-  "success": true,
-  "message": "Layanan berhasil dihapus",
-  "data": null
-}
-```
+**Last Updated:** December 24, 2025  
+**API Version:** 1.0.1  
+**Base URL:** http://localhost:5000/api
