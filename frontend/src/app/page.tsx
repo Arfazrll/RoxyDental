@@ -127,17 +127,17 @@ export default function LandingPagePro() {
             {/* Left */}
             <div className={`w-full space-y-6 text-center md:text-left transition-all duration-1000 ${animate ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-10'}`}>
               <div className="inline-block px-4 py-2 bg-pink-100 text-pink-600 rounded-full text-xs sm:text-sm font-semibold animate-pulse">
-                PoloClinic Hub
+                Dental Clinic
               </div>
               <h1 className="font-bold text-gray-900 leading-tight text-[clamp(1.6rem,4vw,4.5rem)]">
                 Aplikasi Klinik{" "}
                 <span className="text-transparent bg-clip-text bg-linear-to-r from-pink-500 via-pink-600 to-pink-500 animate-gradient-x">
-                  Polo
+                  POLABDC
                 </span>{" "}
                 Efisien & Profesional
               </h1>
               <p className="text-gray-600 text-sm sm:text-base md:text-lg max-w-full md:max-w-md mx-auto md:mx-0">
-                Digitalisasi penuh untuk semua pegawai Klinik Polo. Mudah, aman dan terorganisir.
+                Digitalisasi penuh untuk semua pegawai Klinik POLABDC. Mudah, aman dan terorganisir.
               </p>
             </div>
 
@@ -148,7 +148,7 @@ export default function LandingPagePro() {
                 <div className="relative bg-white/40 backdrop-blur-xl rounded-3xl p-10 shadow-2xl flex flex-col items-center text-center border border-white/20 hover:shadow-3xl transition-shadow duration-500">
                   <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">Selamat Datang</h2>
                   <p className="text-gray-700 text-base sm:text-lg mb-6">
-                    Digitalisasi penuh untuk pegawai klinik Polo
+                    Digitalisasi penuh untuk pegawai klinik POLABDC
                   </p>
                   <button 
                     onClick={goToLogin}
@@ -157,7 +157,7 @@ export default function LandingPagePro() {
                     Masuk Sekarang
                   </button>
                   <span className="text-xs sm:text-sm text-gray-500 mt-3">
-                    Hanya untuk pegawai Klinik Polo
+                    Hanya untuk pegawai Klinik POLABDC
                   </span>
                 </div>
               </div>
@@ -198,7 +198,7 @@ export default function LandingPagePro() {
     <div className="space-y-4">
       <Logo />
       <p className="text-sm sm:text-base text-gray-600">
-        PoloClinic Hub, aplikasi manajemen klinik untuk pegawai. Modern, aman, dan efisien.
+        POLABDC Clinic Hub, aplikasi manajemen klinik untuk pegawai. Modern, aman, dan efisien.
       </p>
     </div>
 
@@ -218,14 +218,14 @@ export default function LandingPagePro() {
       <ul className="space-y-2 text-sm sm:text-base text-gray-600">
         <li>📍 Jl. Klinik No.12, Jakarta</li>
         <li>📞 (021) 1234-5678</li>
-        <li>✉️ info@poloclinic.com</li>
+        <li>✉️ info@polabdclinic.com</li>
       </ul>
     </div>
 
     {/* Newsletter */}
     <div className="space-y-4">
       <h4 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2">Newsletter</h4>
-      <p className="text-sm sm:text-base text-gray-600">Dapatkan info terbaru PoloClinic Hub.</p>
+      <p className="text-sm sm:text-base text-gray-600">Dapatkan info terbaru POLABDC Clinic Hub.</p>
       <div className="flex flex-col sm:flex-row gap-2">
       </div>
     </div>
@@ -234,7 +234,7 @@ export default function LandingPagePro() {
 
   {/* Copyright */}
   <div className="border-t border-white/20 mt-12 pt-6 text-center text-gray-600 text-sm sm:text-base">
-    &copy; 2025 PoloClinic Hub. All rights reserved.
+    &copy; 2025 POLABDC Clinic Hub. All rights reserved.
   </div>
 </footer>
  </div>
