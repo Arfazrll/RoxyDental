@@ -10,6 +10,7 @@ import {
   Calendar,
   Users,
   MapPin,
+  FileText,
   Settings,
   LogOut,
   LayoutDashboard,
@@ -162,6 +163,14 @@ export default function Navbar() {
                     text="Kalender"
                     active={pathname === "/dashboard/perawat/kalenderpr"}
                   />
+
+                   <DropdownItem
+                    href="/dashboard/perawat/pembayaran"
+                    icon={<FileText className="w-5 h-5" />}
+                    text="Pembayaran"
+                    active={pathname.startsWith("/dashboard/perawat/pembayaran")}
+                  />
+
                   <DropdownItem
                     href="/dashboard/perawat/profilpr/akunpr"
                     icon={<Settings className="w-5 h-5" />}

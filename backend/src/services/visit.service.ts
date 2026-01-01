@@ -1,5 +1,5 @@
 import { prisma } from "../config/database";
-import { VisitStatus, Gender } from "../../generated/prisma";
+import { VisitStatus, Gender } from "@prisma/client";
 import { AppError } from "../middlewares/error.middleware";
 
 interface CreatePatientData {
@@ -145,11 +145,9 @@ export class VisitService {
           createdAt: "desc",
         },
       },
-      medications: {
-        orderBy: {
-          createdAt: "asc"
-        }
-      },
+      // `medications` relation is fetched separately because the generated Prisma
+      // client does not include it in `VisitInclude` for the current introspected schema.
+      // We'll load medications after retrieving the visit.
       payments: true,
     },
     orderBy: {
@@ -161,7 +159,16 @@ export class VisitService {
     throw new AppError("Kunjungan tidak ditemukan", 404);
   }
 
-    return visit;
+  // Load medications separately and attach them to the returned object
+  const medications = await prisma.medication.findMany({
+    where: { visitId: visit.id },
+    orderBy: { createdAt: "asc" },
+  });
+
+  return {
+    ...visit,
+    medications,
+  };
   }
 
   async getVisits(

@@ -1,5 +1,5 @@
 import { prisma } from '../config/database';
-import { PaymentMethod, PaymentStatus } from '../../generated/prisma';
+import { PaymentMethod, PaymentStatus } from '@prisma/client';
 import { AppError } from '../middlewares/error.middleware';
 
 interface CreatePaymentData {

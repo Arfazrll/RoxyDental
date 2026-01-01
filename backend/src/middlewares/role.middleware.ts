@@ -1,5 +1,5 @@
 import { Response, NextFunction } from 'express';
-import { UserRole } from '../../generated/prisma';
+import { UserRole } from '@prisma/client';
 import { AuthRequest } from '../types/express.types';
 import { errorResponse } from '../utils/response.util';
 

@@ -4,7 +4,7 @@ import { authMiddleware } from '../middlewares/auth.middleware';
 import { roleMiddleware } from '../middlewares/role.middleware';
 import { validate } from '../middlewares/validation.middleware';
 import { updateProfileSchema } from '../validators/profile.validator';
-import { UserRole } from '../../generated/prisma';
+import { UserRole } from '@prisma/client';
 
 const router = Router();
 const nurseProfileController = new NurseProfileController();

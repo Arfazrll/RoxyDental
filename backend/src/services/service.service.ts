@@ -1,6 +1,6 @@
 import { prisma } from '../config/database';
 import { AppError } from '../middlewares/error.middleware';
-import { ServiceCategory } from '../../generated/prisma';
+import { ServiceCategory } from '@prisma/client';
 
 interface CreateServiceData {
   serviceName: string;

@@ -1,5 +1,5 @@
 import { prisma } from '../config/database';
-import { ServiceCategory, Commission, Treatment, Service, Visit, Patient } from '../../generated/prisma';
+import { ServiceCategory, Commission, Treatment, Service, Visit, Patient } from '@prisma/client';
 import { getCurrentMonth, getCurrentYear } from '../utils/date.util';
 import { Decimal } from '@prisma/client/runtime/library';
 

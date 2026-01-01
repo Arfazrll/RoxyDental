@@ -4,7 +4,6 @@ import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   ArrowLeft,
   Download,
@@ -13,6 +12,8 @@ import {
   Pencil,
   Plus,
   Trash2,
+  Check,
+  X,
 } from "lucide-react";
 import DoctorNavbar from "@/components/ui/navbardr";
 import { visitService, Visit } from "@/services/visit.service";
@@ -34,8 +35,71 @@ interface Examination {
   treatmentPlan: string;
 }
 
+/**
+ * Frontend-only packing format:
+ * - When saving, we pack both treatmentPlan + notes into one string using markers:
+ *   __POLABDC_STRUCTURED__
+ *   <<TREATMENT>>
+ *   ...text...
+ *   <</TREATMENT>>
+ *   <<NOTES>>
+ *   ...text...
+ *   <</NOTES>>
+ *
+ * - When fetching, we parse this format. If incoming notes is plain (legacy),
+ *   we assume it was previously used for both fields and assign both treatmentPlan and notes to that text
+ *   (safe fallback).
+ */
+
+const STRUCTURED_PREFIX = "__POLABDC_STRUCTURED__";
+const OPEN_TREAT = "<<TREATMENT>>";
+const CLOSE_TREAT = "<</TREATMENT>>";
+const OPEN_NOTES = "<<NOTES>>";
+const CLOSE_NOTES = "<</NOTES>>";
+
+const packNotes = (treatmentPlan: string, notes: string) => {
+  // Ensure no accidental double marker — replace markers inside user text
+  const safeTP = String(treatmentPlan ?? "").replaceAll(STRUCTURED_PREFIX, "");
+  const safeNotes = String(notes ?? "").replaceAll(STRUCTURED_PREFIX, "");
+  return [
+    STRUCTURED_PREFIX,
+    OPEN_TREAT,
+    safeTP,
+    CLOSE_TREAT,
+    OPEN_NOTES,
+    safeNotes,
+    CLOSE_NOTES,
+  ].join("\n");
+};
+
+const unpackNotes = (raw?: string): { treatmentPlan: string; notes: string } => {
+  if (!raw) return { treatmentPlan: "", notes: "" };
+  const txt = String(raw);
+  if (!txt.startsWith(STRUCTURED_PREFIX)) {
+    // Legacy (unstructured) — assume previous behavior: treat same text for both fields
+    return { treatmentPlan: txt, notes: txt };
+  }
+
+  const tStart = txt.indexOf(OPEN_TREAT);
+  const tEnd = txt.indexOf(CLOSE_TREAT);
+  const nStart = txt.indexOf(OPEN_NOTES);
+  const nEnd = txt.indexOf(CLOSE_NOTES);
+
+  const treatmentPlan =
+    tStart !== -1 && tEnd !== -1 && tEnd > tStart
+      ? txt.slice(tStart + OPEN_TREAT.length, tEnd).trim()
+      : "";
+  const notesContent =
+    nStart !== -1 && nEnd !== -1 && nEnd > nStart
+      ? txt.slice(nStart + OPEN_NOTES.length, nEnd).trim()
+      : "";
+
+  return { treatmentPlan, notes: notesContent };
+};
+
 export default function RekamMedisDetailPage() {
-  const { visitNumber } = useParams<{ visitNumber: string }>();
+  const params = useParams() as { visitNumber?: string } | null;
+  const visitNumber = params?.visitNumber;
   const router = useRouter();
   const { toast } = useToast();
 
@@ -81,95 +145,116 @@ export default function RekamMedisDetailPage() {
   useEffect(() => {
     if (!medicalRecordNumber) return;
     fetchVisitData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [medicalRecordNumber]);
 
   const fetchVisitData = async () => {
-    try {
-      setLoading(true);
+  if (!medicalRecordNumber) return;
 
-      const response = await visitService.getVisitByMedicalRecord(
-        medicalRecordNumber
-      );
-      setVisit(response);
+  try {
+    setLoading(true);
 
-      const medicalHistory = (response as any).patient?.medicalHistory || "";
-      setDiagnosisDraft(medicalHistory);
+    const response = await visitService.getVisitByMedicalRecord(
+      medicalRecordNumber
+    );
+    setVisit(response);
 
-      setExamDraft({
-        chiefComplaint: response.chiefComplaint || "",
-        physical: response.bloodPressure || "",
-        treatmentPlan: response.notes || "",
-      });
+    const medicalHistory = (response as any).patient?.medicalHistory || "";
+    setDiagnosisDraft(medicalHistory);
 
-      const extractedMeds = ((response as any).medications || []).map((m: any) => ({
-        id: m.id,
-        name: m.name || "",
-        quantity: m.quantity || "1",
-        instructions: m.instructions || "",
-      }));
-      setMedsDraft(extractedMeds);
+    setExamDraft({
+      chiefComplaint: response.chiefComplaint || "",
+      physical: response.bloodPressure || "",
+      treatmentPlan: response.notes || "",
+    });
 
-      setNotesDraft(response.notes || "");
-      setDeletedMedIds([]);
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description:
-          error?.response?.data?.message || "Gagal memuat data rekam medis",
-        variant: "destructive",
-      });
-      router.push("/dashboard/dokter/pasien/rekam-medis");
-    } finally {
-      setLoading(false);
-    }
-  };
+    const extractedMeds = ((response as any).medications || []).map((m: any) => ({
+      id: m.id,
+      name: m.name || "",
+      quantity: m.quantity || "1",
+      instructions: m.instructions || "",
+    }));
+    setMedsDraft(extractedMeds);
+
+    setNotesDraft(response.notes || "");
+    setDeletedMedIds([]);
+  } catch (error: any) {
+    toast({
+      title: "Error",
+      description:
+        error?.response?.data?.message || "Gagal memuat data rekam medis",
+      variant: "destructive",
+    });
+    router.push("/dashboard/dokter/pasien/rekam-medis");
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleSaveDiagnosis = async () => {
-    if (!visit) return;
+  if (!visit) return;
 
-    try {
-      setSaving(true);
-      const patientId = (visit as any).patient?.id;
+  const patientId = (visit as any).patient?.id;
+  if (!patientId) {
+    toast({
+      title: "Error",
+      description: "Data pasien tidak ditemukan",
+      variant: "destructive",
+    });
+    return;
+  }
 
-      await patientService.updateMedicalHistory(patientId, diagnosisDraft);
+  try {
+    setSaving(true);
 
-      await fetchVisitData();
-      setEditDiagnosis(false);
+    await patientService.updateMedicalHistory(
+      patientId,
+      diagnosisDraft
+    );
 
-      toast({
-        title: "Berhasil",
-        description: "Diagnosis berhasil diupdate",
-      });
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description:
-          error?.response?.data?.message || "Gagal menyimpan diagnosis",
-        variant: "destructive",
-      });
-    } finally {
-      setSaving(false);
-    }
-  };
+    await fetchVisitData();
+    setEditDiagnosis(false);
+
+    toast({
+      title: "Berhasil",
+      description: "Diagnosis berhasil diupdate",
+    });
+  } catch (error: any) {
+    toast({
+      title: "Error",
+      description:
+        error?.response?.data?.message || "Gagal menyimpan diagnosis",
+      variant: "destructive",
+    });
+  } finally {
+    setSaving(false);
+  }
+};
 
   const handleSaveExam = async () => {
     if (!visit) return;
 
     try {
       setSaving(true);
+
+      // When saving exam (treatmentPlan), we need to pack both treatmentPlan and existing notesDraft
+      // into the single `notes` field the backend expects.
+      const packed = packNotes(examDraft.treatmentPlan, notesDraft);
+
       await visitService.updateVisitExamination((visit as any).id, {
         chiefComplaint: examDraft.chiefComplaint,
         bloodPressure: examDraft.physical,
-        notes: examDraft.treatmentPlan,
+        notes: packed,
       });
 
+      // Update local visit copy for immediate UI feedback (keeps UI unchanged)
       setVisit((prev) =>
         prev
           ? ({
               ...prev,
               chiefComplaint: examDraft.chiefComplaint,
               bloodPressure: examDraft.physical,
-              notes: examDraft.treatmentPlan,
+              notes: packed,
             } as any)
           : prev
       );
@@ -247,11 +332,15 @@ export default function RekamMedisDetailPage() {
 
     try {
       setSaving(true);
+
+      // Pack current treatmentPlan (from examDraft) + notesDraft into single notes field.
+      const packed = packNotes(examDraft.treatmentPlan, notesDraft);
+
       await visitService.updateVisitExamination((visit as any).id, {
-        notes: notesDraft,
+        notes: packed,
       });
 
-      setVisit((prev) => (prev ? ({ ...prev, notes: notesDraft } as any) : prev));
+      setVisit((prev) => (prev ? ({ ...prev, notes: packed } as any) : prev));
       setEditNotes(false);
 
       toast({
@@ -288,8 +377,9 @@ export default function RekamMedisDetailPage() {
     setMedsDraft(newMeds);
   };
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString?: string) => {
     try {
+      if (!dateString) return "-";
       return new Date(dateString).toLocaleDateString("id-ID", {
         day: "2-digit",
         month: "long",
@@ -300,8 +390,9 @@ export default function RekamMedisDetailPage() {
     }
   };
 
-  const calculateAge = (birthDate: string) => {
+  const calculateAge = (birthDate?: string) => {
     try {
+      if (!birthDate) return 0;
       const birth = new Date(birthDate);
       const today = new Date();
       let age = today.getFullYear() - birth.getFullYear();
@@ -351,18 +442,22 @@ export default function RekamMedisDetailPage() {
       const MARGIN = 50;
       const FOOTER_HEIGHT = 60;
       const CONTENT_WIDTH = PAGE_WIDTH - MARGIN * 2;
-      const LINE_HEIGHT = 13;
+
+      // Typography & layout tweaks
+      const LINE_HEIGHT = 14;
       const CELL_PADDING = 6;
-      const FONT_SIZE_NORMAL = 7;
-      const FONT_SIZE_HEADER = 16;
-      const FONT_SIZE_SECTION = 9;
-      const BG_SECTION = rgb(0.96, 0.98, 1);
-      const COLOR_PRIMARY = rgb(0.06, 0.2, 0.5);
+      const FONT_SIZE_NORMAL = 9;   // body / table text
+      const FONT_SIZE_HEADER = 18;  // main title
+      const FONT_SIZE_SECTION = 11; // section titles
+      const BG_SECTION = rgb(0.98, 0.94, 0.97); // pale pink background for section bar
+      const COLOR_PRIMARY = rgb(0.90, 0.20, 0.50); // main pink (header)
+      const COLOR_SECTION_TEXT = rgb(0.78, 0.12, 0.40); // darker pink for section title text
+      const TEXT_COLOR = rgb(0.12, 0.12, 0.12); // dark gray for body text
       const SECTION_SPACING = 15;
 
       const pdfDoc = await PDFDocument.create();
-      const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
-      const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+      const font = await pdfDoc.embedFont(StandardFonts.TimesRoman);
+      const fontBold = await pdfDoc.embedFont(StandardFonts.TimesRomanBold);
 
       let page = pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
       let { width, height } = page.getSize();
@@ -417,13 +512,19 @@ export default function RekamMedisDetailPage() {
 
       const drawMeta = (meta: string) => {
         ensureSpace(18);
-        page.drawText(meta, { x: MARGIN, y: cursorY - 4, size: 9, font });
+        page.drawText(meta, {
+          x: MARGIN,
+          y: cursorY - 4,
+          size: 9,
+          font,
+          color: TEXT_COLOR,
+        });
         cursorY -= 18;
       };
 
       const drawSectionTitle = (title: string) => {
         cursorY -= SECTION_SPACING;
-        const barH = 20;
+        const barH = 22;
         ensureSpace(barH + SECTION_SPACING);
         page.drawRectangle({
           x: MARGIN - 2,
@@ -433,11 +534,11 @@ export default function RekamMedisDetailPage() {
           color: BG_SECTION,
         });
         page.drawText(title, {
-          x: MARGIN + 6,
-          y: cursorY - barH + 7,
+          x: MARGIN + 8,
+          y: cursorY - barH + 8,
           size: FONT_SIZE_SECTION,
           font: fontBold,
-          color: rgb(0.06, 0.3, 0.6),
+          color: COLOR_SECTION_TEXT,
         });
         cursorY -= barH + 8;
       };
@@ -486,6 +587,7 @@ export default function RekamMedisDetailPage() {
                 y: textY,
                 size: FONT_SIZE_NORMAL,
                 font: ci % 2 === 0 ? fontBold : font,
+                color: TEXT_COLOR,
               });
               textY -= LINE_HEIGHT;
             }
@@ -539,7 +641,6 @@ export default function RekamMedisDetailPage() {
           "No. Telepon",
           (visit as any).patient?.phone || "-",
         ],
-        ["Catatan", (visit as any).patient?.allergies || "-", "", ""],
       ];
 
       const labelW = 90;
@@ -554,6 +655,21 @@ export default function RekamMedisDetailPage() {
       drawTable(patientRows, patientColWidths);
 
       drawSectionTitle("Informasi Kunjungan Terkini");
+
+            // For PDF, parse visit.notes into treatmentPlan + notes
+      const rawNotes = (visit as any).notes || "";
+      const { treatmentPlan: pdfTreatmentPlan, notes: pdfNotes } = unpackNotes(rawNotes);
+
+      // fallback cleaner (hapus marker jika parsing gagal / format berbeda)
+      const cleanText = (txt?: string) =>
+        String(txt || "")
+          .replace(/__POLABDC_STRUCTURED__/g, "")
+          .replace(/<<\/?TREATMENT>>/gi, "")
+          .replace(/<<\/?NOTES>>/gi, "")
+          .replace(/<<.*?>>/g, "")
+          .replace(/<\/<.*?>>/g, "")
+          .trim() || "-";
+
       drawTable(
         [
           ["Tanggal Kunjungan", formatDate((visit as any).visitDate)],
@@ -569,12 +685,15 @@ export default function RekamMedisDetailPage() {
         [
           ["Keluhan Utama", (visit as any).chiefComplaint || "-"],
           ["Hasil Pemeriksaan Fisik", (visit as any).bloodPressure || "-"],
-          ["Rencana Perawatan", (visit as any).notes || "-"],
+          ["Rencana Perawatan", cleanText(pdfTreatmentPlan) || "-"],
+          ["Catatan Kunjungan", cleanText(pdfNotes) || "-"],
         ],
         [160, CONTENT_WIDTH - 160]
       );
 
+
       drawSectionTitle("Obat yang Diberikan");
+
       const pdfMeds: any[] = (visit as any).medications || [];
       if (!Array.isArray(pdfMeds) || pdfMeds.length === 0) {
         drawTable([["Obat", "Tidak ada obat yang diresepkan."]], [
@@ -602,7 +721,7 @@ export default function RekamMedisDetailPage() {
           color: rgb(0.85, 0.85, 0.85),
         });
 
-        p.drawText(`© ${new Date().getFullYear()} RoxyDental`, {
+        p.drawText(`© ${new Date().getFullYear()} POLABDC - Dental Clinic`, {
           x: MARGIN,
           y: FOOTER_HEIGHT - 34,
           size: 9,
@@ -715,11 +834,30 @@ export default function RekamMedisDetailPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 font-sans">
           <div>
             <Card className="shadow-lg">
-              <CardHeader className="bg-pink-600 text-white rounded-t-md">
-                <CardTitle className="text-lg font-semibold">
+              <CardHeader
+                className="
+    bg-pink-600/90
+    text-white
+    rounded-t-md
+    px-6
+    py-4
+    border-b
+    border-pink-700/40
+  "
+              >
+                <CardTitle
+                  className="
+      text-base
+        font-semibold
+        uppercase
+        tracking-wide
+        leading-none
+    "
+                >
                   Informasi Pasien
                 </CardTitle>
               </CardHeader>
+
               <CardContent className="space-y-4 bg-white text-sm pt-4">
                 <div>
                   <p className="text-xs text-gray-400">NO. REKAM MEDIS</p>
@@ -780,59 +918,102 @@ export default function RekamMedisDetailPage() {
                   </p>
                 </div>
 
-                <div>
-                  <p className="text-xs text-gray-400">CATATAN</p>
-                  <p className="text-pink-700 font-medium mt-1">
-                    {(visit as any).patient?.allergies || "-"}
-                  </p>
-                </div>
               </CardContent>
             </Card>
           </div>
 
           <div className="lg:col-span-2 space-y-6 font-sans">
             <Card className="shadow-lg">
-              <CardHeader className="bg-yellow-400/40 rounded-t-md py-5">
+              <CardHeader
+                className="
+    bg-yellow-400/40
+    rounded-t-md
+    px-6
+    py-4
+    border-b
+    border-yellow-500/40
+  "
+              >
                 <div className="flex items-center justify-between w-full">
-                  <CardTitle className="text-lg font-semibold leading-none">
+                  <CardTitle
+                    className="
+        text-base
+        font-semibold
+        uppercase
+        tracking-wide
+        leading-none
+        text-gray-800
+      "
+                  >
                     Informasi Kunjungan Terkini
                   </CardTitle>
 
                   {!editDiagnosis ? (
                     <Button
                       size="sm"
-                      className="h-8"
+                      variant="outline"
+                      className="
+                    h-8
+                    bg-white
+                    border-amber-400
+                    text-amber-700
+                    hover:bg-amber-50
+                    hover:text-amber-800
+                    shadow-sm
+                    transition
+                  "
                       onClick={() => {
                         setDiagnosisDraft((visit as any).patient?.medicalHistory || "");
                         setEditDiagnosis(true);
                       }}
                     >
-                      <Pencil className="w-4 h-4 mr-1" /> Edit
+                      <Pencil className="w-4 h-4 mr-1" />
+                      Edit
                     </Button>
                   ) : (
                     <div className="flex items-center gap-2">
+                      {/* SIMPAN */}
                       <Button
                         size="sm"
-                        className="h-8"
+                        className="
+                      h-8
+                      bg-white
+                      text-amber-500
+                      hover:bg-amber-50
+                      shadow-sm
+                      transition
+                    "
                         onClick={handleSaveDiagnosis}
                         disabled={saving}
                       >
                         {saving ? (
                           <Loader2 className="w-4 h-4 animate-spin" />
                         ) : (
-                          "Simpan"
+                          <>
+                            <Check className="w-4 h-4 mr-1" />
+                            Simpan
+                          </>
                         )}
                       </Button>
+
+                      {/* BATAL */}
                       <Button
                         size="sm"
-                        className="h-8"
-                        variant="outline"
+                        variant="ghost"
+                        className="
+                      h-8
+                      text-gray-600
+                      hover:text-gray-800
+                      hover:bg-amber-50
+                      transition
+                    "
                         onClick={() => {
                           setDiagnosisDraft((visit as any).patient?.medicalHistory || "");
                           setEditDiagnosis(false);
                         }}
                         disabled={saving}
                       >
+                        <X className="w-4 h-4 mr-1" />
                         Batal
                       </Button>
                     </div>
@@ -884,45 +1065,103 @@ export default function RekamMedisDetailPage() {
             </Card>
 
             <Card className="shadow-lg">
-              <CardHeader className="bg-pink-600 text-white rounded-t-md">
-                <div className="flex w-full items-center justify-between">
-                  <CardTitle className="text-lg font-semibold">
+              <CardHeader
+                className="
+    bg-pink-600/85
+    text-white
+    rounded-t-md
+    px-6
+    py-4
+    border-b
+    border-pink-700/40
+  "
+              >
+                <div className="flex items-center justify-between">
+                  <CardTitle
+                    className="
+        text-base
+        font-semibold
+        uppercase
+        tracking-wide
+        leading-none
+      "
+                  >
                     Detail Pemeriksaan
                   </CardTitle>
 
                   {!editExam ? (
                     <Button
                       size="sm"
+                      variant="outline"
+                      className="
+    h-8
+    rounded-lg
+    border-pink-300
+    text-pink-600
+    bg-white
+    hover:bg-pink-50
+    hover:border-pink-400
+    transition
+  "
                       onClick={() => {
+                        // When entering edit mode, ensure examDraft shows parsed data
+                        const rawNotes = (visit as any).notes || "";
+                        const { treatmentPlan, notes } = unpackNotes(rawNotes);
+
                         setExamDraft({
                           chiefComplaint: (visit as any).chiefComplaint || "",
                           physical: (visit as any).bloodPressure || "",
-                          treatmentPlan: (visit as any).notes || "",
+                          treatmentPlan: treatmentPlan || "",
                         });
+                        // keep notesDraft as parsed
+                        setNotesDraft(notes || "");
                         setEditExam(true);
                       }}
                     >
-                      <Pencil className="w-4 h-4 mr-1" /> Edit
+                      <Pencil className="w-4 h-4 mr-1" />
+                      Edit
                     </Button>
                   ) : (
                     <div className="flex items-center gap-2">
+                      {/* SIMPAN */}
                       <Button
                         size="sm"
+                        className="
+        h-8
+        bg-white
+        text-pink-600
+        hover:bg-pink-50
+        shadow-sm
+        transition
+      "
                         onClick={handleSaveExam}
                         disabled={saving}
                       >
                         {saving ? (
-                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <Loader2 className="w-4 h-4 animate-spin text-pink-600" />
                         ) : (
-                          "Simpan"
+                          <>
+                            <Check className="w-4 h-4 mr-1" />
+                            Simpan
+                          </>
                         )}
                       </Button>
+
+                      {/* BATAL */}
                       <Button
                         size="sm"
-                        variant="outline"
+                        variant="ghost"
+                        className="
+        h-8
+        text-white/80
+        hover:text-white
+        hover:bg-white/10
+        transition
+      "
                         onClick={() => setEditExam(false)}
                         disabled={saving}
                       >
+                        <X className="w-4 h-4 mr-1" />
                         Batal
                       </Button>
                     </div>
@@ -986,32 +1225,37 @@ export default function RekamMedisDetailPage() {
                     />
                   ) : (
                     <p className="font-medium mt-1">
-                      {(visit as any).notes || "-"}
+                      {/* Show parsed treatmentPlan */}
+                      {unpackNotes((visit as any).notes || "").treatmentPlan || "-"}
                     </p>
                   )}
                 </div>
 
-                <div className="bg-yellow-50 border-l-4 border-yellow-300 p-3 rounded mt-2">
-                  <div className="flex items-center justify-between mb-1">
-                    <p className="text-sm font-medium">Catatan:</p>
+                <div className="bg-pink-50 border-l-4 border-pink-400 p-4 rounded-lg mt-2">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-sm font-semibold text-pink-700">
+                      Catatan
+                    </p>
 
                     {!editNotes ? (
                       <Button
                         size="sm"
                         variant="ghost"
-                        className="h-7 px-2 text-xs"
+                        className="h-7 px-3 text-xs text-pink-600 hover:bg-pink-100 hover:text-pink-700"
                         onClick={() => {
-                          setNotesDraft((visit as any).notes || "");
+                          const rawNotes = (visit as any).notes || "";
+                          const { notes } = unpackNotes(rawNotes);
+                          setNotesDraft(notes || "");
                           setEditNotes(true);
                         }}
                       >
-                        <Pencil className="w-3 h-3 mr-1" /> Edit
+                        Edit
                       </Button>
                     ) : (
                       <div className="flex gap-2">
                         <Button
                           size="sm"
-                          className="h-7 px-2 text-xs"
+                          className="h-7 px-3 text-xs bg-pink-600 hover:bg-pink-700 text-white"
                           onClick={handleSaveNotes}
                           disabled={saving}
                         >
@@ -1021,12 +1265,15 @@ export default function RekamMedisDetailPage() {
                             "Simpan"
                           )}
                         </Button>
+
                         <Button
                           size="sm"
                           variant="outline"
-                          className="h-7 px-2 text-xs"
+                          className="h-7 px-3 text-xs border-pink-300 text-pink-600 hover:bg-pink-100"
                           onClick={() => {
-                            setNotesDraft((visit as any).notes || "");
+                            const rawNotes = (visit as any).notes || "";
+                            const { notes } = unpackNotes(rawNotes);
+                            setNotesDraft(notes || "");
                             setEditNotes(false);
                           }}
                           disabled={saving}
@@ -1037,32 +1284,68 @@ export default function RekamMedisDetailPage() {
                     )}
                   </div>
 
-                  {editNotes ? (
+                  {/* ISI CATATAN */}
+                  {!editNotes ? (
+                    <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">
+                      {unpackNotes((visit as any).notes || "").notes || (
+                        <span className="italic text-gray-400">
+                          Tidak ada catatan.
+                        </span>
+                      )}
+                    </p>
+                  ) : (
                     <textarea
+                      className="w-full mt-1 rounded-md border border-pink-300 p-2 text-sm focus:border-pink-500 focus:ring-pink-500 resize-none"
                       rows={3}
-                      className="w-full border rounded px-2 py-1 text-sm"
                       value={notesDraft}
                       onChange={(e) => setNotesDraft(e.target.value)}
+                      disabled={saving}
+                      placeholder="Tulis catatan di sini..."
                     />
-                  ) : (
-                    <p className="text-sm mt-1 text-gray-700">
-                      {(visit as any).notes || "-"}
-                    </p>
                   )}
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="shadow-lg">
-              <CardHeader className="bg-yellow-400/40 rounded-t-md">
-                <div className="flex w-full items-center justify-between">
-                  <CardTitle className="text-lg font-semibold">
+            <Card className="shadow-lg border border-yellow-200">
+              {/* HEADER */}
+              <CardHeader
+                className="
+    bg-yellow-400/40
+    rounded-t-md
+    px-6
+    py-4
+    border-b
+    border-yellow-500/40
+  "
+              >
+                <div className="flex items-center justify-between">
+                  <CardTitle
+                    className="
+        text-base
+        font-semibold
+        uppercase
+        tracking-wide
+        leading-none
+        text-gray-800
+      "
+                  >
                     Obat yang Diberikan
                   </CardTitle>
 
                   {!editMeds ? (
                     <Button
                       size="sm"
+                      variant="outline"
+                      className="
+            h-8
+            bg-white
+            border-yellow-400
+            text-yellow-700
+            hover:bg-yellow-50
+            hover:text-yellow-800
+            shadow-sm
+          "
                       onClick={() => {
                         const extractedMeds =
                           ((visit as any).medications || []).map((m: any) => ({
@@ -1076,24 +1359,43 @@ export default function RekamMedisDetailPage() {
                         setEditMeds(true);
                       }}
                     >
-                      <Pencil className="w-4 h-4 mr-1" /> Edit
+                      <Pencil className="w-4 h-4 mr-2" />
+                      Edit
                     </Button>
                   ) : (
-                    <div className="flex gap-2">
+                    <div className="flex items-center gap-2">
                       <Button
                         size="sm"
+                        className="
+              h-8
+              bg-white
+              text-yellow-600
+              border border-yellow-400
+              hover:bg-yellow-50
+            "
                         onClick={handleSaveMeds}
                         disabled={saving}
                       >
                         {saving ? (
                           <Loader2 className="w-4 h-4 animate-spin" />
                         ) : (
-                          "Simpan"
+                          <>
+                            <Check className="w-4 h-4 mr-2" />
+                            Simpan
+                          </>
                         )}
                       </Button>
+
                       <Button
                         size="sm"
-                        variant="outline"
+                        variant="ghost"
+                        className="
+              h-8
+              px-4
+              text-gray-600
+              hover:text-gray-800
+              hover:bg-yellow-50
+            "
                         onClick={() => {
                           const extractedMeds =
                             ((visit as any).medications || []).map((m: any) => ({
@@ -1108,6 +1410,7 @@ export default function RekamMedisDetailPage() {
                         }}
                         disabled={saving}
                       >
+                        <X className="w-4 h-4 mr-2" />
                         Batal
                       </Button>
                     </div>
@@ -1115,39 +1418,57 @@ export default function RekamMedisDetailPage() {
                 </div>
               </CardHeader>
 
-              <CardContent className="space-y-3 bg-white text-sm pt-4">
+              {/* CONTENT */}
+             <CardContent className="bg-white text-sm px-6 py-5">
                 {(editMeds ? medsDraft : meds).length === 0 ? (
-                  <p className="text-gray-600">
-                    Tidak ada obat yang diresepkan pada kunjungan ini.
-                  </p>
+                  <div className="mt-4 py-6 flex justify-center">
+                    <p className="text-gray-500 italic text-center">
+                      Tidak ada obat yang diresepkan pada kunjungan ini.
+                    </p>
+                  </div>
                 ) : (
                   (editMeds ? medsDraft : meds).map((m: any, idx: number) => (
                     <div
                       key={m.id ?? idx}
-                      className="rounded-md bg-pink-50 p-4 border border-pink-100 space-y-2"
+                      className="
+            rounded-md
+            border
+            border-yellow-200
+            bg-yellow-50/40
+            px-4
+            py-3
+            space-y-3
+            mt-5
+          "
                     >
+                      {/* VIEW MODE */}
                       {!editMeds ? (
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <p className="font-semibold text-pink-700">
+                        <div className="flex justify-between items-start gap-4">
+                          <div className="space-y-1">
+                            <p className="font-semibold text-gray-800">
                               {m.name}
                             </p>
                             {m.instructions && (
-                              <p className="text-gray-700 text-sm mt-1">
+                              <p className="text-gray-600 text-sm leading-relaxed">
                                 {m.instructions}
                               </p>
                             )}
                           </div>
-                          <Badge variant="secondary">
+
+                          <div className="text-xs font-medium text-gray-700 bg-white border border-yellow-300 rounded px-3 py-1">
                             Qty: {m.quantity}
-                          </Badge>
+                          </div>
                         </div>
                       ) : (
-                        <div className="flex items-start gap-2">
-                          <div className="flex-1 space-y-2">
+                        /* EDIT MODE */
+                        <div className="grid grid-cols-12 gap-3 items-start">
+                          {/* Nama Obat */}
+                          <div className="col-span-12 md:col-span-4">
+                            <label className="block text-xs text-gray-600 mb-1">
+                              Nama Obat
+                            </label>
                             <input
-                              className="w-full border rounded p-2"
-                              placeholder="Nama Obat"
+                              className="w-full border rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-yellow-300"
                               value={m.name}
                               onChange={(e) => {
                                 const copy = [...medsDraft];
@@ -1155,10 +1476,15 @@ export default function RekamMedisDetailPage() {
                                 setMedsDraft(copy);
                               }}
                             />
+                          </div>
 
+                          {/* Quantity */}
+                          <div className="col-span-6 md:col-span-2">
+                            <label className="block text-xs text-gray-600 mb-1">
+                              Qty
+                            </label>
                             <input
-                              className="w-full border rounded p-2"
-                              placeholder="Quantity"
+                              className="w-full border rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-yellow-300"
                               value={m.quantity}
                               onChange={(e) => {
                                 const copy = [...medsDraft];
@@ -1166,11 +1492,16 @@ export default function RekamMedisDetailPage() {
                                 setMedsDraft(copy);
                               }}
                             />
+                          </div>
 
+                          {/* Instruksi */}
+                          <div className="col-span-12 md:col-span-5">
+                            <label className="block text-xs text-gray-600 mb-1">
+                              Aturan Pakai
+                            </label>
                             <textarea
-                              className="w-full border rounded p-2"
-                              placeholder="Instruksi"
                               rows={2}
+                              className="w-full border rounded-md px-3 py-2 text-sm resize-none focus:ring-2 focus:ring-yellow-300"
                               value={m.instructions}
                               onChange={(e) => {
                                 const copy = [...medsDraft];
@@ -1183,14 +1514,17 @@ export default function RekamMedisDetailPage() {
                             />
                           </div>
 
-                          <Button
-                            size="sm"
-                            variant="destructive"
-                            className="mt-1"
-                            onClick={() => removeMedication(idx)}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
+                          {/* Delete */}
+                          <div className="col-span-12 md:col-span-1 flex justify-end">
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="text-red-500 hover:bg-red-50"
+                              onClick={() => removeMedication(idx)}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
                         </div>
                       )}
                     </div>
@@ -1200,7 +1534,14 @@ export default function RekamMedisDetailPage() {
                 {editMeds && (
                   <Button
                     variant="outline"
-                    className="w-full border-dashed border-2 border-pink-300 text-pink-600 hover:bg-pink-50"
+                    className="
+          w-full
+          border-dashed
+          border-2
+          border-yellow-400
+          text-yellow-700
+          hover:bg-yellow-50
+        "
                     onClick={addNewMedication}
                   >
                     <Plus className="w-4 h-4 mr-2" />
@@ -1209,11 +1550,12 @@ export default function RekamMedisDetailPage() {
                 )}
               </CardContent>
             </Card>
+
           </div>
         </div>
 
         <div className="mt-8 text-center text-xs text-gray-400">
-          © 2025 RoxyDental.
+          © 2025 POLABDC Dental Clinic.
         </div>
       </div>
     </div>

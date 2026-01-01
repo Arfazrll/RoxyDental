@@ -140,49 +140,49 @@ export default function Navbar() {
                 </div>
 
                 <div className="py-2">
-  <DropdownItem
-    href="/dashboard/dokter/main"
-    icon={<LayoutDashboard className="w-5 h-5" />}
-    text="Dashboard"
-    active={pathname === "/dashboard/dokter/main"}
-  />
+              <DropdownItem
+                href="/dashboard/dokter/main"
+                icon={<LayoutDashboard className="w-5 h-5" />}
+                text="Dashboard"
+                active={pathname === "/dashboard/dokter/main"}
+              />
 
-  <DropdownItem
-    href="/dashboard/dokter/akun"
-    icon={<User className="w-5 h-5" />}
-    text="Profil"
-    active={pathname === "/dashboard/dokter/akun"}
-  />
+              <DropdownItem
+                href="/dashboard/dokter/akun"
+                icon={<User className="w-5 h-5" />}
+                text="Profil"
+                active={pathname === "/dashboard/dokter/akun"}
+              />
 
-  {/* PASIEN (Daftar Pasien + Antrian + Rekam Medis) */}
-  <DropdownItem
-    href="/dashboard/dokter/pasien/daftar-pasien"
-    icon={<Users className="w-5 h-5" />}
-    text="Daftar Pasien"
-    active={pathname.startsWith("/dashboard/dokter/pasien")}
-  />
+              {/* PASIEN (Daftar Pasien + Antrian + Rekam Medis) */}
+              <DropdownItem
+                href="/dashboard/dokter/pasien/daftar-pasien"
+                icon={<Users className="w-5 h-5" />}
+                text="Daftar Pasien"
+                active={pathname.startsWith("/dashboard/dokter/pasien")}
+              />
 
-  <DropdownItem
-    href="/dashboard/dokter/kalender"
-    icon={<Calendar className="w-5 h-5" />}
-    text="Kalender"
-    active={pathname.startsWith("/dashboard/dokter/kalender")}
-  />
+              <DropdownItem
+                href="/dashboard/dokter/kalender"
+                icon={<Calendar className="w-5 h-5" />}
+                text="Kalender"
+                active={pathname.startsWith("/dashboard/dokter/kalender")}
+              />
 
-  <DropdownItem
-    href="/dashboard/dokter/keuangan"
-    icon={<FileText className="w-5 h-5" />}
-    text="Keuangan"
-    active={pathname.startsWith("/dashboard/dokter/keuangan")}
-  />
+              <DropdownItem
+                href="/dashboard/dokter/keuangan"
+                icon={<FileText className="w-5 h-5" />}
+                text="Keuangan"
+                active={pathname.startsWith("/dashboard/dokter/keuangan")}
+              />
 
-  <DropdownItem
-    href="/dashboard/dokter/profil/akun"
-    icon={<Settings className="w-5 h-5" />}
-    text="Pengaturan"
-    active={pathname.startsWith("/dashboard/dokter/profil")}
-  />
-</div>
+              <DropdownItem
+                href="/dashboard/dokter/profil/akun"
+                icon={<Settings className="w-5 h-5" />}
+                text="Pengaturan"
+                active={pathname.startsWith("/dashboard/dokter/profil")}
+              />
+            </div>
 
 
                 <div className="border-t border-gray-200 py-2">

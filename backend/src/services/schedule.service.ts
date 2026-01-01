@@ -1,5 +1,5 @@
 import { prisma } from '../config/database';
-import { ScheduleType } from '../../generated/prisma';
+import { ScheduleType } from '@prisma/client';
 
 interface CreateScheduleData {
   title: string;

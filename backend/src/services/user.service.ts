@@ -1,5 +1,5 @@
 import { prisma } from '../config/database';
-import { UserRole } from '../../generated/prisma';
+import { UserRole } from '@prisma/client';
 import { hashPassword } from '../utils/bcrypt.util';
 import { AppError } from '../middlewares/error.middleware';
 

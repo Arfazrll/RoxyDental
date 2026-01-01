@@ -2,30 +2,31 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { FaEnvelope, FaCheckCircle } from "react-icons/fa";
+import { FaEnvelope } from "react-icons/fa";
 import api from "@/lib/api";
 import Image from "next/image";
 
 export default function ForgotPasswordPage() {
   const router = useRouter();
+
   const [email, setEmail] = useState("");
   const [step, setStep] = useState<"input" | "sent">("input");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [resendSuccess, setResendSuccess] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
     if (!email.includes("@")) {
-      setError("Masukkan email yang valid");
+      setError("Masukkan alamat email yang valid");
       return;
     }
 
     setLoading(true);
-
     try {
-      await api.post('/auth/forgot-password', { email });
+      await api.post("/auth/forgot-password", { email });
       setStep("sent");
     } catch (err: any) {
       setError(err.response?.data?.message || "Gagal mengirim email reset");
@@ -37,136 +38,156 @@ export default function ForgotPasswordPage() {
   const handleResend = async () => {
     setLoading(true);
     setError("");
+    setResendSuccess(false);
 
     try {
-      await api.post('/auth/forgot-password', { email });
+      await api.post("/auth/forgot-password", { email });
+      setResendSuccess(true);
+
+      setTimeout(() => {
+        setResendSuccess(false);
+      }, 3000);
     } catch (err: any) {
-      setError(err.response?.data?.message || "Gagal mengirim email reset");
+      setError(err.response?.data?.message || "Gagal mengirim ulang email");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="relative flex flex-col items-center justify-center min-h-screen text-center overflow-hidden font-poppins bg-linear-to-br from-pink-100 via-pink-200 to-pink-300">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-pink-100 via-pink-200 to-pink-300 px-4 font-poppins">
+      <div className="relative w-full max-w-[420px]">
+        {/* Background blur */}
+        <div className="absolute -left-24 -top-20 w-64 h-64 bg-pink-200/30 rounded-full blur-3xl" />
+        <div className="absolute -right-24 bottom-[-40px] w-72 h-72 bg-pink-300/30 rounded-full blur-3xl" />
 
-      <div className="absolute -top-20 left-[-100px] w-[260px] h-[260px] bg-pink-200/30 rounded-full blur-[60px] animate-float-slow"></div>
-      <div className="absolute bottom-[-120px] right-[-100px] w-[300px] h-[300px] bg-pink-300/30 rounded-full blur-[60px] animate-float-slow delay-2000"></div>
+        {/* ================= INPUT STEP ================= */}
+        {step === "input" && (
+          <div className="relative bg-white/60 backdrop-blur-md rounded-3xl shadow-lg p-6 md:p-8 border border-white/30">
+            <div className="flex flex-col items-center mb-6">
+              <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-pink-400 to-pink-600 flex items-center justify-center shadow">
+                <Image
+                  src="/images/putih.png"
+                  alt="Logo"
+                  width={36}
+                  height={36}
+                  priority
+                />
+              </div>
 
-      {step === "input" && (
-        <div className="w-full max-w-[400px] transition-all duration-700 opacity-100 translate-y-0">
-          <div className="
-          mx-auto mb-6
-          w-[90px] h-[90px]
-          flex items-center justify-center
-          rounded-full
-          bg-linear-to-br from-pink-400 via-pink-500 to-pink-600
-          shadow-lg
-          animate-pulse
-        ">
-          <Image
-            src="/images/putih.png"
-            alt="Logo Gigi"
-            width={48}
-            height={48}
-            className="object-contain"
-            priority
-          />
-          </div>
-
-
-          <h2 className="text-2xl font-bold text-pink-600 drop-shadow-sm mb-2">Lupa Password?</h2>
-          <p className="text-pink-500 text-sm opacity-80 mb-6">
-            Masukkan email kamu untuk menerima tautan reset password
-          </p>
-
-          {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-xl text-sm">
-              {error}
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit} className="text-left bg-white/40 backdrop-blur-md p-6 rounded-2xl shadow-xl">
-            <label className="text-pink-500 text-sm font-medium">Email</label>
-            <div className="flex items-center bg-white/70 rounded-xl mt-1 mb-5 px-3 py-2 shadow-inner focus-within:ring-2 focus-within:ring-pink-400 transition-all">
-              <FaEnvelope className="text-pink-400 mr-2" />
-             <input
-              type="email"
-              className="
-                w-full py-2 px-1
-                outline-none bg-transparent
-                text-gray-800
-                placeholder-pink-300
-              "
-              placeholder="Masukkan email kamu"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              disabled={loading}
-            />
+              <h1 className="mt-4 text-[22px] font-semibold tracking-tight text-pink-700">
+                Lupa Password
+              </h1>
+              <p className="mt-1 text-[13px] text-slate-600 text-center leading-relaxed">
+                Masukkan email terdaftar untuk menerima tautan reset password
+              </p>
             </div>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-3 text-white font-bold rounded-xl shadow-lg bg-linear-to-r from-pink-400 via-pink-500 to-pink-600 hover:from-pink-500 hover:to-pink-400 hover:scale-105 transition-all duration-300 drop-shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? "Mengirim..." : "Kirim Email"}
-            </button>
-          </form>
+            {error && (
+              <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-[13px] text-red-700">
+                {error}
+              </div>
+            )}
 
-          <button
-            onClick={() => router.push("/login")}
-            className="mt-5 text-pink-600 font-semibold text-sm hover:underline drop-shadow-sm"
-          >
-            Kembali ke Login
-          </button>
-        </div>
-      )}
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="block text-[13px] font-medium text-slate-700 mb-2">
+                  Email
+                </label>
+                <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 focus-within:ring-2 focus-within:ring-pink-200">
+                  <FaEnvelope className="text-pink-400 text-sm" />
+                  <input
+                    type="email"
+                    className="w-full bg-transparent outline-none text-[14px] text-slate-800 placeholder:text-slate-400"
+                    placeholder="nama@email.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    disabled={loading}
+                  />
+                </div>
+              </div>
 
-      {step === "sent" && (
-        <div className="w-full max-w-[440px] transition-all duration-700 opacity-100 translate-y-0">
-          <div className="mx-auto mb-6 w-[110px] h-[110px] flex items-center justify-center rounded-full text-white text-4xl shadow-xl bg-linear-to-br from-pink-400 via-pink-500 to-pink-600 animate-pulse drop-shadow-sm">
-            <FaCheckCircle />
-          </div>
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full py-3 rounded-lg bg-gradient-to-br from-pink-500 to-pink-600 text-[14px] font-semibold text-white shadow hover:scale-[1.02] transition-transform disabled:opacity-60"
+              >
+                {loading ? "Mengirim..." : "Kirim Email Reset"}
+              </button>
+            </form>
 
-          <h2 className="text-2xl font-bold text-pink-600 drop-shadow-sm">Email Terkirim</h2>
-          <p className="text-pink-500 opacity-80 text-sm mb-4">
-            Kami telah mengirimkan tautan reset password ke <strong>{email}</strong>. 
-            Silakan cek inbox atau folder spam kamu.
-          </p>
-
-          <div className="bg-yellow-50 border border-yellow-300 text-yellow-800 p-3 rounded-lg text-xs mb-4">
-            Development Mode: Cek console terminal backend untuk link reset password
-          </div>
-
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-2 rounded-lg text-sm mb-3">
-              {error}
+            <div className="mt-5 text-center">
+              <button
+                onClick={() => router.push("/login")}
+                className="text-[13px] font-medium text-pink-600 hover:underline"
+              >
+                Kembali ke Login
+              </button>
             </div>
-          )}
-
-          <div className="flex flex-col gap-3 w-full max-w-[300px] mx-auto mt-4">
-            <button
-              onClick={() => router.push("/login")}
-              className="py-3 text-white font-bold rounded-xl shadow-lg bg-linear-to-r from-pink-400 via-pink-500 to-pink-600 hover:from-pink-500 hover:to-pink-400 hover:scale-105 transition-all duration-300 drop-shadow-sm"
-            >
-              Kembali ke Login
-            </button>
-
-            <button
-              onClick={handleResend}
-              disabled={loading}
-              className={`text-sm font-semibold ${loading ? "text-gray-400" : "text-pink-600 hover:underline"} drop-shadow-sm`}
-            >
-              {loading ? "Mengirim ulang..." : "Kirim Ulang Email"}
-            </button>
           </div>
+        )}
 
-          <p className="mt-5 text-pink-500 text-xs opacity-70 drop-shadow-sm">
-            2025 RoxyDental - All rights reserved
-          </p>
-        </div>
-      )}
+        {/* ================= SENT STEP ================= */}
+        {step === "sent" && (
+          <div className="relative bg-white/60 backdrop-blur-md rounded-3xl shadow-lg p-6 md:p-8 border border-white/30 text-center">
+            {/* Header minimal – TANPA ICON */}
+            <div className="mb-6">
+              <div className="h-[3px] w-16 mx-auto rounded-full bg-gradient-to-r from-pink-400 to-pink-600 mb-4" />
+              <h2 className="text-[22px] font-semibold text-pink-700 tracking-tight">
+                Email Terkirim
+              </h2>
+              <p className="mt-1 text-[12.5px] text-slate-500">
+                Silakan periksa email Anda
+              </p>
+            </div>
+
+            <p className="text-[13px] text-slate-600 leading-relaxed mb-4">
+              Kami telah mengirimkan tautan reset password ke alamat email:
+              <span className="block mt-1 font-medium text-slate-800">
+                {email}
+              </span>
+            </p>
+
+            {resendSuccess && (
+              <div className="mb-4 rounded-xl border border-pink-200 bg-pink-50 px-4 py-3 text-left">
+                <p className="text-[13px] font-medium text-pink-700">
+                  Email berhasil dikirim ulang
+                </p>
+                <p className="text-[12px] text-slate-600 leading-relaxed">
+                  Silakan periksa inbox atau folder spam.
+                </p>
+              </div>
+            )}
+
+            {error && (
+              <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-[13px] text-red-700">
+                {error}
+              </div>
+            )}
+
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={() => router.push("/login")}
+                className="py-3 rounded-lg bg-gradient-to-br from-pink-500 to-pink-600 text-[14px] font-semibold text-white shadow hover:scale-[1.02] transition-transform"
+              >
+                Kembali ke Login
+              </button>
+
+              <button
+                onClick={handleResend}
+                disabled={loading}
+                className="text-[13px] font-medium text-pink-600 hover:underline disabled:text-slate-400"
+              >
+                {loading ? "Mengirim ulang..." : "Kirim ulang email"}
+              </button>
+            </div>
+
+            <p className="mt-6 text-[11px] text-slate-500">
+             © 2025 POLABDC — All rights reserved
+            </p>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

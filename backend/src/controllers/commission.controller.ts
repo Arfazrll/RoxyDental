@@ -2,7 +2,7 @@ import { Response, NextFunction } from 'express';
 import { AuthRequest } from '../types/express.types';
 import { CommissionService } from '../services/commission.service';
 import { successResponse } from '../utils/response.util';
-import { ServiceCategory } from '../../generated/prisma';
+import { ServiceCategory } from '@prisma/client';
 
 const commissionService = new CommissionService();
 

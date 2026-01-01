@@ -11,8 +11,49 @@ import { visitService, Visit } from "@/services/visit.service";
 import { dashboardNurseService } from "@/services/dashboard-nurse.service";
 import { useToast } from "@/hooks/use-toast";
 
+/**
+ * Nurse read-only view.
+ * - Perawat hanya melihat (no edit buttons).
+ * - PDF generator includes parsed treatment & notes (structured format handling).
+ *
+ * Do NOT change backend behavior.
+ */
+
+/* Structured notes helpers (same format used by doctor UI) */
+const STRUCTURED_PREFIX = "__POLABDC_STRUCTURED__";
+const OPEN_TREAT = "<<TREATMENT>>";
+const CLOSE_TREAT = "<</TREATMENT>>";
+const OPEN_NOTES = "<<NOTES>>";
+const CLOSE_NOTES = "<</NOTES>>";
+
+const unpackNotes = (raw?: string) => {
+  if (!raw) return { treatmentPlan: "", notes: "" };
+  const txt = String(raw);
+  if (!txt.startsWith(STRUCTURED_PREFIX)) {
+    // legacy/unstructured -> fallback: both fields same
+    return { treatmentPlan: txt.trim(), notes: txt.trim() };
+  }
+
+  const tStart = txt.indexOf(OPEN_TREAT);
+  const tEnd = txt.indexOf(CLOSE_TREAT);
+  const nStart = txt.indexOf(OPEN_NOTES);
+  const nEnd = txt.indexOf(CLOSE_NOTES);
+
+  const treatmentPlan =
+    tStart !== -1 && tEnd !== -1 && tEnd > tStart
+      ? txt.slice(tStart + OPEN_TREAT.length, tEnd).trim()
+      : "";
+  const notes =
+    nStart !== -1 && nEnd !== -1 && nEnd > nStart
+      ? txt.slice(nStart + OPEN_NOTES.length, nEnd).trim()
+      : "";
+
+  return { treatmentPlan, notes };
+};
+
 export default function RekamMedisDetailPage() {
-  const { rmNo } = useParams<{ rmNo: string }>();
+  const params = useParams() as { rmNo?: string } | null;
+  const rmNo = params?.rmNo;
   const router = useRouter();
   const { toast } = useToast();
 
@@ -22,6 +63,7 @@ export default function RekamMedisDetailPage() {
   const [isDownloading, setIsDownloading] = useState(false);
   const [visit, setVisit] = useState<Visit | null>(null);
   const [currentNurseName, setCurrentNurseName] = useState<string>("-");
+  const [currentDoctorName, setCurrentDoctorName] = useState<string>("-");
 
   useEffect(() => {
     const fetchNurseInfo = async () => {
@@ -40,16 +82,25 @@ export default function RekamMedisDetailPage() {
   useEffect(() => {
     if (!medicalRecordNumber) return;
     fetchVisitData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [medicalRecordNumber]);
 
   const fetchVisitData = async () => {
+    if (!medicalRecordNumber) return;
     try {
       setLoading(true);
-
       const response = await visitService.getVisitByMedicalRecord(
         medicalRecordNumber
       );
       setVisit(response);
+
+      // also try to extract doctor name if available (optional)
+      try {
+        const docName = (response as any).doctorName || (response as any).doctor?.fullName;
+        if (docName) setCurrentDoctorName(docName);
+      } catch {
+        // ignore
+      }
     } catch (error: any) {
       toast({
         title: "Error",
@@ -61,6 +112,45 @@ export default function RekamMedisDetailPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const formatDate = (dateString?: string) => {
+    try {
+      if (!dateString) return "-";
+      return new Date(dateString).toLocaleDateString("id-ID", {
+        day: "2-digit",
+        month: "long",
+        year: "numeric",
+      });
+    } catch {
+      return "-";
+    }
+  };
+
+  const calculateAge = (birthDate?: string) => {
+    try {
+      if (!birthDate) return 0;
+      const birth = new Date(birthDate);
+      const today = new Date();
+      let age = today.getFullYear() - birth.getFullYear();
+      const monthDiff = today.getMonth() - birth.getMonth();
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+        age--;
+      }
+      return age;
+    } catch {
+      return 0;
+    }
+  };
+
+  const getTindakan = () => {
+    if (!visit) return "-";
+    const firstTreatment = (visit as any).treatments?.[0];
+    return (
+      (visit as any).chiefComplaint ||
+      firstTreatment?.service?.serviceName ||
+      "-"
+    );
   };
 
   const handlePrint = () => window.print();
@@ -89,18 +179,22 @@ export default function RekamMedisDetailPage() {
       const MARGIN = 50;
       const FOOTER_HEIGHT = 60;
       const CONTENT_WIDTH = PAGE_WIDTH - MARGIN * 2;
-      const LINE_HEIGHT = 13;
+
+      // Typography & layout tweaks
+      const LINE_HEIGHT = 14;
       const CELL_PADDING = 6;
-      const FONT_SIZE_NORMAL = 7;
-      const FONT_SIZE_HEADER = 16;
-      const FONT_SIZE_SECTION = 9;
-      const BG_SECTION = rgb(0.96, 0.98, 1);
-      const COLOR_PRIMARY = rgb(0.06, 0.2, 0.5);
+      const FONT_SIZE_NORMAL = 9; // body / table text
+      const FONT_SIZE_HEADER = 18; // main title
+      const FONT_SIZE_SECTION = 11; // section titles
+      const BG_SECTION = rgb(0.98, 0.94, 0.97); // pale pink background for section bar
+      const COLOR_PRIMARY = rgb(0.90, 0.20, 0.50); // main pink (header)
+      const COLOR_SECTION_TEXT = rgb(0.78, 0.12, 0.40); // darker pink for section title text
+      const TEXT_COLOR = rgb(0.12, 0.12, 0.12); // dark gray for body text
       const SECTION_SPACING = 15;
 
       const pdfDoc = await PDFDocument.create();
-      const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
-      const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+      const font = await pdfDoc.embedFont(StandardFonts.TimesRoman);
+      const fontBold = await pdfDoc.embedFont(StandardFonts.TimesRomanBold);
 
       let page = pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
       let { width, height } = page.getSize();
@@ -155,13 +249,19 @@ export default function RekamMedisDetailPage() {
 
       const drawMeta = (meta: string) => {
         ensureSpace(18);
-        page.drawText(meta, { x: MARGIN, y: cursorY - 4, size: 9, font });
+        page.drawText(meta, {
+          x: MARGIN,
+          y: cursorY - 4,
+          size: 9,
+          font,
+          color: TEXT_COLOR,
+        });
         cursorY -= 18;
       };
 
       const drawSectionTitle = (title: string) => {
         cursorY -= SECTION_SPACING;
-        const barH = 20;
+        const barH = 22;
         ensureSpace(barH + SECTION_SPACING);
         page.drawRectangle({
           x: MARGIN - 2,
@@ -171,18 +271,17 @@ export default function RekamMedisDetailPage() {
           color: BG_SECTION,
         });
         page.drawText(title, {
-          x: MARGIN + 6,
-          y: cursorY - barH + 7,
+          x: MARGIN + 8,
+          y: cursorY - barH + 8,
           size: FONT_SIZE_SECTION,
           font: fontBold,
-          color: rgb(0.06, 0.3, 0.6),
+          color: COLOR_SECTION_TEXT,
         });
         cursorY -= barH + 8;
       };
 
       const drawTable = (rows: string[][], colWidths: number[]) => {
-        for (const row of rows)
-          while (row.length < colWidths.length) row.push("");
+        for (const row of rows) while (row.length < colWidths.length) row.push("");
 
         for (const row of rows) {
           const cellsLines = row.map((cell, idx) =>
@@ -225,6 +324,7 @@ export default function RekamMedisDetailPage() {
                 y: textY,
                 size: FONT_SIZE_NORMAL,
                 font: ci % 2 === 0 ? fontBold : font,
+                color: TEXT_COLOR,
               });
               textY -= LINE_HEIGHT;
             }
@@ -278,7 +378,6 @@ export default function RekamMedisDetailPage() {
           "No. Telepon",
           (visit as any).patient?.phone || "-",
         ],
-        ["Catatan", (visit as any).patient?.allergies || "-", "", ""],
       ];
 
       const labelW = 90;
@@ -293,9 +392,24 @@ export default function RekamMedisDetailPage() {
       drawTable(patientRows, patientColWidths);
 
       drawSectionTitle("Informasi Kunjungan Terkini");
+
+      // parse notes for PDF
+      const rawNotes = (visit as any).notes || "";
+      const { treatmentPlan: pdfTreatmentPlan, notes: pdfNotes } = unpackNotes(rawNotes);
+
+      const cleanText = (txt?: string) =>
+        String(txt || "")
+          .replace(/__POLABDC_STRUCTURED__/g, "")
+          .replace(/<<\/?TREATMENT>>/gi, "")
+          .replace(/<<\/?NOTES>>/gi, "")
+          .replace(/<<.*?>>/g, "")
+          .replace(/<\/<.*?>>/g, "")
+          .trim() || "-";
+
       drawTable(
         [
           ["Tanggal Kunjungan", formatDate((visit as any).visitDate)],
+          ["Dokter Pemeriksa", currentDoctorName],
           ["Perawat", currentNurseName],
           ["Tindakan", getTindakan()],
           ["Diagnosis", (visit as any).patient?.medicalHistory || "-"],
@@ -308,12 +422,14 @@ export default function RekamMedisDetailPage() {
         [
           ["Keluhan Utama", (visit as any).chiefComplaint || "-"],
           ["Hasil Pemeriksaan Fisik", (visit as any).bloodPressure || "-"],
-          ["Rencana Perawatan", (visit as any).notes || "-"],
+          ["Rencana Perawatan", cleanText(pdfTreatmentPlan) || "-"],
+          ["Catatan Kunjungan", cleanText(pdfNotes) || "-"],
         ],
         [160, CONTENT_WIDTH - 160]
       );
 
       drawSectionTitle("Obat yang Diberikan");
+
       const pdfMeds: any[] = (visit as any).medications || [];
       if (!Array.isArray(pdfMeds) || pdfMeds.length === 0) {
         drawTable([["Obat", "Tidak ada obat yang diresepkan."]], [
@@ -341,7 +457,7 @@ export default function RekamMedisDetailPage() {
           color: rgb(0.85, 0.85, 0.85),
         });
 
-        p.drawText(`© ${new Date().getFullYear()} RoxyDental`, {
+        p.drawText(`© ${new Date().getFullYear()} POLABDC - Dental Clinic`, {
           x: MARGIN,
           y: FOOTER_HEIGHT - 34,
           size: 9,
@@ -365,9 +481,7 @@ export default function RekamMedisDetailPage() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `${
-        (visit as any).patient?.medicalRecordNumber || "rekam_medis"
-      }.pdf`;
+      a.download = `${(visit as any).patient?.medicalRecordNumber || "rekam_medis"}.pdf`;
       a.click();
       URL.revokeObjectURL(url);
     } catch (err) {
@@ -380,47 +494,6 @@ export default function RekamMedisDetailPage() {
     } finally {
       setIsDownloading(false);
     }
-  };
-
-  const formatDate = (dateString: string) => {
-    try {
-      return new Date(dateString).toLocaleDateString("id-ID", {
-        day: "2-digit",
-        month: "long",
-        year: "numeric",
-      });
-    } catch {
-      return "-";
-    }
-  };
-
-  const calculateAge = (birthDate: string) => {
-    try {
-      const birth = new Date(birthDate);
-      const today = new Date();
-      let age = today.getFullYear() - birth.getFullYear();
-      const monthDiff = today.getMonth() - birth.getMonth();
-
-      if (
-        monthDiff < 0 ||
-        (monthDiff === 0 && today.getDate() < birth.getDate())
-      ) {
-        age--;
-      }
-      return age;
-    } catch {
-      return 0;
-    }
-  };
-
-  const getTindakan = () => {
-    if (!visit) return "-";
-    const firstTreatment = (visit as any).treatments?.[0];
-    return (
-      (visit as any).chiefComplaint ||
-      firstTreatment?.service?.serviceName ||
-      "-"
-    );
   };
 
   if (loading) {
@@ -438,9 +511,7 @@ export default function RekamMedisDetailPage() {
     return (
       <div className="min-h-screen bg-background p-6">
         <div className="max-w-4xl mx-auto text-center py-20">
-          <p className="text-pink-700 font-semibold text-lg">
-            Rekam medis tidak ditemukan
-          </p>
+          <p className="text-pink-700 font-semibold text-lg">Rekam medis tidak ditemukan</p>
           <Button className="mt-4" onClick={() => router.back()}>
             Kembali ke daftar
           </Button>
@@ -450,6 +521,7 @@ export default function RekamMedisDetailPage() {
   }
 
   const meds: any[] = (visit as any).medications || [];
+  const { treatmentPlan, notes } = unpackNotes((visit as any).notes || "");
 
   return (
     <div className="min-h-screen bg-[#FFF5F7]">
@@ -458,9 +530,7 @@ export default function RekamMedisDetailPage() {
       <div id="rekam-medis-root" className="max-w-7xl mx-auto p-4 md:p-6">
         <div className="flex items-center justify-between mb-6">
           <Button
-            onClick={() =>
-              router.push("/dashboard/perawat/pasienpr/rekam-medis")
-            }
+            onClick={() => router.push("/dashboard/perawat/pasienpr/rekam-medis")}
             className="inline-flex items-center gap-2 bg-white/60 border border-pink-200 text-pink-700 px-3 py-2 rounded shadow-sm text-sm hover:bg-white"
           >
             <ArrowLeft className="w-4 h-4" />
@@ -498,10 +568,9 @@ export default function RekamMedisDetailPage() {
           <div>
             <Card className="shadow-lg">
               <CardHeader className="bg-pink-600 text-white rounded-t-md">
-                <CardTitle className="text-lg font-semibold">
-                  Informasi Pasien
-                </CardTitle>
+                <CardTitle className="text-lg font-semibold">Informasi Pasien</CardTitle>
               </CardHeader>
+
               <CardContent className="space-y-4 bg-white text-sm pt-4">
                 <div>
                   <p className="text-xs text-gray-400">NO. REKAM MEDIS</p>
@@ -512,61 +581,40 @@ export default function RekamMedisDetailPage() {
 
                 <div>
                   <p className="text-xs text-gray-400">NO. ID</p>
-                  <p className="font-medium mt-1">
-                    {(visit as any).patient?.patientNumber || "-"}
-                  </p>
+                  <p className="font-medium mt-1">{(visit as any).patient?.patientNumber || "-"}</p>
                 </div>
 
                 <div>
                   <p className="text-xs text-gray-400">NAMA LENGKAP</p>
-                  <p className="font-medium mt-1">
-                    {(visit as any).patient?.fullName || "-"}
-                  </p>
+                  <p className="font-medium mt-1">{(visit as any).patient?.fullName || "-"}</p>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <p className="text-xs text-gray-400">UMUR</p>
-                    <p className="font-medium mt-1">
-                      {calculateAge((visit as any).patient?.dateOfBirth)} tahun
-                    </p>
+                    <p className="font-medium mt-1">{calculateAge((visit as any).patient?.dateOfBirth)} tahun</p>
                   </div>
                   <div>
                     <p className="text-xs text-gray-400">JENIS KELAMIN</p>
                     <p className="font-medium mt-1">
-                      {(visit as any).patient?.gender === "L"
-                        ? "Laki-laki"
-                        : "Perempuan"}
+                      {(visit as any).patient?.gender === "L" ? "Laki-laki" : "Perempuan"}
                     </p>
                   </div>
                 </div>
 
                 <div>
                   <p className="text-xs text-gray-400">TANGGAL LAHIR</p>
-                  <p className="font-medium mt-1">
-                    {formatDate((visit as any).patient?.dateOfBirth)}
-                  </p>
+                  <p className="font-medium mt-1">{formatDate((visit as any).patient?.dateOfBirth)}</p>
                 </div>
 
                 <div>
                   <p className="text-xs text-gray-400">ALAMAT</p>
-                  <p className="font-medium mt-1">
-                    {(visit as any).patient?.address || "-"}
-                  </p>
+                  <p className="font-medium mt-1">{(visit as any).patient?.address || "-"}</p>
                 </div>
 
                 <div>
                   <p className="text-xs text-gray-400">NO. TELEPON</p>
-                  <p className="font-medium mt-1">
-                    {(visit as any).patient?.phone || "-"}
-                  </p>
-                </div>
-
-                <div>
-                  <p className="text-xs text-gray-400">CATATAN</p>
-                  <p className="text-pink-700 font-medium mt-1">
-                    {(visit as any).patient?.allergies || "-"}
-                  </p>
+                  <p className="font-medium mt-1">{(visit as any).patient?.phone || "-"}</p>
                 </div>
               </CardContent>
             </Card>
@@ -575,17 +623,13 @@ export default function RekamMedisDetailPage() {
           <div className="lg:col-span-2 space-y-6 font-sans">
             <Card className="shadow-lg">
               <CardHeader className="bg-yellow-400/40 rounded-t-md py-5">
-                <CardTitle className="text-lg font-semibold leading-none">
-                  Informasi Kunjungan Terkini
-                </CardTitle>
+                <CardTitle className="text-lg font-semibold leading-none">Informasi Kunjungan Terkini</CardTitle>
               </CardHeader>
 
               <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start bg-white text-sm pt-4">
                 <div>
                   <p className="text-xs text-gray-400">TANGGAL KUNJUNGAN</p>
-                  <p className="font-medium mt-1">
-                    {formatDate((visit as any).visitDate)}
-                  </p>
+                  <p className="font-medium mt-1">{formatDate((visit as any).visitDate)}</p>
                 </div>
 
                 <div>
@@ -601,9 +645,7 @@ export default function RekamMedisDetailPage() {
                 <div className="md:col-span-3 mt-2">
                   <p className="text-xs text-gray-400">DIAGNOSIS</p>
                   <div className="mt-2 rounded-md bg-pink-50 p-3">
-                    <p className="text-pink-700 font-semibold">
-                      {(visit as any).patient?.medicalHistory || "-"}
-                    </p>
+                    <p className="text-pink-700 font-semibold">{(visit as any).patient?.medicalHistory || "-"}</p>
                   </div>
                 </div>
               </CardContent>
@@ -611,74 +653,51 @@ export default function RekamMedisDetailPage() {
 
             <Card className="shadow-lg">
               <CardHeader className="bg-pink-600 text-white rounded-t-md">
-                <CardTitle className="text-lg font-semibold">
-                  Detail Pemeriksaan
-                </CardTitle>
+                <CardTitle className="text-lg font-semibold">Detail Pemeriksaan</CardTitle>
               </CardHeader>
 
               <CardContent className="space-y-4 bg-white text-sm pt-4">
                 <div>
                   <p className="text-xs text-gray-400">KELUHAN UTAMA</p>
-                  <p className="font-medium mt-1">
-                    {(visit as any).chiefComplaint || "-"}
-                  </p>
+                  <p className="font-medium mt-1">{(visit as any).chiefComplaint || "-"}</p>
                 </div>
 
                 <div>
-                  <p className="text-xs text-gray-400">
-                    HASIL PEMERIKSAAN FISIK
-                  </p>
-                  <p className="font-medium mt-1">
-                    {(visit as any).bloodPressure || "-"}
-                  </p>
+                  <p className="text-xs text-gray-400">HASIL PEMERIKSAAN FISIK</p>
+                  <p className="font-medium mt-1">{(visit as any).bloodPressure || "-"}</p>
                 </div>
 
                 <div>
                   <p className="text-xs text-gray-400">RENCANA PERAWATAN</p>
-                  <p className="font-medium mt-1">
-                    {(visit as any).notes || "-"}
-                  </p>
+                  <p className="font-medium mt-1">{treatmentPlan || ((visit as any).notes || "-")}</p>
                 </div>
 
-                {(visit as any).notes && (
+                {notes ? (
                   <div className="bg-yellow-50 border-l-4 border-yellow-300 p-3 rounded mt-2">
                     <p className="text-sm font-medium">Catatan:</p>
-                    <p className="text-sm mt-1 text-gray-700">
-                      {(visit as any).notes}
-                    </p>
+                    <p className="text-sm mt-1 text-gray-700 whitespace-pre-line">{notes}</p>
                   </div>
-                )}
+                ) : null}
               </CardContent>
             </Card>
 
             <Card className="shadow-lg">
               <CardHeader className="bg-yellow-400/40 rounded-t-md">
-                <CardTitle className="text-lg font-semibold">
-                  Obat yang Diberikan
-                </CardTitle>
+                <CardTitle className="text-lg font-semibold">Obat yang Diberikan</CardTitle>
               </CardHeader>
 
               <CardContent className="space-y-3 bg-white text-sm pt-4">
                 {meds.length === 0 ? (
-                  <p className="text-gray-600">
-                    Tidak ada obat yang diresepkan pada kunjungan ini.
-                  </p>
+                  <div className="mt-4 py-6 flex justify-center">
+                    <p className="text-gray-600 text-center">Tidak ada obat yang diresepkan pada kunjungan ini.</p>
+                  </div>
                 ) : (
                   meds.map((m: any, idx: number) => (
-                    <div
-                      key={m.id ?? idx}
-                      className="rounded-md bg-pink-50 p-4 border border-pink-100 space-y-2"
-                    >
+                    <div key={m.id ?? idx} className="rounded-md bg-pink-50 p-4 border border-pink-100 space-y-2">
                       <div className="flex justify-between items-start">
                         <div>
-                          <p className="font-semibold text-pink-700">
-                            {m.name}
-                          </p>
-                          {m.instructions && (
-                            <p className="text-gray-700 text-sm mt-1">
-                              {m.instructions}
-                            </p>
-                          )}
+                          <p className="font-semibold text-pink-700">{m.name}</p>
+                          {m.instructions && <p className="text-gray-700 text-sm mt-1">{m.instructions}</p>}
                         </div>
                         <Badge variant="secondary">Qty: {m.quantity}</Badge>
                       </div>
@@ -690,9 +709,7 @@ export default function RekamMedisDetailPage() {
           </div>
         </div>
 
-        <div className="mt-8 text-center text-xs text-gray-400">
-          © 2025 RoxyDental.
-        </div>
+        <div className="mt-8 text-center text-xs text-gray-400">  © 2025 POLABDC Dental Clinic.</div>
       </div>
     </div>
   );

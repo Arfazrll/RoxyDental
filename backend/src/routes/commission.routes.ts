@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { CommissionController } from '../controllers/commission.controller';
 import { authMiddleware } from '../middlewares/auth.middleware';
 import { roleMiddleware } from '../middlewares/role.middleware';
-import { UserRole } from '../../generated/prisma';
+import { UserRole } from '@prisma/client';
 
 const router = Router();
 const commissionController = new CommissionController();
