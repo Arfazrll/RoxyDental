@@ -124,7 +124,7 @@ function CalendarContent() {
       const startDate = formatDate(weekDays[0]);
       const endDate = formatDate(weekDays[6]);
 
-      const eventsRes = await calendarService.getMyEvents(startDate, endDate);
+      const eventsRes = await calendarService.getEvents(startDate, endDate);
 
       const mappedEvents: DisplayEvent[] = eventsRes.data.map((event: CalendarEvent) => ({
         id: event.id,
@@ -415,13 +415,12 @@ function CalendarContent() {
                   return (
                     <div
                       key={idx}
-                      className={`py-2 cursor-pointer hover:bg-pink-200 rounded transition relative ${
-                        isSelected
+                      className={`py-2 cursor-pointer hover:bg-pink-200 rounded transition relative ${isSelected
                           ? "bg-pink-600 text-white font-bold"
                           : date
-                          ? "text-pink-900"
-                          : "text-pink-300"
-                      }`}
+                            ? "text-pink-900"
+                            : "text-pink-300"
+                        }`}
                       onClick={() => {
                         if (date) handleMiniCalendarClick(new Date(dateStr));
                       }}
@@ -448,13 +447,12 @@ function CalendarContent() {
               {myLeaves.map((leave) => (
                 <div
                   key={leave.id}
-                  className={`${
-                    leave.status === "PENDING"
+                  className={`${leave.status === "PENDING"
                       ? "bg-yellow-50 border-yellow-300"
                       : leave.status === "APPROVED"
-                      ? "bg-green-50 border-green-300"
-                      : "bg-red-50 border-red-300"
-                  } border text-pink-900 p-2 rounded-lg shadow`}
+                        ? "bg-green-50 border-green-300"
+                        : "bg-red-50 border-red-300"
+                    } border text-pink-900 p-2 rounded-lg shadow`}
                 >
                   <div className="flex justify-between items-start">
                     <div className="flex-1">

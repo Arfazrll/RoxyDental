@@ -43,7 +43,6 @@ export default function SettingsChangePassword() {
     confirmPassword: false,
   });
 
-  // Toast state
   const [toast, setToast] = useState<{ type: "success" | "error" | null; message: string }>({
     type: null,
     message: "",
@@ -51,7 +50,6 @@ export default function SettingsChangePassword() {
 
   const showToast = (type: "success" | "error", message: string) => {
     setToast({ type, message });
-    // auto dismiss
     setTimeout(() => setToast({ type: null, message: "" }), 3500);
   };
 
@@ -118,9 +116,27 @@ export default function SettingsChangePassword() {
         showToast("error", response.message || "Gagal mengganti password");
       }
     } catch (error: any) {
-      console.error("Change password error object:", JSON.stringify(error, null, 2));
+      let errObj: any = error;
 
-      if (error?.message === "Password saat ini salah") {
+      if (typeof error === 'string') {
+        try {
+          errObj = JSON.parse(error);
+        } catch (e) {
+          errObj = { message: error };
+        }
+      } else if (error?.response?.data) {
+        errObj = error.response.data;
+      } else if (error?.message) {
+        if (typeof error.message === 'string') {
+          try {
+            errObj = JSON.parse(error.message);
+          } catch (e) {
+            errObj = { message: error.message };
+          }
+        }
+      }
+
+      if (errObj?.message === "Password saat ini salah") {
         setErrorMessage("Password saat ini yang Anda masukkan salah");
         setPasswordErrors({
           ...passwordErrors,
@@ -128,12 +144,12 @@ export default function SettingsChangePassword() {
         });
         setTouched({ ...touched, oldPassword: true });
         showToast("error", "Password saat ini salah.");
-      } else if (error?.errors) {
-        const firstError = error.errors[0];
+      } else if (errObj?.errors && Array.isArray(errObj.errors)) {
+        const firstError = errObj.errors[0];
         setErrorMessage(firstError.message || "Validasi gagal");
         showToast("error", firstError.message || "Validasi gagal");
       } else {
-        const msg = error?.message || "Terjadi kesalahan saat mengganti password (Unknown Error)";
+        const msg = errObj?.message || (typeof errObj === 'string' ? errObj : "Terjadi kesalahan saat mengganti password");
         setErrorMessage(msg);
         showToast("error", msg);
       }
@@ -149,7 +165,6 @@ export default function SettingsChangePassword() {
     router.push("/dashboard/dokter/main");
   };
 
-  // password criteria for checklist
   const newPw = passwordData.newPassword || "";
   const criteria = {
     minLength: newPw.length >= 6,
@@ -190,7 +205,7 @@ export default function SettingsChangePassword() {
 
               <CardContent className="p-8 space-y-6">
                 <div className="space-y-5">
-                  {['old', 'new', 'confirm'].map((type, idx) => {
+                  {(['old', 'new', 'confirm'] as const).map((type, idx) => {
                     const isOld = type === 'old';
                     const isNew = type === 'new';
                     const isConfirm = type === 'confirm';
@@ -333,7 +348,6 @@ export default function SettingsChangePassword() {
         <p className="text-center text-sm text-pink-600 mt-8"> © 2025 POLABDC — All rights reserved</p>
       </div>
 
-      {/* Konfirmasi Dialog */}
       <Dialog open={confirmDialogOpen} onOpenChange={setConfirmDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
@@ -358,7 +372,6 @@ export default function SettingsChangePassword() {
         </DialogContent>
       </Dialog>
 
-      {/* Dialog Sukses */}
       <Dialog open={successDialogOpen} onOpenChange={setSuccessDialogOpen}>
         <DialogContent className="max-w-md flex justify-center items-center p-6">
           <div className="text-center bg-pink-100 rounded-2xl shadow-lg p-6 w-full">
@@ -374,7 +387,6 @@ export default function SettingsChangePassword() {
         </DialogContent>
       </Dialog>
 
-      {/* Dialog Error */}
       <Dialog open={errorDialogOpen} onOpenChange={setErrorDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
@@ -394,7 +406,6 @@ export default function SettingsChangePassword() {
         </DialogContent>
       </Dialog>
 
-      {/* Toast */}
       {toast.type && (
         <div className="fixed right-6 top-6 z-50">
           <div
