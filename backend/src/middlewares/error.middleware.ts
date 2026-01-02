@@ -1,5 +1,5 @@
-import { Request, Response, NextFunction } from 'express';
-import { errorResponse } from '../utils/response.util';
+import { Request, Response, NextFunction } from "express";
+import { errorResponse } from "../utils/response.util";
 
 export class AppError extends Error {
   statusCode: number;
@@ -9,6 +9,7 @@ export class AppError extends Error {
     super(message);
     this.statusCode = statusCode;
     this.isOperational = true;
+
     Error.captureStackTrace(this, this.constructor);
   }
 }
@@ -20,12 +21,14 @@ export const errorHandler = (
   next: NextFunction
 ) => {
   if (err instanceof AppError) {
-    return res.status(err.statusCode).json(errorResponse(err.message));
+    return res
+      .status(err.statusCode)
+      .json(errorResponse(err.message));
   }
 
-  console.error('Unexpected Error:', err);
-  return res.status(500).json(errorResponse('Internal server error'));
+  console.error("Unexpected Error:", err);
 
-  console.error(err);
-
+  return res
+    .status(500)
+    .json(errorResponse("Internal server error"));
 };
