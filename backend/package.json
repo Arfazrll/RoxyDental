@@ -24,7 +24,7 @@
     "jsonwebtoken": "^9.0.2",
     "multer": "^2.0.2",
     "nodemailer": "^7.0.11",
-    "supabase": "^2.58.5",
+    "supabase": "^2.75.5",
     "zod": "^3.25.76"
   },
   "devDependencies": {
